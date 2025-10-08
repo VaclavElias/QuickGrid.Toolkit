@@ -22,6 +22,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
     [Parameter] public bool IsFilter { get; set; } = true;
     [Parameter] public bool IsToolbar { get; set; } = true;
     [Parameter] public bool IsNestedSearch { get; set; } = true;
+    [Parameter] public bool ExactMatch { get; set; }
     [Parameter] public bool IsExportEnabled { get; set; }
     [Parameter] public bool IsPreviewFeature { get; set; }
     [Parameter] public Func<TGridItem, object> ItemKey { get; set; } = x => x!;
@@ -303,7 +304,11 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
     }
 
     public bool QuickSearchAction(TGridItem item, string query)
-        => QuickSearchUtility.QuickSearch(item, query, IsNestedSearch);
+        => QuickSearchUtility.QuickSearch(item, query, options: new()
+        {
+            IncludeChildProperties = IsNestedSearch,
+            ExactMatch = ExactMatch
+        });
 
     public Task ExportAsync() => Events?.OnExport.InvokeAsync(_filteredItems) ?? Task.CompletedTask;
 

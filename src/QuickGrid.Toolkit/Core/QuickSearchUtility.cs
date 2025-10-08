@@ -18,6 +18,25 @@ public static class QuickSearchUtility
     /// <returns>True if the query is found in any property; otherwise, false.</returns>
     public static bool QuickSearch<T>(T item, string query, bool includeChildProperties = true)
     {
+        var options = new QuickSearchOptions
+        {
+            IncludeChildProperties = includeChildProperties
+        };
+        return QuickSearch(item, query, options);
+    }
+
+    /// <summary>
+    /// Searches the properties of an object to find a match for the specified query with configurable options.
+    /// </summary>
+    /// <typeparam name="T">The type of the object being searched.</typeparam>
+    /// <param name="item">The object to search.</param>
+    /// <param name="query">The search query string.</param>
+    /// <param name="options">Options for configuring the search behavior.</param>
+    /// <returns>True if the query is found in any property; otherwise, false.</returns>
+    public static bool QuickSearch<T>(T item, string query, QuickSearchOptions options)
+    {
+        options ??= new QuickSearchOptions();
+
         foreach (var property in typeof(T).GetProperties())
         {
             var value = property.GetValue(item);
@@ -28,16 +47,16 @@ public static class QuickSearchUtility
                 continue;
             }
 
-            if (MatchesQuery(value, query)) return true;
+            if (MatchesQuery(value, query, options)) return true;
 
             // Optionally search inside child properties if the value is a class (but not a string)
-            if (includeChildProperties && IsClass(value) && value is not string)
+            if (options.IncludeChildProperties && IsClass(value) && value is not string)
             {
                 foreach (var childProperty in value!.GetType().GetProperties())
                 {
                     var childValue = childProperty.GetValue(value);
 
-                    if (MatchesQuery(childValue, query)) return true;
+                    if (MatchesQuery(childValue, query, options)) return true;
                 }
             }
         }
@@ -64,11 +83,25 @@ public static class QuickSearchUtility
     /// </summary>
     /// <param name="value">The value to check.</param>
     /// <param name="query">The search query string.</param>
+    /// <param name="options">Options for configuring the match behavior.</param>
     /// <returns>True if the value matches the query; otherwise, false.</returns>
-    private static bool MatchesQuery(object? value, string query)
+    private static bool MatchesQuery(object? value, string query, QuickSearchOptions options)
     {
         if (value is null) return false;
 
-        return value.ToString()?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false;
+        var valueString = value.ToString();
+
+        if (valueString is null) return false;
+
+        var comparison = options.CaseSensitive
+            ? StringComparison.Ordinal
+            : StringComparison.OrdinalIgnoreCase;
+
+        if (options.ExactMatch)
+        {
+            return valueString.Equals(query, comparison);
+        }
+
+        return valueString.Contains(query, comparison);
     }
 }
