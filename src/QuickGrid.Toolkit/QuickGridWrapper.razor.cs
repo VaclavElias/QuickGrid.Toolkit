@@ -26,6 +26,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
     [Parameter] public bool IsPreviewFeature { get; set; }
     [Parameter] public Func<TGridItem, object> ItemKey { get; set; } = x => x!;
     [Parameter] public EventCallback ColumnSelectionChanged { get; set; }
+    [Parameter] public EventCallback<string> QuickSearchChanged { get; set; }
     [Parameter] public EventCallback<List<TGridItem>> SearchResultChanged { get; set; }
     [Parameter] public QuickGridWrapperEvents<TGridItem>? Events { get; set; }
     /// <summary>
@@ -280,10 +281,25 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
         IsLoading = false;
     }
 
-    private void ClearSearch()
+    private async Task OnInMemorySearchChanged()
+    {
+        if (string.IsNullOrEmpty(_searchQuery))
+        {
+            await QuickSearchChanged.InvokeAsync(_searchQuery);
+        }
+    }
+
+    public void ClearSearch() => ClearSearch(true);
+
+    public void ClearSearch(bool shouldInvokeCallback = false)
     {
         //_filteredItems = Items;
         _searchQuery = null;
+
+        if (shouldInvokeCallback)
+        {
+            QuickSearchChanged.InvokeAsync(_searchQuery);
+        }
     }
 
     public bool QuickSearchAction(TGridItem item, string query)

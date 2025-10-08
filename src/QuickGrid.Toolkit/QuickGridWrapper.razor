@@ -73,7 +73,7 @@
                     }
                     @if (_isInMemorySearch)
                     {
-                        <input @bind="_searchQuery" @bind:event="oninput" placeholder="quick search.." type="search" class="d-inline-block py-0 mb-1 ms-1 form-control form-control-sm border-0 quick-search" style="width: 200px" />
+                        <input @bind="_searchQuery" @bind:event="oninput" @bind:after="OnInMemorySearchChanged" placeholder="quick search.." type="search" class="d-inline-block py-0 mb-1 ms-1 form-control form-control-sm border-0 quick-search" style="width: 200px" />
                         if (!string.IsNullOrEmpty(_searchQuery))
                         {
                             <span class="small text-muted ms-2">(@_filteredItems?.Count()) Results</span>
