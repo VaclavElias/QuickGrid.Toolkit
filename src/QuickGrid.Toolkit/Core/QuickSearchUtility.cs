@@ -56,6 +56,11 @@ public static class QuickSearchUtility
                 {
                     var childValue = childProperty.GetValue(value);
 
+                    if (childValue is IEnumerable && childValue is not string)
+                    {
+                        continue;
+                    }
+
                     if (MatchesQuery(childValue, query, options)) return true;
                 }
             }
