@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Concurrent;
 
 namespace QuickGrid.Toolkit.Core;
 
@@ -7,6 +8,12 @@ namespace QuickGrid.Toolkit.Core;
 /// </summary>
 public static class QuickSearchUtility
 {
+    /// <summary>
+    /// Cache for type property information to improve reflection performance.
+    /// This cache is safe to keep for the application lifetime as type metadata is immutable.
+    /// </summary>
+    private static readonly ConcurrentDictionary<Type, PropertyInfo[]> _propertyCache = new();
+
     /// <summary>
     /// Searches the properties of an object to find a match for the specified query.
     /// Optionally, it can also search in the first-level child properties.
@@ -22,6 +29,7 @@ public static class QuickSearchUtility
         {
             IncludeChildProperties = includeChildProperties
         };
+
         return QuickSearch(item, query, options);
     }
 
@@ -37,7 +45,9 @@ public static class QuickSearchUtility
     {
         options ??= new QuickSearchOptions();
 
-        foreach (var property in typeof(T).GetProperties())
+        var properties = _propertyCache.GetOrAdd(typeof(T), t => t.GetProperties());
+
+        foreach (var property in properties)
         {
             var value = property.GetValue(item);
 
