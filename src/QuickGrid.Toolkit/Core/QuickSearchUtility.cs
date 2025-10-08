@@ -24,20 +24,22 @@ public static class QuickSearchUtility
 
             // Skip if the value is a collection (but not a string)
             if (value is IEnumerable && value is not string)
+            {
                 continue;
+            }
 
-            if (MatchesQuery(value, query))
-                return true;
+            if (MatchesQuery(value, query)) return true;
 
             // Optionally search inside child properties if the value is a class (but not a string)
             if (includeChildProperties && IsClass(value) && value is not string)
+            {
                 foreach (var childProperty in value!.GetType().GetProperties())
                 {
                     var childValue = childProperty.GetValue(value);
 
-                    if (MatchesQuery(childValue, query))
-                        return true;
+                    if (MatchesQuery(childValue, query)) return true;
                 }
+            }
         }
 
         return false;
