@@ -28,6 +28,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
     [Parameter] public Func<TGridItem, object> ItemKey { get; set; } = x => x!;
     [Parameter] public EventCallback ColumnSelectionChanged { get; set; }
     [Parameter] public EventCallback<string> QuickSearchChanged { get; set; }
+    [Parameter] public EventCallback<bool> ExactMatchChanged { get; set; }
     [Parameter] public EventCallback<List<TGridItem>> SearchResultChanged { get; set; }
     [Parameter] public QuickGridWrapperEvents<TGridItem>? Events { get; set; }
     /// <summary>
@@ -455,6 +456,17 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
     }
 
     //public string GetTableClass() => $"table table-sm {IsTableIndex()} table-striped small table-blazor table-fit table-thead-sticky table-bg-transparent mb-0";
+
+    public async Task DisableExactMatch()
+    {
+        ExactMatch = false;
+        await ExactMatchChanged.InvokeAsync(ExactMatch);
+    }
+
+    public async Task EnableExactMatch()
+    {
+        ExactMatch = true;
+    }
 
     public string GetTableClass() => $"{Class} {IsTableIndex()}";
 

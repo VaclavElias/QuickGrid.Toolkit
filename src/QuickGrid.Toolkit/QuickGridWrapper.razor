@@ -52,6 +52,7 @@
                         <span class="action me-2" data-bs-toggle="dropdown" aria-expanded="false">@IconProvider.Render(QuickGridIcon.Settings)</span>
                         <ul class="dropdown-menu">
                             <li><button class="dropdown-item" @onclick="ManageColumns">@IconProvider.Render(QuickGridIcon.Wrench) Manage Columns</button></li>
+                            <li><button class="dropdown-item" @onclick="EnableExactMatch">@IconProvider.Render(QuickGridIcon.Search) Enable Exact Match</button></li>
                             @if (IsExportEnabled)
                             {
                                 <li>
@@ -77,6 +78,10 @@
                         if (!string.IsNullOrEmpty(_searchQuery))
                         {
                             <span class="small text-muted ms-2">(@_filteredItems?.Count()) Results</span>
+                        }
+                        if (ExactMatch)
+                        {
+                            <span @onclick="DisableExactMatch" class="badge bg-info text-dark ms-2 action">Exact Match ✖</span>
                         }
                     }
                     else
