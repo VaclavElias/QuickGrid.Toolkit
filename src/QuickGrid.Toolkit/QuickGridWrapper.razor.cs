@@ -78,14 +78,20 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
         {
             IQueryable<TGridItem>? result;
 
-            if (string.IsNullOrEmpty(_searchQuery))
+            if (string.IsNullOrWhiteSpace(_searchQuery))
             {
                 result = Items;
 
             }
             else if (FilterCriteria is null)
             {
-                result = Items?.Where(item => QuickSearchAction(item, _searchQuery));
+                var searchOptions = new QuickSearchOptions()
+                {
+                    IncludeChildProperties = IsNestedSearch,
+                    ExactMatch = ExactMatch
+                };
+
+                result = Items?.Where(item => QuickSearchAction(item, _searchQuery, searchOptions));
             }
             else
             {
@@ -303,12 +309,8 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
         }
     }
 
-    public bool QuickSearchAction(TGridItem item, string query)
-        => QuickSearchUtility.QuickSearch(item, query, options: new()
-        {
-            IncludeChildProperties = IsNestedSearch,
-            ExactMatch = ExactMatch
-        });
+    public bool QuickSearchAction(TGridItem item, string query, QuickSearchOptions searchOptions)
+        => QuickSearchUtility.QuickSearch(item, query, options: searchOptions);
 
     public Task ExportAsync() => Events?.OnExport.InvokeAsync(_filteredItems) ?? Task.CompletedTask;
 
