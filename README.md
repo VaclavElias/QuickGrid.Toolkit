@@ -18,12 +18,16 @@ QuickGrid.Toolkit extends the Blazor QuickGrid with reusable, dynamic column man
     - ⏳ Example
   - ✅ Custom column styling
     - ⏳ Example
-  - ✅ Custom row styling
+  - ✅ Custom row styling (css `:has()`)
     - ⏳ Example
   - ⏳ Export to CSV and Json
     - ⏳ Example
-  - ✅ Search across all columns
-    - ✅ Example in `QuickGridWrapper`
+  - ✅ Quick search across all columns (`QuickGridWrapper`)
+    - ✅ Example
+    - ✅ Pass search value
+      - ⏳ Example
+    - ✅ Exact Match option (`QuickGridWrapper`)
+      - ✅ Example
 - QuickGrid.Samples: a demo app showcasing the toolkit (see the Users pages)
 
 ## Requirements
