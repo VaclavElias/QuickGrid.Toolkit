@@ -1,13 +1,21 @@
 @page "/users-grid"
 <PageTitle>Users Grid</PageTitle>
 <h1>Users Grid</h1>
+<p>
+    This grid uses a <code>ColumnManager{T}</code> to manage the columns. The <code>ColumnSelector</code> component
+    allows the user to select which columns to display. The <code>QuickGridColumns.Columns{T}</code> method is used to
+    render the columns based on the <code>ColumnManager{T}</code>.
+</p>
+<p>
+    Check source <a href="https://github.com/VaclavElias/QuickGrid.Toolkit/blob/main/src/QuickGrid.Samples/Pages/UsersGrid.razor">here</a>.
+</p>
+<h2>Example</h2>
 <div class="my-3">
     <ColumnSelector ColumnManager="_columnManager" SelectionChanged="SelectionChangedAsync" />
 </div>
 <QuickGrid @ref="_grid" Items="@_items.AsQueryable()" Class="table table-sm table-index table-striped small table-fit table-thead-sticky mb-0" Theme="twentyAI">
     @QuickGridColumns.Columns(_columnManager)
 </QuickGrid>
-
 @code {
     private List<UserDto> _items = new();
     private ColumnManager<UserDto> _columnManager = new();

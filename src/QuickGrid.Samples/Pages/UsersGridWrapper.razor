@@ -1,9 +1,17 @@
 @page "/users-grid-wrapper"
 <PageTitle>Users Grid Wrapper</PageTitle>
 <h1>Users Grid Wrapper</h1>
-<QuickGridWrapper
-    Items="@_items.AsQueryable()"
-    ColumnManager="_columnManager" />
+<p>
+    This example shows how to use the <code>QuickGridWrapper{T}</code> component to simplify the usage of the <code>QuickGrid{T}</code> component
+    with a <code>ColumnManager{T}</code>. The <code>QuickGridWrapper{T}</code> component automatically handles the rendering of the columns
+    based on the provided <code>ColumnManager{T}</code>.
+</p>
+<p>
+    Check source <a href="https://github.com/VaclavElias/QuickGrid.Toolkit/blob/main/src/QuickGrid.Samples/Pages/UsersGridWrapper.razor">here</a>.
+</p>
+<h2>Example</h2>
+<QuickGridWrapper Items="@_items.AsQueryable()"
+                  ColumnManager="_columnManager" />
 @code {
     private List<UserDto> _items = new();
     private ColumnManager<UserDto> _columnManager = new();
