@@ -12,7 +12,15 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
     [Parameter] public string? Class { get; set; } = "table table-sm table-index table-striped small table-fit table-thead-sticky table-no-empty-lines mb-0";
     [Parameter] public string? DownloadFileName { get; set; }
     [Parameter] public string? QuickSearch { get; set; }
+
+    /// <summary>
+    /// A version number that should be incremented whenever the Items collection changes. It is used to detect changes and refresh the grid accordingly, specifically footer totals and if external filter is applied while search is active.
+    /// </summary>
+    [Parameter] public long ItemsVersion { get; set; }
+
+    // ToDo: If most callers already have a List and use in-memory search, consider changing Items to IEnumerable<TGridItem> (or IReadOnlyList<TGridItem>) and add QueryableItems for EF-backed scenarios. Use the branching above to support both safely.
     [Parameter] public IQueryable<TGridItem>? Items { get; set; }
+    [Parameter] public IQueryable<TGridItem>? QueryableItems { get; set; }
     [Parameter] public ColumnManager<TGridItem> ColumnManager { get; set; } = new();
     [Parameter] public bool IsPaginator { get; set; }
     [Parameter] public bool IsLoading { get; set; }
@@ -59,7 +67,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
     private bool _isInMemorySearch;
     private bool _showFilterSection;
 
-    private int _previousHashCode;
+    private long _prevItemsVersion;
     private string? _searchQuery;
     private string? _lastSearchQuery;
 
@@ -67,6 +75,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
     private PaginationState? _pagination;
     private ColumnManager<TGridItem> _defaultColumnManager = new();
 
+    private List<TGridItem>? _cachedFilteredItems;
     private List<string> _defaultVisibleColumns = [];
     private List<TGridItem>? _evaluatedItems;
     private readonly List<FooterColumn<TGridItem>> _footerColumns = [];
@@ -92,7 +101,12 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
                     ExactMatch = ExactMatch
                 };
 
-                result = Items?.Where(item => QuickSearchAction(item, _searchQuery, searchOptions));
+                if (_searchQuery != _lastSearchQuery)
+                {
+                    _cachedFilteredItems = Items?.Where(item => QuickSearchAction(item, _searchQuery, searchOptions)).ToList();
+                }
+
+                result = _cachedFilteredItems?.AsQueryable();
             }
             else
             {
@@ -151,14 +165,19 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
     protected override async Task OnParametersSetAsync()
     {
         SetTableIndex();
-
         UpdateSearchQuery();
 
-        var currentHashCode = Items?.GetHashCode();
-
-        if (_previousHashCode != currentHashCode)
+        if (Items is not null && QueryableItems is not null && Events is not null)
         {
-            _previousHashCode = currentHashCode ?? 0;
+            await Events.WarningRequested.InvokeAsync("Provide only one of Items or QueryableItems.");
+        }
+
+        if (_prevItemsVersion != ItemsVersion)
+        {
+            _prevItemsVersion = ItemsVersion;
+
+            // Invalidate caches and force re-evaluation for current search
+            _lastSearchQuery = null;
 
             await Task.Delay(10);
 
