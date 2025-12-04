@@ -66,6 +66,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
     private bool _isTableIndex;
     private bool _isInMemorySearch;
     private bool _showFilterSection;
+    private bool _isDebug = false;
 
     private long _prevItemsVersion;
     private string? _searchQuery;

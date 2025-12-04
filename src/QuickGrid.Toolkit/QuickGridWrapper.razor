@@ -1,4 +1,13 @@
 @typeparam TGridItem
+@if (_isDebug)
+{
+    <p>
+        IsPaginator: @IsPaginator<br />
+        ItemsPerPage: @ItemsPerPage<br />
+        ItemsVersion: @ItemsVersion<br />
+        _pagination: @_pagination<br />
+    </p>
+}
 <div class="mx-2">
     @if (IsLoading)
     {
@@ -21,10 +30,12 @@
                                         @if (SelectedConfiguration is null)
                                         {
                                             @IconProvider.Render(QuickGridIcon.Tick)
-                                        } else
+                                        }
+                                        else
                                         {
                                             @IconProvider.Render(QuickGridIcon.EmptyIcon)
-                                        }<span>Default</span>
+                                        }
+                                        <span>Default</span>
                                     </button>
                                 </li>
                                 @foreach (var item in ColumnConfigurations)
