@@ -16,6 +16,7 @@ public class TickColumn<TGridItem> : ColumnBase<TGridItem>
     [Parameter] public bool ShowOnlyTrue { get; set; }
     [Parameter] public string? TrueClass { get; set; }
     [Parameter] public string? FalseClass { get; set; }
+    [Parameter] public Func<TGridItem, Task>? OnClickAsync { get; set; }
 
     private Expression<Func<TGridItem, object>>? _lastAssignedProperty;
     private Func<TGridItem, object?>? _cellTextFunc;
@@ -41,7 +42,17 @@ public class TickColumn<TGridItem> : ColumnBase<TGridItem>
         }
         var cssClass = isTrue ? (TrueClass ?? TrueSign) : (FalseClass ?? FalseSign);
 
-        builder.AddMarkupContent(1, $"<i class=\"{cssClass}\"></i>");
+        if (OnClickAsync is null)
+        {
+            builder.AddMarkupContent(1, $"<i class=\"{cssClass}\"></i>");
+        }
+        else
+        {
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "onclick", EventCallback.Factory.Create(this, () => OnClickAsync(item)));
+            builder.AddMarkupContent(2, $"<i class=\"{cssClass}\"></i>");
+            builder.CloseElement();
+        }
     }
 
     protected override void OnParametersSet()

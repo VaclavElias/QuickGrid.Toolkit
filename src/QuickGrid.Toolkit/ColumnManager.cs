@@ -225,7 +225,8 @@ public class ColumnManager<TGridItem>
         Align align = Align.Center,
         string? trueClass = null,
         string? falseClass = null,
-        bool showOnlyTrue = false)
+        bool showOnlyTrue = false,
+        Func<TGridItem, Task>? onClick = null)
     {
         var column = new TickPropertyColumn<TGridItem>()
         {
@@ -238,6 +239,7 @@ public class ColumnManager<TGridItem>
             TrueClass = trueClass,
             FalseClass = falseClass,
             Class = @class,
+            OnActionAsync = onClick
         };
 
         Add(column);
