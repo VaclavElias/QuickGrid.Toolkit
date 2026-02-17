@@ -372,6 +372,27 @@ public class ColumnManager<TGridItem>
         );
     }
 
+    /// <summary>
+    /// Adds a markup column that renders raw HTML content from the expression value, with an optional click handler.
+    /// </summary>
+    /// <param name="expression">An expression returning HTML markup to render in the cell.</param>
+    /// <param name="onClick">Optional async click handler; when provided, the cell content is wrapped in a clickable div.</param>
+    public void AddMarkup<TValue>(
+        Expression<Func<TGridItem, TValue?>> expression,
+        string? title = null,
+        string? fullTitle = null,
+        string? @class = null,
+        Align align = Align.Left,
+        GridSort<TGridItem>? sortBy = null,
+        bool visible = true,
+        Func<TGridItem, Task>? onClick = null,
+        string? propertyName = null)
+    {
+        var column = _columnBuilder.BuildMarkupColumn(
+            expression, title, fullTitle, @class, align, sortBy, visible, onClick, propertyName);
+        Add(column);
+    }
+
     private static string BuildDisplayValue(object? value, string? format)
     {
         if (value is null)

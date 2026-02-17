@@ -281,4 +281,51 @@ public class ColumnBuilder<TGridItem>
             Class = @class
         };
     }
+
+    /// <summary>
+    /// Builds a markup column that renders raw HTML content from an expression, with an optional click handler.
+    /// </summary>
+    public DynamicColumn<TGridItem> BuildMarkupColumn<TValue>(
+        Expression<Func<TGridItem, TValue?>> expression,
+        string? title = null,
+        string? fullTitle = null,
+        string? @class = null,
+        Align align = Align.Left,
+        GridSort<TGridItem>? sortBy = null,
+        bool visible = true,
+        Func<TGridItem, Task>? onClick = null,
+        string? propertyName = null)
+    {
+        DynamicColumn<TGridItem> column = BuildColumn(expression, title, fullTitle, @class, align, sortBy, visible);
+
+        var compiledExpression = expression.Compile();
+
+        column.ChildContent = (item) => (builder) =>
+        {
+            if (item is null) return;
+
+            var value = compiledExpression.Invoke(item);
+            var markup = value?.ToString();
+
+            if (string.IsNullOrEmpty(markup)) return;
+
+            if (onClick is null)
+            {
+                builder.AddMarkupContent(0, markup);
+            }
+            else
+            {
+                builder.OpenElement(0, "div");
+                builder.AddAttribute(1, "onclick", EventCallback.Factory.Create(this, () => onClick.Invoke(item)));
+                builder.AddMarkupContent(2, markup);
+                builder.CloseElement();
+            }
+        };
+
+        column.Visible = visible;
+        column.Class = onClick is not null ? $"{@class} action".Trim() : @class;
+        column.PropertyName = propertyName;
+
+        return column;
+    }
 }
