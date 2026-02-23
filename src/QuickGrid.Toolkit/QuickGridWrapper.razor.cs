@@ -34,6 +34,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
     [Parameter] public bool IsExportEnabled { get; set; }
     [Parameter] public bool IsPreviewFeature { get; set; }
     [Parameter] public Func<TGridItem, object> ItemKey { get; set; } = x => x!;
+    [Parameter] public Func<TGridItem, string?>? RowClass { get; set; }
     [Parameter] public EventCallback ColumnSelectionChanged { get; set; }
     [Parameter] public EventCallback<string> QuickSearchChanged { get; set; }
     [Parameter] public EventCallback<bool> ExactMatchChanged { get; set; }

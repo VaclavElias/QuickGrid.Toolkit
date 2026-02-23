@@ -124,7 +124,7 @@
 {
     @FilterSection
 }
-<QuickGrid @ref="_grid" Items="@_filteredItems" Class="@GetTableClass()" Theme="twentyAI" Pagination="@_pagination" id="@Id" ItemKey="ItemKey">
+<QuickGrid @ref="_grid" Items="@_filteredItems" Class="@GetTableClass()" Theme="twentyAI" Pagination="@_pagination" id="@Id" ItemKey="ItemKey" RowClass="RowClass">
     @QuickGridColumns.Columns(UsedColumnManager)
 </QuickGrid>
 @if (IsPaginator && _pagination != null)
