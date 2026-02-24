@@ -228,22 +228,29 @@ public class ColumnBuilder<TGridItem>
 
     /// <summary>
     /// Builds a static action column with content and optional click handler.
+    /// Passing <paramref name="enabled"/> restricts rendering to rows where the predicate returns <c>true</c>.
     /// </summary>
     public DynamicColumn<TGridItem> BuildStaticActionColumn(
         string staticContent,
         string? title = null,
         Align align = Align.Left,
         string? @class = null,
-        Func<TGridItem, Task>? onClick = null)
+        Func<TGridItem, Task>? onClick = null,
+        Expression<Func<TGridItem, bool>>? enabled = null)
     {
+        var compiledEnabled = enabled?.Compile();
         return new()
         {
             Title = title ?? DefaultActionTitle,
             ChildContent = (item) => (builder) =>
             {
+                if ((compiledEnabled?.Invoke(item)) is false) return;
+
                 builder.OpenElement(0, "div");
-                if (onClick != null)
+                if (onClick is not null)
+                {
                     builder.AddAttribute(1, "onclick", EventCallback.Factory.Create(this, () => onClick.Invoke(item)));
+                }
                 builder.AddContent(2, staticContent);
                 builder.CloseElement();
             },

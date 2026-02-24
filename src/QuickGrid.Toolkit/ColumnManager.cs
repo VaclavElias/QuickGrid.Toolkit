@@ -117,9 +117,10 @@ public class ColumnManager<TGridItem>
         string? title = null,
         Align align = Align.Left,
         string? @class = null,
-        Func<TGridItem, Task>? onClick = null)
+        Func<TGridItem, Task>? onClick = null,
+        Expression<Func<TGridItem, bool>>? enabled = null)
     {
-        var column = _columnBuilder.BuildStaticActionColumn(staticContent, title, align, @class, onClick);
+        var column = _columnBuilder.BuildStaticActionColumn(staticContent, title, align, @class, onClick, enabled);
         Add(column);
     }
 
