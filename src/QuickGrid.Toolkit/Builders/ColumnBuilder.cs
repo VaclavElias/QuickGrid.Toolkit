@@ -211,6 +211,7 @@ public class ColumnBuilder<TGridItem>
             ChildContent = (item) => (builder) =>
             {
                 var value = compiledExpression.Invoke(item);
+
                 if (onClick is null)
                 {
                     builder.AddContent(0, value);
@@ -252,13 +253,17 @@ public class ColumnBuilder<TGridItem>
             {
                 if ((compiledEnabled?.Invoke(item)) is false) return;
 
-                builder.OpenElement(0, "div");
-                if (onClick is not null)
+                if (onClick is null)
                 {
-                    builder.AddAttribute(1, "onclick", EventCallback.Factory.Create(this, () => onClick.Invoke(item)));
+                    builder.AddContent(0, staticContent);
                 }
-                builder.AddContent(2, staticContent);
-                builder.CloseElement();
+                else
+                {
+                    builder.OpenElement(0, "div");
+                    builder.AddAttribute(1, "onclick", EventCallback.Factory.Create(this, () => onClick.Invoke(item)));
+                    builder.AddContent(2, staticContent);
+                    builder.CloseElement();
+                }
             },
             ColumnType = typeof(TemplateColumn<TGridItem>),
             Align = align,
@@ -269,6 +274,7 @@ public class ColumnBuilder<TGridItem>
     /// <summary>
     /// Builds a conditional action column with enabled/disabled logic.
     /// </summary>
+    [Obsolete("Use BuildStaticActionColumn with an enabled predicate instead.")]
     public DynamicColumn<TGridItem> BuildConditionalActionColumn(
         string staticContent,
         string? title = null,
