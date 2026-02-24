@@ -124,6 +124,7 @@ public class ColumnManager<TGridItem>
         Add(column);
     }
 
+    [Obsolete("Use AddAction with Func<TGridItem, Task> instead.")]
     public void AddAction(
         string staticContent,
         string? title = null,
@@ -134,34 +135,6 @@ public class ColumnManager<TGridItem>
     {
         var column = _columnBuilder.BuildConditionalActionColumn(staticContent, title, align, @class, onClick, enabled);
         Add(column);
-    }
-
-    [Obsolete("Use AddNumber instead.", true)]
-    public void AddSimpleNumber(Expression<Func<TGridItem, object?>> expression, string? title = null, string format = "N0")
-    {
-        var compiledExpression = expression.Compile();
-
-        Add(new()
-        {
-            Title = string.IsNullOrWhiteSpace(title) ? ExpressionHelper.GetPropertyName<TGridItem, object>(expression) : title,
-            ChildContent = (item) => (builder) =>
-            {
-                var value = compiledExpression.Invoke(item);
-                if (value is decimal number)
-                    builder.AddContent(0, number.ToString(format));
-                else
-                    builder.AddContent(0, default(string));
-            },
-            SortBy = GridSort<TGridItem>.ByAscending(p => p == null ? default : compiledExpression.Invoke(p)),
-            ColumnType = typeof(TemplateColumn<TGridItem>),
-            Format = format
-        });
-    }
-
-    [Obsolete("Use AddNumber instead.", true)]
-    public void AddSimpleNumber2(Expression<Func<TGridItem, object?>> expression, string? title = null)
-    {
-        Add(new() { Property = expression, Title = title, Format = "N0", Align = Align.Right });
     }
 
     /// <summary>
