@@ -10,6 +10,7 @@ namespace QuickGrid.Toolkit.Builders;
 public class ColumnBuilder<TGridItem>
 {
     private const string MissingTitle = "Title n/a";
+    private const string DefaultActionTitle = "Action";
 
     /// <summary>
     /// Builds a base column with common properties.
@@ -51,11 +52,12 @@ public class ColumnBuilder<TGridItem>
     {
         DynamicColumn<TGridItem> column = BuildColumn(expression, title, fullTitle, @class, align, sortBy, visible);
 
+        var compiledExpression = expression.Compile();
         column.ChildContent = (item) => (builder) =>
         {
-            if (item == null) return;
+            if (item is null) return;
 
-            var value = expression.Compile().Invoke(item);
+            var value = compiledExpression.Invoke(item);
 
             if (value is null)
             {
@@ -82,7 +84,6 @@ public class ColumnBuilder<TGridItem>
             }
         };
 
-        column.Visible = visible;
         column.PropertyName = propertyName;
 
         return column;
@@ -103,11 +104,12 @@ public class ColumnBuilder<TGridItem>
     {
         DynamicColumn<TGridItem> column = BuildColumn(expression, title, fullTitle, @class, align, visible: visible);
 
+        var compiledExpression = expression.Compile();
         column.ChildContent = (item) => (builder) =>
         {
-            if (item == null) return;
+            if (item is null) return;
 
-            var value = expression.Compile().Invoke(item);
+            var value = compiledExpression.Invoke(item);
 
             if (value.HasValue)
             {
@@ -140,13 +142,14 @@ public class ColumnBuilder<TGridItem>
         Func<TGridItem, Task>? onClick = null,
         string? propertyName = null) where TValue : struct, IFormattable
     {
-        DynamicColumn<TGridItem> column = BuildColumn(expression, title, fullTitle, @class, align);
+        DynamicColumn<TGridItem> column = BuildColumn(expression, title, fullTitle, @class, align, visible: visible);
 
+        var compiledExpression = expression.Compile();
         column.ChildContent = (item) => (builder) =>
         {
-            if (item == null) return;
+            if (item is null) return;
 
-            var value = expression.Compile().Invoke(item);
+            var value = compiledExpression.Invoke(item);
 
             if (value.HasValue)
             {
@@ -179,7 +182,6 @@ public class ColumnBuilder<TGridItem>
             }
         };
 
-        column.Visible = visible;
         column.IsNumeric = true;
         column.PropertyName = propertyName;
 
@@ -236,7 +238,7 @@ public class ColumnBuilder<TGridItem>
     {
         return new()
         {
-            Title = title ?? "Action",
+            Title = title ?? DefaultActionTitle,
             ChildContent = (item) => (builder) =>
             {
                 builder.OpenElement(0, "div");
@@ -262,15 +264,16 @@ public class ColumnBuilder<TGridItem>
         Action<TGridItem>? onClick = null,
         Expression<Func<TGridItem, bool>>? enabled = null)
     {
+        var compiledEnabled = enabled?.Compile();
         return new()
         {
-            Title = title ?? "Action",
+            Title = title ?? DefaultActionTitle,
             ChildContent = (item) => (builder) =>
             {
-                if (enabled?.Compile().Invoke(item) != false)
+                if (compiledEnabled?.Invoke(item) != false)
                 {
                     builder.OpenElement(0, "div");
-                    if (onClick != null)
+                    if (onClick is not null)
                         builder.AddAttribute(1, "onclick", EventCallback.Factory.Create(this, () => onClick.Invoke(item)));
                     builder.AddContent(2, staticContent);
                     builder.CloseElement();
@@ -322,8 +325,7 @@ public class ColumnBuilder<TGridItem>
             }
         };
 
-        column.Visible = visible;
-        column.Class = onClick is not null ? $"{@class} action".Trim() : @class;
+        column.Class = onClick is not null ? (@class is null ? "action" : $"{@class} action") : @class;
         column.PropertyName = propertyName;
 
         return column;
