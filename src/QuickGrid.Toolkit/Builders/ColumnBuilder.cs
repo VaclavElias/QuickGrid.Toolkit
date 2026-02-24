@@ -211,11 +211,17 @@ public class ColumnBuilder<TGridItem>
             ChildContent = (item) => (builder) =>
             {
                 var value = compiledExpression.Invoke(item);
-                builder.OpenElement(0, "div");
-                if (onClick is not null)
+                if (onClick is null)
+                {
+                    builder.AddContent(0, value);
+                }
+                else
+                {
+                    builder.OpenElement(0, "div");
                     builder.AddAttribute(1, "onclick", EventCallback.Factory.Create(this, () => onClick.Invoke(item)));
-                builder.AddContent(2, value);
-                builder.CloseElement();
+                    builder.AddContent(2, value);
+                    builder.CloseElement();
+                }
             },
             SortBy = sortBy ?? GridSort<TGridItem>.ByAscending(p => p == null ? default : compiledExpression.Invoke(p)),
             ColumnType = typeof(TemplateColumn<TGridItem>),
