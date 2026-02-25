@@ -24,7 +24,7 @@ public static class ExpressionHelper
         else
             memberExpression = expression.Body as MemberExpression;
 
-        if (memberExpression == null)
+        if (memberExpression is null)
             throw new ArgumentException($"Expression '{expression}' refers to a method, not a property.");
 
         if (memberExpression.Member is not PropertyInfo propertyInfo)
