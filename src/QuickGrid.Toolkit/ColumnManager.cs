@@ -1,5 +1,4 @@
 using QuickGrid.Toolkit.Builders;
-using QuickGrid.Toolkit.Helpers;
 using System.Globalization;
 
 namespace QuickGrid.Toolkit;
