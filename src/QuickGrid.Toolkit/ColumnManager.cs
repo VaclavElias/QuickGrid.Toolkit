@@ -86,8 +86,7 @@ public class ColumnManager<TGridItem>
         Add(column);
     }
 
-    // ToDo: This will replace AddSimpleDate
-    public void AddSimpleDate2<TValue>(
+    public void AddSimpleDate<TValue>(
         Expression<Func<TGridItem, TValue?>> expression,
         string? title = null,
         string? fullTitle = null,
