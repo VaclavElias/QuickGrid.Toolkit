@@ -25,6 +25,7 @@ public class CellStyleMap<TValue>
         {
             _styleMappings.Add(new CellStyle<TValue>(value, style));
         }
+
         return this;
     }
 
@@ -36,6 +37,7 @@ public class CellStyleMap<TValue>
     public CellStyleMap<TValue> AddRange(IEnumerable<CellStyle<TValue>> mappings)
     {
         _styleMappings.AddRange(mappings);
+
         return this;
     }
 
@@ -47,6 +49,7 @@ public class CellStyleMap<TValue>
     public CellStyleMap<TValue> SetNullStyle(string style)
     {
         _nullValueStyle = style;
+
         return this;
     }
 
@@ -63,6 +66,7 @@ public class CellStyleMap<TValue>
         }
 
         var mapping = _styleMappings.FirstOrDefault(m => EqualityComparer<TValue>.Default.Equals(m.Value, value));
+
         return mapping?.Style ?? string.Empty;
     }
 
@@ -108,7 +112,9 @@ public class CellStyleMap<TValue>
     public CellStyleMap<TValue> Clear(bool clearNullStyle = true)
     {
         _styleMappings.Clear();
+
         if (clearNullStyle) _nullValueStyle = null;
+
         return this;
     }
 
@@ -123,6 +129,7 @@ public class CellStyleMap<TValue>
         _styleMappings.Clear();
         _styleMappings.AddRange(mappings);
         _nullValueStyle = nullValueStyle;
+
         return this;
     }
 
@@ -135,15 +142,19 @@ public class CellStyleMap<TValue>
         {
             var hadNull = _nullValueStyle is not null;
             _nullValueStyle = null;
+
             return hadNull;
         }
 
         var idx = _styleMappings.FindIndex(m => EqualityComparer<TValue>.Default.Equals(m.Value, value));
+
         if (idx >= 0)
         {
             _styleMappings.RemoveAt(idx);
+
             return true;
         }
+
         return false;
     }
 }
