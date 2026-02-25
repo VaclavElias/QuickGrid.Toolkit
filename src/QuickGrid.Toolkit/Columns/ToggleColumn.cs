@@ -1,6 +1,6 @@
 namespace QuickGrid.Toolkit.Columns;
 
-public class ToggleColumn<TGridItem> : ColumnBase<TGridItem>
+public class ToggleColumn<TGridItem> : PropertyColumnBase<TGridItem>
 {
     public override GridSort<TGridItem>? SortBy
     {
@@ -8,21 +8,17 @@ public class ToggleColumn<TGridItem> : ColumnBase<TGridItem>
         set => throw new NotSupportedException($"PropertyColumn generates this member internally. For custom sorting rules, see '{typeof(TemplateColumn<TGridItem>)}'.");
     }
 
-    [Parameter] public Expression<Func<TGridItem, object?>> Property { get; set; } = default!;
     [Parameter] public Func<TGridItem, Task>? OnChangeAsync { get; set; }
 
-    private Expression<Func<TGridItem, object?>>? _lastAssignedProperty;
-    private Func<TGridItem, object?>? _cellTextFunc;
     private GridSort<TGridItem>? _sortBuilder;
 
-    //GridSort<TGridItem>? ISortBuilderColumn<TGridItem>.SortBuilder => _sortBuilder;
+    protected override void OnNewPropertySet()
+        => _sortBuilder = GridSort<TGridItem>.ByAscending(Property);
 
     protected override void CellContent(RenderTreeBuilder builder, TGridItem item)
     {
-        var isTrue = _cellTextFunc!(item)?.ToString() == "True";
-        var isNull = _cellTextFunc!(item) is null;
-
-        isTrue = isTrue && !isNull;
+        var rawValue = CellValueFunc!(item);
+        var isTrue = rawValue is not null && rawValue.ToString() == "True";
 
         builder.OpenElement(0, "div");
         builder.AddAttribute(1, "class", "form-switch d-inline-block");
@@ -40,24 +36,5 @@ public class ToggleColumn<TGridItem> : ColumnBase<TGridItem>
         }
         builder.CloseElement();
         builder.CloseElement();
-    }
-
-    protected override void OnParametersSet()
-    {
-        if (_lastAssignedProperty != Property)
-        {
-            _lastAssignedProperty = Property;
-
-            var compiledPropertyExpression = Property.Compile();
-
-            _cellTextFunc = item => compiledPropertyExpression!(item)?.ToString();
-
-            _sortBuilder = GridSort<TGridItem>.ByAscending(Property);
-        }
-
-        if (Title is null && Property.Body is MemberExpression memberExpression)
-        {
-            Title = memberExpression.Member.Name;
-        }
     }
 }
