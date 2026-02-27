@@ -64,6 +64,7 @@
                         <ul class="dropdown-menu">
                             <li><button class="dropdown-item" @onclick="ManageColumns">@IconProvider.Render(QuickGridIcon.Wrench) Manage Columns</button></li>
                             <li><button class="dropdown-item" @onclick="EnableExactMatch">@IconProvider.Render(QuickGridIcon.Search) Enable Exact Match</button></li>
+                            @DropdownItems
                             @if (IsExportEnabled)
                             {
                                 <li>

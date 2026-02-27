@@ -47,6 +47,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
     [Parameter] public FilterCriteria<TGridItem>? FilterCriteria { get; set; }
     [Parameter] public RenderFragment? SelectedItemsActionDropDown { get; set; }
     [Parameter] public RenderFragment? FilterSection { get; set; }
+    [Parameter] public RenderFragment? DropdownItems { get; set; }
 
     [Inject] protected IJSRuntime JS { get; set; } = default!;
     [Inject] protected IServiceProvider ServiceProvider { get; set; } = default!;
