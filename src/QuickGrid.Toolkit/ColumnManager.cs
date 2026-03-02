@@ -122,19 +122,6 @@ public class ColumnManager<TGridItem>
         Add(column);
     }
 
-    [Obsolete("Use AddAction with Func<TGridItem, Task> instead.")]
-    public void AddAction(
-        string staticContent,
-        string? title = null,
-        Align align = Align.Left,
-        string? @class = null,
-        Action<TGridItem>? onClick = null,
-        Expression<Func<TGridItem, bool>>? enabled = null)
-    {
-        var column = _columnBuilder.BuildConditionalActionColumn(staticContent, title, align, @class, onClick, enabled);
-        Add(column);
-    }
-
     /// <summary>
     /// Adds a decimal numeric column to the grid.
     /// </summary>
