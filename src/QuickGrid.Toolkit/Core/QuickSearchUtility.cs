@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Reflection;
 
 namespace QuickGrid.Toolkit.Core;
 
@@ -13,6 +14,16 @@ public static class QuickSearchUtility
     /// This cache is safe to keep for the application lifetime as type metadata is immutable.
     /// </summary>
     private static readonly ConcurrentDictionary<Type, PropertyInfo[]> _propertyCache = new();
+
+    private static readonly HashSet<Type> _simpleTypes =
+    [
+        typeof(string),
+        typeof(decimal),
+        typeof(DateTime),
+        typeof(DateTimeOffset),
+        typeof(TimeSpan),
+        typeof(Guid)
+    ];
 
     /// <summary>
     /// Searches the properties of an object to find a match for the specified query.
@@ -43,54 +54,116 @@ public static class QuickSearchUtility
     /// <returns>True if the query is found in any property; otherwise, false.</returns>
     public static bool QuickSearch<T>(T item, string query, QuickSearchOptions options)
     {
+        if (item is null || string.IsNullOrWhiteSpace(query)) return false;
+
         options ??= new QuickSearchOptions();
 
-        var properties = _propertyCache.GetOrAdd(typeof(T), t => t.GetProperties());
+        var terms = GetSearchTerms(query, options);
+
+        if (terms.Length == 0) return false;
+
+        return options.MultiTermOperator == SearchOperator.And
+            ? terms.All(term => MatchesObject(item, term, typeof(T), 0, options))
+            : terms.Any(term => MatchesObject(item, term, typeof(T), 0, options));
+    }
+
+    private static bool MatchesObject(object item, string term, Type type, int depth, QuickSearchOptions options)
+    {
+        var properties = GetSearchableProperties(type, depth, options);
 
         foreach (var property in properties)
         {
             var value = property.GetValue(item);
 
-            // Skip if the value is a collection (but not a string)
-            if (value is IEnumerable && value is not string)
+            if (value is null || IsNonStringEnumerable(value))
             {
                 continue;
             }
 
-            if (MatchesQuery(value, query, options)) return true;
-
-            // Optionally search inside child properties if the value is a class (but not a string)
-            if (options.IncludeChildProperties && IsClass(value) && value is not string)
+            if (IsSearchableLeafValue(value) && MatchesQuery(value, term, options))
             {
-                foreach (var childProperty in value!.GetType().GetProperties())
-                {
-                    var childValue = childProperty.GetValue(value);
+                return true;
+            }
 
-                    if (childValue is IEnumerable && childValue is not string)
-                    {
-                        continue;
-                    }
-
-                    if (MatchesQuery(childValue, query, options)) return true;
-                }
+            if (ShouldTraverse(value, depth, options) && MatchesObject(value, term, value.GetType(), depth + 1, options))
+            {
+                return true;
             }
         }
 
         return false;
     }
 
-    /// <summary>
-    /// Checks if the provided object is a class and not a primitive type or string.
-    /// </summary>
-    /// <param name="value">The object to check.</param>
-    /// <returns>True if the object is a class (but not a string); otherwise, false.</returns>
-    private static bool IsClass(object? value)
+    private static string[] GetSearchTerms(string query, QuickSearchOptions options)
     {
-        if (value is null) return false;
+        if (options.ExactMatch)
+        {
+            return [query.Trim()];
+        }
 
-        var type = value.GetType();
+        return query
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
 
-        return type.IsClass && !type.IsPrimitive && type != typeof(string);
+    private static PropertyInfo[] GetSearchableProperties(Type type, int depth, QuickSearchOptions options)
+    {
+        var properties = _propertyCache.GetOrAdd(type, static t =>
+            t.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .Where(static property => property.CanRead && property.GetIndexParameters().Length == 0)
+                .ToArray());
+
+        if (depth > 0)
+        {
+            return properties;
+        }
+
+        return properties
+            .Where(property => IsIncludedProperty(property.Name, options))
+            .ToArray();
+    }
+
+    private static bool IsIncludedProperty(string propertyName, QuickSearchOptions options)
+    {
+        if (options.ExcludedColumns?.Contains(propertyName, StringComparer.OrdinalIgnoreCase) == true)
+        {
+            return false;
+        }
+
+        if (options.ColumnNames is null || options.ColumnNames.Count == 0)
+        {
+            return true;
+        }
+
+        return options.ColumnNames.Contains(propertyName, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static bool IsSearchableLeafValue(object value)
+    {
+        var type = Nullable.GetUnderlyingType(value.GetType()) ?? value.GetType();
+
+        return type.IsPrimitive || type.IsEnum || _simpleTypes.Contains(type);
+    }
+
+    private static bool IsNonStringEnumerable(object value)
+        => value is IEnumerable && value is not string;
+
+    private static bool ShouldTraverse(object value, int depth, QuickSearchOptions options)
+    {
+        if (!options.IncludeChildProperties || depth >= options.MaxSearchDepth)
+        {
+            return false;
+        }
+
+        if (IsSearchableLeafValue(value) || value is string || IsNonStringEnumerable(value))
+        {
+            return false;
+        }
+
+        var type = Nullable.GetUnderlyingType(value.GetType()) ?? value.GetType();
+
+        return type.IsClass || type.IsValueType;
     }
 
     /// <summary>
