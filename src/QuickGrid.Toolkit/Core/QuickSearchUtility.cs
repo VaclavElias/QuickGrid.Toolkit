@@ -1,11 +1,11 @@
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Reflection;
 
 namespace QuickGrid.Toolkit.Core;
 
 /// <summary>
-/// Utility class for performing quick searches on properties of an object.
+/// Provides in-memory search across public readable properties of an object graph.
+/// Simple leaf values are matched directly, while complex objects can be traversed up to the configured depth.
 /// </summary>
 public static class QuickSearchUtility
 {
@@ -26,14 +26,18 @@ public static class QuickSearchUtility
     ];
 
     /// <summary>
-    /// Searches the properties of an object to find a match for the specified query.
-    /// Optionally, it can also search in the first-level child properties.
+    /// Searches an object's public readable properties for the specified query.
+    /// Direct matching is performed only against simple leaf values such as strings, primitives, enums,
+    /// and common scalar types. Complex properties are traversed when child-property searching is enabled.
     /// </summary>
     /// <typeparam name="T">The type of the object being searched.</typeparam>
     /// <param name="item">The object to search.</param>
     /// <param name="query">The search query string.</param>
-    /// <param name="includeChildProperties">Flag to determine whether to search in child properties as well.</param>
-    /// <returns>True if the query is found in any property; otherwise, false.</returns>
+    /// <param name="includeChildProperties">
+    /// A value indicating whether nested complex properties should also be searched.
+    /// When enabled, nested traversal is limited by <see cref="QuickSearchOptions.MaxSearchDepth"/>.
+    /// </param>
+    /// <returns><see langword="true"/> if the query matches any searchable value; otherwise, <see langword="false"/>.</returns>
     public static bool QuickSearch<T>(T item, string query, bool includeChildProperties = true)
     {
         var options = new QuickSearchOptions
@@ -45,13 +49,16 @@ public static class QuickSearchUtility
     }
 
     /// <summary>
-    /// Searches the properties of an object to find a match for the specified query with configurable options.
+    /// Searches an object's public readable properties for the specified query using configurable options.
     /// </summary>
     /// <typeparam name="T">The type of the object being searched.</typeparam>
     /// <param name="item">The object to search.</param>
     /// <param name="query">The search query string.</param>
-    /// <param name="options">Options for configuring the search behavior.</param>
-    /// <returns>True if the query is found in any property; otherwise, false.</returns>
+    /// <param name="options">
+    /// Options that control matching behavior, nested traversal, root-level property inclusion and exclusion,
+    /// and how multi-term queries are combined.
+    /// </param>
+    /// <returns><see langword="true"/> if the query matches any searchable value; otherwise, <see langword="false"/>.</returns>
     public static bool QuickSearch<T>(T item, string query, QuickSearchOptions options)
     {
         if (item is null || string.IsNullOrWhiteSpace(query)) return false;
@@ -167,12 +174,12 @@ public static class QuickSearchUtility
     }
 
     /// <summary>
-    /// Determines whether a given value matches the search query.
+    /// Determines whether a selected searchable leaf value matches the search query.
     /// </summary>
     /// <param name="value">The value to check.</param>
     /// <param name="query">The search query string.</param>
     /// <param name="options">Options for configuring the match behavior.</param>
-    /// <returns>True if the value matches the query; otherwise, false.</returns>
+    /// <returns><see langword="true"/> if the value matches the query; otherwise, <see langword="false"/>.</returns>
     private static bool MatchesQuery(object? value, string query, QuickSearchOptions options)
     {
         if (value is null) return false;
