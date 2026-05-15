@@ -100,7 +100,7 @@ public static class ExpressionHelper
     // Helper class to extract property names from expressions
     private sealed class PropertyReferenceVisitor : ExpressionVisitor
     {
-        public List<string> PropertyNames { get; } = [];
+        internal List<string> PropertyNames { get; } = [];
 
         protected override Expression VisitMember(MemberExpression node)
         {
