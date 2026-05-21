@@ -159,14 +159,16 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (Id is null || _titlesLoaded) return;
+        if (Id is null) return;
 
-        if (UsedColumnManager.Columns.Count > 0)
+        if (!_titlesLoaded && UsedColumnManager.Columns.Count > 0)
         {
             await RefreshColumnTitlesAsync();
 
             _titlesLoaded = true;
         }
+
+        await AddOrUpdateFooterAsync();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -378,7 +380,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
         if (string.IsNullOrWhiteSpace(text))
         {
             ClearSearch();
-            await AddOrUpdateFooterAsync();
+            //await AddOrUpdateFooterAsync();
 
             return;
         }
@@ -401,12 +403,12 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
 
         IsLoading = false;
 
-        await AddOrUpdateFooterAsync();
+        //await AddOrUpdateFooterAsync();
     }
 
     private async Task OnInMemorySearchChanged()
     {
-        await AddOrUpdateFooterAsync();
+        //await AddOrUpdateFooterAsync();
 
         if (string.IsNullOrEmpty(_searchQuery))
         {
