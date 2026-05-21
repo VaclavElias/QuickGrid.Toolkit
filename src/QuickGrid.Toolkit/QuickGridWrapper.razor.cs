@@ -278,7 +278,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
             }
         }
 
-        return $"<tfoot><tr class=\"table-warning fw-bold\">{html}</tr></tfoot>";
+        return $"<tr class=\"table-warning fw-bold\">{html}</tr>";
     }
 
     private async Task SearchTextChanged(string? text)
