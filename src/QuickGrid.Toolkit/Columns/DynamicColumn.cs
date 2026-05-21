@@ -19,6 +19,7 @@ public class DynamicColumn<TGridItem>
     public bool Visible { get; set; } = true;
     public bool Sortable { get; set; } = true;
     public bool IsNumeric { get; set; }
+    public bool? CalculateTotal { get; set; }
     public string? Title { get; set; } = string.Empty;
     public string? FullTitle
     {

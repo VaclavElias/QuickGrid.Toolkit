@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
+using System.Globalization;
+using System.Net;
 using System.Text;
 
 namespace QuickGrid.Toolkit;
@@ -30,6 +32,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
     [Parameter] public bool IsFilter { get; set; } = true;
     [Parameter] public bool IsToolbar { get; set; } = true;
     [Parameter] public bool IsNestedSearch { get; set; } = true;
+    [Parameter] public TotalFooter TotalFooter { get; set; } = new();
     [Parameter] public bool ExactMatch { get; set; }
     [Parameter] public bool IsExportEnabled { get; set; }
     [Parameter] public bool IsPreviewFeature { get; set; }
@@ -63,6 +66,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
         _iconProvider ??= ServiceProvider.GetService<IQuickGridIconProvider>() ?? new DefaultQuickGridIconProvider();
 
     private const string ColumnTitleSetupErrorMessage = "Non-critical: Failed to setup column titles for {Id}. Application continues to run without this feature.";
+    private const string FooterSetupErrorMessage = "Non-critical: Failed to setup footer for {Id}. Application continues to run without this feature.";
 
     private bool _titlesLoaded;
     private bool _isTableIndex;
@@ -218,10 +222,20 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
 
     public async ValueTask AddOrUpdateFooterAsync()
     {
-        if (Id is null || UsedColumnManager.FooterColumns.Count == 0) return;
+        if (Id is null || !HasFooter()) return;
 
-        await JS.InvokeVoidAsync("addOrUpdateFooter", Id, GenerateTableFooterWithTotals());
+        try
+        {
+            await JS.InvokeVoidAsync("addOrUpdateFooter", Id, GenerateTableFooterWithTotals());
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, FooterSetupErrorMessage, Id);
+        }
     }
+
+    private bool HasFooter()
+        => UsedColumnManager.FooterColumns.Count > 0 || TotalFooter.IsTotalFooter;
 
     private void SetDefaultColumns()
     {
@@ -258,7 +272,17 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
 
     private string GenerateTableFooterWithTotals()
     {
+        var html = UsedColumnManager.FooterColumns.Count > 0
+            ? GenerateManualFooterCells()
+            : GenerateAutomaticFooterCells();
+
+        return $"<tr class=\"table-warning fw-bold\">{html}</tr>";
+    }
+
+    private string GenerateManualFooterCells()
+    {
         StringBuilder html = new();
+        var footerItems = GetFooterItems();
 
         foreach (var column in UsedColumnManager.Columns.Where(w => w.Visible && w.Class != "d-none"))
         {
@@ -272,13 +296,79 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
             {
                 html.Append(footerColumn.Content);
             }
-            else if (Items != null)
+            else
             {
-                html.Append(footerColumn.StringContent?.Invoke(Items));
+                html.Append(footerColumn.StringContent?.Invoke(footerItems));
             }
         }
 
-        return $"<tr class=\"table-warning fw-bold\">{html}</tr>";
+        return html.ToString();
+    }
+
+    private string GenerateAutomaticFooterCells()
+    {
+        StringBuilder html = new();
+
+        var visibleColumns = UsedColumnManager.Columns
+            .Where(w => w.Visible && w.Class != "d-none")
+            .ToList();
+
+        var labelColumn = GetTotalFooterLabelColumn(visibleColumns);
+
+        foreach (var column in visibleColumns)
+        {
+            if (column == labelColumn)
+            {
+                html.Append(BuildFooterCell(TotalFooter.TotalFooterLabel, column.Class));
+            }
+            else if (ShouldCalculateTotal(column))
+            {
+                html.Append(BuildTotalFooterCell(column));
+            }
+            else
+            {
+                html.Append("<td></td>");
+            }
+        }
+
+        return html.ToString();
+    }
+
+    private DynamicColumn<TGridItem>? GetTotalFooterLabelColumn(List<DynamicColumn<TGridItem>> visibleColumns)
+        => TotalFooter.TotalFooterLabelColumnId is int labelColumnId
+            ? visibleColumns.FirstOrDefault(w => w.Id == labelColumnId)
+            : visibleColumns.FirstOrDefault(w => !w.IsNumeric);
+
+    private static bool ShouldCalculateTotal(DynamicColumn<TGridItem> column)
+        => column.Property is not null && column.CalculateTotal switch
+        {
+            true => true,
+            false => false,
+            _ => column.IsNumeric
+        };
+
+    private string BuildTotalFooterCell(DynamicColumn<TGridItem> column)
+    {
+        var compiledExpression = column.Property!.Compile();
+        var total = GetFooterItems().Sum(item => Convert.ToDecimal(compiledExpression(item)));
+        var format = column.Format ?? TotalFooter.DefaultFormat;
+        var cssClass = TotalFooter.RemoveClass is { Length: > 0 } removeClass
+            ? column.Class?.Replace(removeClass, "")
+            : column.Class;
+
+        return BuildFooterCell(total.ToString(format, CultureInfo.InvariantCulture), cssClass);
+    }
+
+    private IEnumerable<TGridItem> GetFooterItems()
+        => _filteredItems ?? Items ?? Enumerable.Empty<TGridItem>();
+
+    private static string BuildFooterCell(string? value, string? cssClass)
+    {
+        var classAttribute = string.IsNullOrWhiteSpace(cssClass)
+            ? string.Empty
+            : $" class=\"{WebUtility.HtmlEncode(cssClass)}\"";
+
+        return $"<td{classAttribute}>{WebUtility.HtmlEncode(value)}</td>";
     }
 
     private async Task SearchTextChanged(string? text)
@@ -288,6 +378,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
         if (string.IsNullOrWhiteSpace(text))
         {
             ClearSearch();
+            await AddOrUpdateFooterAsync();
 
             return;
         }
@@ -309,10 +400,14 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
         _evaluatedItems = await Items.Where(FilterCriteria.CreateExpression()).ToListAsync();
 
         IsLoading = false;
+
+        await AddOrUpdateFooterAsync();
     }
 
     private async Task OnInMemorySearchChanged()
     {
+        await AddOrUpdateFooterAsync();
+
         if (string.IsNullOrEmpty(_searchQuery))
         {
             await QuickSearchChanged.InvokeAsync(_searchQuery);
@@ -425,6 +520,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
         }
 
         await RefreshColumnTitlesAsync();
+        await AddOrUpdateFooterAsync();
     }
 
     private void OnColumnSelectorClose()
