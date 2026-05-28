@@ -182,6 +182,7 @@ public class ColumnManager<TGridItem>
         string? fullTitle = null,
         string? @class = null,
         Align align = Align.Center,
+        bool visible = true,
         string? trueClass = null,
         string? falseClass = null,
         bool showOnlyTrue = false,
@@ -198,7 +199,8 @@ public class ColumnManager<TGridItem>
             TrueClass = trueClass,
             FalseClass = falseClass,
             Class = @class,
-            OnActionAsync = onClick
+            OnActionAsync = onClick,
+            Visible = visible
         };
 
         Add(column);
