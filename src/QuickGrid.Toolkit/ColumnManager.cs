@@ -49,6 +49,43 @@ public class ColumnManager<TGridItem>
         }
     }
 
+    public void Add<TValue>(
+        Expression<Func<TGridItem, TValue?>> expression,
+        ColumnInfo columnInfo,
+        string? format = null,
+        Align align = Align.Left,
+        CellStyleMap<TValue>? cellStyle = null,
+        GridSort<TGridItem>? sortBy = null,
+        bool visible = true,
+        string? propertyName = null)
+    {
+        Add(expression, columnInfo.Title, columnInfo.FullTitle, format, columnInfo.Class, align, cellStyle, sortBy, visible, propertyName);
+    }
+
+    /// <summary>
+    /// Adds a column to the grid based on a specified expression.
+    /// </summary>
+    /// <param name="expression">An expression to determine the property of the grid item to display.</param>
+    /// <param name="title">The title of the column. If null or whitespace, the property name is used.</param>
+    /// <param name="format">The format string for IFormattable values.</param>
+    public void Add<TValue>(
+        Expression<Func<TGridItem, TValue?>> expression,
+        string? title = null,
+        string? fullTitle = null,
+        string? format = null,
+        string? @class = null,
+        Align align = Align.Left,
+        CellStyleMap<TValue>? cellStyle = null,
+        GridSort<TGridItem>? sortBy = null,
+        bool visible = true,
+        string? propertyName = null,
+        bool? addToContent = null)
+    {
+        var column = _columnBuilder.BuildSimpleColumn(
+            expression, title, fullTitle, format, @class, align, cellStyle, sortBy, visible, propertyName, addToContent);
+        Add(column);
+    }
+
     public void AddSimple<TValue>(
         Expression<Func<TGridItem, TValue?>> expression,
         ColumnInfo columnInfo,
@@ -59,7 +96,7 @@ public class ColumnManager<TGridItem>
         bool visible = true,
         string? propertyName = null)
     {
-        AddSimple(expression, columnInfo.Title, columnInfo.FullTitle, format, columnInfo.Class, align, cellStyle, sortBy, visible, propertyName);
+        Add(expression, columnInfo, format, align, cellStyle, sortBy, visible, propertyName);
     }
 
     /// <summary>
@@ -81,11 +118,10 @@ public class ColumnManager<TGridItem>
         string? propertyName = null,
         bool? addToContent = null)
     {
-        var column = _columnBuilder.BuildSimpleColumn(
-            expression, title, fullTitle, format, @class, align, cellStyle, sortBy, visible, propertyName, addToContent);
-        Add(column);
+        Add(expression, title, fullTitle, format, @class, align, cellStyle, sortBy, visible, propertyName, addToContent);
     }
 
+    // ToDo: Rename to AddDate()
     public void AddSimpleDate<TValue>(
         Expression<Func<TGridItem, TValue?>> expression,
         string? title = null,
@@ -122,6 +158,7 @@ public class ColumnManager<TGridItem>
         Add(column);
     }
 
+    // ToDo: Consider merging, these are good candidates to merge into one generic method, including AddStyledNumber
     /// <summary>
     /// Adds a decimal numeric column to the grid.
     /// </summary>
