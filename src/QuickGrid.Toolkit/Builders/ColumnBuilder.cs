@@ -21,7 +21,8 @@ public class ColumnBuilder<TGridItem>
         string? @class = null,
         Align align = Align.Left,
         GridSort<TGridItem>? sortBy = null,
-        bool visible = true) => new()
+        bool visible = true,
+        bool? calculateTotal = null) => new()
         {
             Title = title ?? ExpressionHelper.GetPropertyName<TGridItem, TValue>(expression),
             SortBy = sortBy ?? GridSort<TGridItem>.ByAscending(expression),
@@ -30,7 +31,8 @@ public class ColumnBuilder<TGridItem>
             FullTitle = fullTitle,
             Class = @class,
             Visible = visible,
-            Property = ExpressionHelper.ConvertToObjectExpression(expression)
+            Property = ExpressionHelper.ConvertToObjectExpression(expression),
+            CalculateTotal = calculateTotal
         };
 
     /// <summary>
@@ -139,7 +141,8 @@ public class ColumnBuilder<TGridItem>
         bool visible = true,
         CellStyleMap<TValue>? cellStyle = null,
         Func<TGridItem, Task>? onClick = null,
-        string? propertyName = null) where TValue : struct, IFormattable
+        string? propertyName = null,
+        bool? calculateTotal = null) where TValue : struct, IFormattable
     {
         DynamicColumn<TGridItem> column = BuildColumn(expression, title, fullTitle, @class, align, visible: visible);
 
@@ -183,6 +186,7 @@ public class ColumnBuilder<TGridItem>
 
         column.IsNumeric = true;
         column.PropertyName = propertyName;
+        column.CalculateTotal = calculateTotal;
 
         return column;
     }

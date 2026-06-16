@@ -193,8 +193,9 @@ public class ColumnManager<TGridItem>
         Align align = Align.Right,
         bool visible = true,
         CellStyleMap<TValue>? cellStyle = null,
-        Func<TGridItem, Task>? onClick = null) where TValue : struct, IFormattable
-        => AddStyledNumber(expression, columnInfo.Title, columnInfo.FullTitle, format, columnInfo.Class, align, visible, cellStyle, onClick, columnInfo.PropertyName);
+        Func<TGridItem, Task>? onClick = null,
+        bool? calculateTotal = null) where TValue : struct, IFormattable
+        => AddStyledNumber(expression, columnInfo.Title, columnInfo.FullTitle, format, columnInfo.Class, align, visible, cellStyle, onClick, columnInfo.PropertyName, calculateTotal);
 
     public void AddStyledNumber<TValue>(
         Expression<Func<TGridItem, TValue?>> expression,
@@ -206,10 +207,11 @@ public class ColumnManager<TGridItem>
         bool visible = true,
         CellStyleMap<TValue>? cellStyle = null,
         Func<TGridItem, Task>? onClick = null,
-        string? propertyName = null) where TValue : struct, IFormattable
+        string? propertyName = null,
+        bool? calculateTotal = null) where TValue : struct, IFormattable
     {
         var column = _columnBuilder.BuildStyledNumberColumn(
-            expression, title, fullTitle, format, @class, align, visible, cellStyle, onClick, propertyName);
+            expression, title, fullTitle, format, @class, align, visible, cellStyle, onClick, propertyName, calculateTotal);
         Add(column);
     }
 
