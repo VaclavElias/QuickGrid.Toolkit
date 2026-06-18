@@ -8,7 +8,7 @@ using System.Text;
 
 namespace QuickGrid.Toolkit;
 
-public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
+public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposable
 {
     [Parameter] public string? Id { get; set; }
     [Parameter] public string? Class { get; set; } = "table table-sm table-index table-striped small table-fit table-thead-sticky table-no-empty-lines mb-0";
@@ -86,6 +86,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
     private List<string> _defaultVisibleColumns = [];
     private List<TGridItem>? _evaluatedItems;
     private readonly List<FooterColumn<TGridItem>> _footerColumns = [];
+    private IJSObjectReference? _module;
 
     private int _selectedItemsCount => _filteredItems?.Count(item => (ISelectionDto?)item != null && ((ISelectionDto?)item)!.IsSelected) ?? 0;
 
@@ -214,7 +215,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
 
         try
         {
-            await JS.InvokeVoidAsync("setColumnTitles", Id, titles);
+            await InvokeModuleVoidAsync("setColumnTitles", Id, titles);
         }
         catch (Exception ex)
         {
@@ -228,12 +229,19 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
 
         try
         {
-            await JS.InvokeVoidAsync("addOrUpdateFooter", Id, GenerateTableFooterWithTotals());
+            await InvokeModuleVoidAsync("addOrUpdateFooter", Id, GenerateTableFooterWithTotals());
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, FooterSetupErrorMessage, Id);
         }
+    }
+
+    private async ValueTask InvokeModuleVoidAsync(string identifier, params object?[]? args)
+    {
+        _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./_content/QuickGrid.Toolkit/quickGridToolkit.js");
+
+        await _module.InvokeVoidAsync(identifier, args);
     }
 
     private bool HasFooter()
@@ -597,8 +605,17 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IDisposable
         _showFilterSection = !_showFilterSection;
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-
+        if (_module is not null)
+        {
+            try
+            {
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
     }
 }

@@ -30,8 +30,8 @@
         _columnManager.Add(new() { Property = p => p.Id });
         _columnManager.AddSimple(p => p.Region, fullTitle: "Region");
         _columnManager.AddSimple(p => p.Product, fullTitle: "Product");
-        _columnManager.AddStyledNumber<decimal>(p => p.TotalAmount, "Amount", fullTitle: "Total Amount", format: "N2");
-        _columnManager.AddStyledNumber<decimal>(p => p.TotalAmount / _totalAmount, "Average", fullTitle: "Average Amount", format: "N2");
-        _columnManager.AddStyledNumber<decimal>(p => p.TotalAmount / _totalAmount, "Average %", fullTitle: "Average Amount %", format: "P2");
+        _columnManager.AddStyledNumber<decimal>(p => p.TotalAmount, "Amount", fullTitle: "Total Amount", format: "N2", @class: "text-end");
+        _columnManager.AddStyledNumber<decimal>(p => p.TotalAmount / _totalAmount, "Average", fullTitle: "Average Amount", format: "N2", @class: "text-end");
+        _columnManager.AddStyledNumber<decimal>(p => p.TotalAmount / _totalAmount, "Average %", fullTitle: "Average Amount %", format: "P2", @class: "text-end");
     }
 }
