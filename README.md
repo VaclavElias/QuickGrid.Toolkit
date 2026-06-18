@@ -40,20 +40,37 @@ QuickGrid.Toolkit extends the Blazor QuickGrid with reusable, dynamic column man
 - Toolkit CSS (Static Web Asset):
   - `<link rel="stylesheet" href="@Assets["_content/QuickGrid.Toolkit/app.css"]" />`
 
+## How it works
+
+You declare every possible column once in a `ColumnManager<T>` using strongly-typed helpers (`AddSimple`, `AddNumber`, `AddToggleColumn`, `AddTickColumn`, `AddImageColumn`, `AddIndexColumn`, …). The toolkit then renders those columns either into a `QuickGrid` you control, or into the all-in-one `QuickGridWrapper`. Because the column configuration is just data, the same setup can drive several grids that each show a different subset of columns.
+
+## Run the samples
+
+```bash
+dotnet run --project src/QuickGrid.Samples
+```
+
+The demo app contains three example pages that share the same column setup and build on each other:
+
+| Page | Route | Shows |
+| --- | --- | --- |
+| [QuickGrid + ColumnManager](src/QuickGrid.Samples/Pages/UsersGrid.razor) | `/users-grid` | The low-level pattern: your own `QuickGrid` + a `ColumnSelector` for show/hide |
+| [QuickGridWrapper](src/QuickGrid.Samples/Pages/UsersGridWrapper.razor) | `/users-grid-wrapper` | The same columns in a component with toolbar, quick search and pagination |
+| [Total Footer](src/QuickGrid.Samples/Pages/TotalFooterExample.razor) | `/total-footer-example` | An automatic, summed totals row on a `QuickGridWrapper` |
+
 ## Getting started
 
-Below are two small examples. We assume you already use Blazor and QuickGrid and that you are familiar with their concepts.
+The snippets below assume you already use Blazor and QuickGrid. Each mirrors a sample page, open the linked source for the full, runnable version.
 
-### Example 1: Direct `QuickGrid` with `ColumnManager<T>` (UsersGrid.razor)
+### 1. Direct `QuickGrid` with `ColumnManager<T>`
 
-This pattern gives you full control of a `QuickGrid` while the toolkit manages the columns and selection UI.
+Full control of the `QuickGrid` markup while the toolkit manages columns and the selection UI. See [`UsersGrid.razor`](src/QuickGrid.Samples/Pages/UsersGrid.razor).
 
 ```razor
-<h1>Users Grid</h1>
-<div class="my-3">
-    <ColumnSelector ColumnManager="_columnManager" SelectionChanged="SelectionChangedAsync" />
-</div>
-<QuickGrid @ref="_grid" Items="@_items.AsQueryable()" Class="table table-sm table-index table-striped small table-fit table-thead-sticky mb-0" Theme="twentyAI">
+<ColumnSelector ColumnManager="_columnManager" SelectionChanged="SelectionChangedAsync" />
+
+<QuickGrid @ref="_grid" Items="@_items.AsQueryable()" Theme="twentyAI"
+           Class="table table-sm table-index table-striped small table-fit table-thead-sticky mb-0">
     @QuickGridColumns.Columns(_columnManager)
 </QuickGrid>
 
@@ -64,77 +81,56 @@ This pattern gives you full control of a `QuickGrid` while the toolkit manages t
 
     protected override void OnInitialized()
     {
-        var sharedManager = new SharedUserColumnManager();
-
         _columnManager.AddIndexColumn();
-        _columnManager.Add(new() { Property = p => p.Id });
         _columnManager.AddSimple(p => p.Name, fullTitle: "Name");
-        _columnManager.AddRange(sharedManager.Columns);
         _columnManager.AddToggleColumn(p => p.RemoteWorking, "Remote", fullTitle: "Remote Working", onChange: ToggleChange);
         _columnManager.AddCountry();
 
         _items = UserService.GetUsers();
     }
 
-    private async Task SelectionChangedAsync()
+    private async Task SelectionChangedAsync() // call after the selection changes
     {
-        if (_grid is null) return;
-        await _grid.RefreshDataAsync();
+        if (_grid is not null) await _grid.RefreshDataAsync();
     }
 
-    private async Task ToggleChange(UserDto user)
-    {
-        user.RemoteWorking = !user.RemoteWorking;
-        await Task.CompletedTask;
-        StateHasChanged();
-    }
+    private async Task ToggleChange(UserDto user) { /* ... */ }
 }
 ```
 
 Key points:
-- `ColumnManager<T>` defines all possible columns (including predefined helpers like `AddCountry()` and custom ones like `AddToggleColumn(...)`).
-- `ColumnSelector` renders a simple UI to show/hide columns; call `RefreshDataAsync` when the selection changes.
-- `QuickGridColumns.Columns(_columnManager)` renders the current set of visible columns.
+- `ColumnManager<T>` defines all possible columns (predefined helpers like `AddCountry()` plus custom ones like `AddToggleColumn(...)`).
+- `ColumnSelector` renders the show/hide UI; call `RefreshDataAsync` when the selection changes.
+- `QuickGridColumns.Columns(_columnManager)` renders the currently visible columns.
 
-### Example 2: `QuickGridWrapper` (UsersGridWrapper.razor)
+### 2. `QuickGridWrapper`
 
-When you have multiple grids with similar data but different columns, the wrapper centralizes the grid markup while you keep per-page column configuration.
+When several grids share similar data but different columns, the wrapper centralizes the grid markup, toolbar, quick search and pagination, you keep just the per-page column configuration. See [`UsersGridWrapper.razor`](src/QuickGrid.Samples/Pages/UsersGridWrapper.razor).
 
 ```razor
-<QuickGridWrapper
-    Items="@_items.AsQueryable()"
-    ColumnManager="_columnManager" />
+<QuickGridWrapper Items="@_items.AsQueryable()" ColumnManager="_columnManager" />
+```
+
+You pass `Items` and a configured `ColumnManager<T>`; the column setup is identical to example 1.
+
+### 3. Total footer
+
+Add `TotalFooter` and an `Id` to a `QuickGridWrapper` to get an automatic totals row, numeric columns are summed for you. See [`TotalFooterExample.razor`](src/QuickGrid.Samples/Pages/TotalFooterExample.razor).
+
+```razor
+<QuickGridWrapper Items="@_items.AsQueryable()"
+                  ColumnManager="_columnManager"
+                  TotalFooter="_totalFooter"
+                  Id="id-total-footer-example" />
 
 @code {
-    private List<UserDto> _items = new();
-    private ColumnManager<UserDto> _columnManager = new();
-
-    protected override void OnInitialized()
-    {
-        var sharedManager = new SharedUserColumnManager();
-
-        _columnManager.AddIndexColumn();
-        _columnManager.Add(new() { Property = p => p.Id });
-        _columnManager.AddSimple(p => p.Name, fullTitle: "Name");
-        _columnManager.AddRange(sharedManager.Columns);
-        _columnManager.AddToggleColumn(p => p.RemoteWorking, "Remote", fullTitle: "Remote Working", onChange: ToggleChange);
-        _columnManager.AddCountry();
-
-        _items = UserService.GetUsers();
-    }
-
-    private async Task ToggleChange(UserDto user)
-    {
-        user.RemoteWorking = !user.RemoteWorking;
-        await Task.CompletedTask;
-        StateHasChanged();
-    }
+    private TotalFooter _totalFooter = new() { IsTotalFooter = true };
+    // numeric columns (AddNumber / AddStyledNumber) are totalled automatically;
+    // set CalculateTotal on a column to force a total on or off.
 }
 ```
 
-Notes:
-- `QuickGridWrapper` encapsulates the base grid and styling. You pass `Items` and a configured `ColumnManager<T>`.
-- The wrapper will gain additional features over time. This README will be updated accordingly.
+The footer is rendered by a small ES module shipped with the toolkit (`quickGridToolkit.js`) that the wrapper imports automatically. It only appears when the wrapper has an `Id`, because that becomes the grid table's `id`.
 
 ## Utility CSS classes
 
@@ -144,9 +140,5 @@ Notes:
 
 ## Known issues
 
-- The `Format` property is not working for `object` type.
-
-## Samples
-
-Explore the `QuickGrid.Samples` project for working pages and configurations.
+- The `Format` property is not working for `object` type (formatting is instead applied inside the column's rendered content).
 
