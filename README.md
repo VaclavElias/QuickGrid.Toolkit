@@ -135,6 +135,8 @@ Key points:
 - `ColumnSelector` renders the show/hide UI; call `RefreshDataAsync` when the selection changes.
 - `QuickGridColumns.Columns(_columnManager)` renders the currently visible columns.
 
+<img width="610" height="344" alt="image" src="https://github.com/user-attachments/assets/9d6c2476-f023-499c-8c25-9b780f1a51a7" />
+
 ### 2. `QuickGridWrapper`
 
 When several grids share similar data but different columns, the wrapper centralizes the grid markup, toolbar, quick search and pagination, you keep just the per-page column configuration. See [`UsersGridWrapper.razor`](src/QuickGrid.Samples/Pages/UsersGridWrapper.razor).
@@ -144,6 +146,8 @@ When several grids share similar data but different columns, the wrapper central
 ```
 
 You pass `Items` and a configured `ColumnManager<T>`; the column setup is identical to example 1.
+
+<img width="435" height="369" alt="image" src="https://github.com/user-attachments/assets/23e067fd-a273-49e5-a099-ddac8a8af795" />
 
 ### 3. Total footer
 
@@ -163,6 +167,8 @@ Add `TotalFooter` and an `Id` to a `QuickGridWrapper` to get an automatic totals
 ```
 
 The footer is rendered by a small ES module shipped with the toolkit (`quickGridToolkit.js`) that the wrapper imports automatically. It only appears when the wrapper has an `Id`, because that becomes the grid table's `id`.
+
+<img width="556" height="438" alt="image" src="https://github.com/user-attachments/assets/aa9eb31d-3ea9-47d8-92f0-29557e7bcdc1" />
 
 ## Utility CSS classes
 
