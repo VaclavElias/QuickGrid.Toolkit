@@ -8,6 +8,7 @@ public static class UserService
             new() { Id = 1078, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Jack", Country = "China", RemoteWorking = true },
             new() { Id = 1189, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Katherine", Country = "India", RemoteWorking = false },
             new() { Id = 1290, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Lucas", Country = "Spain", RemoteWorking = true },
+            new() { Id = 1291, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Xavier", Country = "Spain", RemoteWorking = true },
             new() { Id = 1311, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Mia", Country = "Argentina", RemoteWorking = false },
             new() { Id = 1412, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Noah", Country = "Japan", RemoteWorking = true },
             new() { Id = 1513, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Olivia", Country = "Italy", RemoteWorking = false },
@@ -20,10 +21,13 @@ public static class UserService
             new() { Id = 2753, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Bob", Country = "Canada", RemoteWorking = true },
             new() { Id = 3835, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Charlie", Country = "Mexico", RemoteWorking = true },
             new() { Id = 4653, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "David", Country = "Germany", RemoteWorking = true },
-            new() { Id = 5536, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Emma", Country = "France", RemoteWorking = true },
+            new() { Id = 5536, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Emma", Country = "Germany", RemoteWorking = true },
+            new() { Id = 5537, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Henry", Country = "United Kingdom", RemoteWorking = true },
+            new() { Id = 5538, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Emma", Country = "France", RemoteWorking = true },
             new() { Id = 6634, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Frank", Country = "UK", RemoteWorking = true },
             new() { Id = 7666, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Grace", Country = "Australia", RemoteWorking = true },
-            new() { Id = 8267, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Henry", Country = "Russia", RemoteWorking = true },
+            new() { Id = 7667, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Grace", Country = "Germany", RemoteWorking = true },
+            new() { Id = 8267, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Sergej", Country = "Russia", RemoteWorking = true },
             new() { Id = 9676, Age = GetRandomAge(), Weight = GetRandomWeight(), Name = "Isabella", Country = "Brazil", RemoteWorking = true }
         ];
 
