@@ -1,0 +1,37 @@
+@* Shared header for the QuickGrid.Toolkit example pages.
+   Keeps every example visually and structurally consistent: page title, a one-line lead,
+   an optional explanation/key-points block, a link to the page source on GitHub, and the
+   "Live example" heading that introduces the grid rendered by the page below. *@
+
+<PageTitle>@Title</PageTitle>
+
+<h1>@Title</h1>
+
+@if (!string.IsNullOrWhiteSpace(Lead))
+{
+    <p class="lead">@Lead</p>
+}
+
+@ChildContent
+
+<p>
+    <a href="@($"{SourceBaseUrl}{SourceFile}")" target="_blank" rel="noopener">View the source for this page on GitHub</a>.
+</p>
+
+<h2>Live example</h2>
+
+@code {
+    private const string SourceBaseUrl =
+        "https://github.com/VaclavElias/QuickGrid.Toolkit/blob/main/src/QuickGrid.Samples/Pages/";
+
+    [Parameter, EditorRequired] public string Title { get; set; } = default!;
+
+    /// <summary>File name of the page under <c>Pages/</c>, used to build the GitHub source link.</summary>
+    [Parameter, EditorRequired] public string SourceFile { get; set; } = default!;
+
+    /// <summary>Optional one-line summary shown beneath the title.</summary>
+    [Parameter] public string? Lead { get; set; }
+
+    /// <summary>Optional explanation and key points for the example.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

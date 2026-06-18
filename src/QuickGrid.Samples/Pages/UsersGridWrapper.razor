@@ -1,17 +1,24 @@
 @page "/users-grid-wrapper"
-<PageTitle>QuickGridWrapper</PageTitle>
-<h1>QuickGridWrapper</h1>
-<p>
-    This example shows how to use the <code>QuickGridWrapper{T}</code> component to simplify the usage of the <code>QuickGrid{T}</code> component
-    with a <code>ColumnManager{T}</code>. The <code>QuickGridWrapper{T}</code> component automatically handles the rendering of the columns
-    based on the provided <code>ColumnManager{T}</code>.
-</p>
-<p>
-    Check source <a href="https://github.com/VaclavElias/QuickGrid.Toolkit/blob/main/src/QuickGrid.Samples/Pages/UsersGridWrapper.razor">here</a>.
-</p>
-<h2>Example</h2>
+
+<ExampleInfo Title="QuickGridWrapper"
+             SourceFile="UsersGridWrapper.razor"
+             Lead="The same columns as the QuickGrid example, in an all-in-one component.">
+    <p>
+        <code>QuickGridWrapper&lt;T&gt;</code> wraps the grid together with a toolbar, quick search across all
+        columns, a column selector and optional pagination. You configure the same
+        <code>ColumnManager&lt;T&gt;</code> as before and pass it with your <code>Items</code> — there is no
+        <code>&lt;QuickGrid&gt;</code> markup to write.
+    </p>
+    <ul>
+        <li>The column setup below is identical to the <a href="users-grid">QuickGrid + ColumnManager</a> example — only the host component changes.</li>
+        <li>Try the <strong>quick search</strong> box above the grid; it matches across every column (and nested properties). The settings menu also offers an exact-match toggle.</li>
+        <li>To add an automatic totals row, see the <a href="total-footer-example">Total Footer</a> example, which builds on this one.</li>
+    </ul>
+</ExampleInfo>
+
 <QuickGridWrapper Items="@_items.AsQueryable()"
                   ColumnManager="_columnManager" />
+
 @code {
     private List<UserDto> _items = new();
     private ColumnManager<UserDto> _columnManager = new();

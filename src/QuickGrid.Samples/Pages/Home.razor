@@ -1,7 +1,48 @@
-﻿@page "/"
+@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>QuickGrid.Toolkit samples</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>QuickGrid.Toolkit</h1>
 
-Welcome to your new app.
+<p class="lead">
+    Extensions for the Blazor
+    <a href="https://aspnet.github.io/quickgridsamples/" target="_blank" rel="noopener">QuickGrid</a>:
+    runtime, data-driven column management with a show/hide UI, custom column types, quick search and footer totals.
+</p>
+
+<p>
+    Define your columns once in a <code>ColumnManager&lt;T&gt;</code>, then render them through a plain
+    <code>QuickGrid</code> or the all-in-one <code>QuickGridWrapper</code>. The same configuration can drive
+    several grids that each expose a different set of visible columns.
+</p>
+
+<h2>Examples</h2>
+
+<p>Each example below shares the same column setup and links to the next, so they read as a progression.</p>
+
+<div class="list-group mb-4">
+    <a class="list-group-item list-group-item-action" href="users-grid">
+        <strong>QuickGrid + ColumnManager</strong>
+        <div class="small text-muted">
+            Write your own <code>&lt;QuickGrid&gt;</code> and render columns from a <code>ColumnManager</code>,
+            with a <code>ColumnSelector</code> for show/hide. The low-level building blocks.
+        </div>
+    </a>
+    <a class="list-group-item list-group-item-action" href="users-grid-wrapper">
+        <strong>QuickGridWrapper</strong>
+        <div class="small text-muted">
+            The same columns inside one component that adds a toolbar, quick search and pagination.
+        </div>
+    </a>
+    <a class="list-group-item list-group-item-action" href="total-footer-example">
+        <strong>Total Footer</strong>
+        <div class="small text-muted">
+            Add an automatic, summed totals row to a <code>QuickGridWrapper</code>.
+        </div>
+    </a>
+</div>
+
+<p>
+    Source and documentation on
+    <a href="https://github.com/VaclavElias/QuickGrid.Toolkit" target="_blank" rel="noopener">GitHub</a>.
+</p>

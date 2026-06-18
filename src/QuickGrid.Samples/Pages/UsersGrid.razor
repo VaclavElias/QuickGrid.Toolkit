@@ -1,21 +1,29 @@
 @page "/users-grid"
-<PageTitle>Regular QuickGrid</PageTitle>
-<h1>Regular QuickGrid</h1>
-<p>
-    This grid uses a <code>ColumnManager{T}</code> to manage the columns. The <code>ColumnSelector</code> component
-    allows the user to select which columns to display. The <code>QuickGridColumns.Columns{T}</code> method is used to
-    render the columns based on the <code>ColumnManager{T}</code>.
-</p>
-<p>
-    Check source <a href="https://github.com/VaclavElias/QuickGrid.Toolkit/blob/main/src/QuickGrid.Samples/Pages/UsersGrid.razor">here</a>.
-</p>
-<h2>Example</h2>
+
+<ExampleInfo Title="QuickGrid + ColumnManager"
+             SourceFile="UsersGrid.razor"
+             Lead="Bring your own QuickGrid, and let the toolkit manage the columns.">
+    <p>
+        This is the low-level pattern. You write the <code>&lt;QuickGrid&gt;</code> markup yourself and render
+        its columns from a <code>ColumnManager&lt;T&gt;</code> with <code>@@QuickGridColumns.Columns(...)</code>.
+        A <code>ColumnSelector</code> gives the user a show/hide UI; call <code>RefreshDataAsync()</code> whenever
+        the selection changes.
+    </p>
+    <ul>
+        <li><code>ColumnManager&lt;T&gt;</code> declares every possible column. Note the mix of helpers below: <code>AddSimple</code>, <code>AddToggleColumn</code>, a shared column set pulled in with <code>AddRange</code>, and the custom <code>AddCountry</code> extension.</li>
+        <li>Reach for this pattern when you need full control over the <code>&lt;QuickGrid&gt;</code> element and its attributes.</li>
+        <li>Want a toolbar, quick search and pagination without writing markup? See <a href="users-grid-wrapper">QuickGridWrapper</a>, which uses the very same column configuration.</li>
+    </ul>
+</ExampleInfo>
+
 <div class="my-3">
     <ColumnSelector ColumnManager="_columnManager" SelectionChanged="SelectionChangedAsync" />
 </div>
+
 <QuickGrid @ref="_grid" Items="@_items.AsQueryable()" Class="table table-sm table-index table-striped small table-fit table-thead-sticky mb-0" Theme="twentyAI">
     @QuickGridColumns.Columns(_columnManager)
 </QuickGrid>
+
 @code {
     private List<UserDto> _items = new();
     private ColumnManager<UserDto> _columnManager = new();
