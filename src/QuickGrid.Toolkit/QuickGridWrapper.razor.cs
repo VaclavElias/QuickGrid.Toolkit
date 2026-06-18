@@ -73,6 +73,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     private bool _isInMemorySearch;
     private bool _showFilterSection;
     private bool _isDebug = false;
+    private bool _refreshGridAfterRender;
 
     private long _prevItemsVersion;
     private string? _searchQuery;
@@ -134,14 +135,6 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
     protected override async Task OnInitializedAsync()
     {
-        if (IsPaginator)
-        {
-            _pagination = new PaginationState
-            {
-                ItemsPerPage = ItemsPerPage
-            };
-        }
-
         _defaultColumnManager = ColumnManager;
 
         //var result = await ColumnConfigurationService.GetConfigurationsAsync(Id, _authenticatedUserId, default);
@@ -160,6 +153,12 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (_refreshGridAfterRender)
+        {
+            _refreshGridAfterRender = false;
+            await RefreshDataAsync();
+        }
+
         if (Id is null) return;
 
         if (!_titlesLoaded && UsedColumnManager.Columns.Count > 0)
@@ -174,6 +173,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
     protected override async Task OnParametersSetAsync()
     {
+        EnsurePaginationState();
         SetTableIndex();
         UpdateSearchQuery();
 
@@ -188,8 +188,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
             // Invalidate caches and force re-evaluation for current search
             _lastSearchQuery = null;
-
-            await Task.Delay(10);
+            _refreshGridAfterRender = true;
 
             await AddOrUpdateFooterAsync();
         }
@@ -198,6 +197,18 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         {
             SetDefaultColumns();
         }
+    }
+
+    private void EnsurePaginationState()
+    {
+        if (!IsPaginator)
+        {
+            _pagination = null;
+            return;
+        }
+
+        _pagination ??= new PaginationState();
+        _pagination.ItemsPerPage = ItemsPerPage;
     }
 
     private void UpdateSearchQuery()
