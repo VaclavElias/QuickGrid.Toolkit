@@ -1,0 +1,37 @@
+@page "/total-footer-example"
+<PageTitle>Total Footer Example</PageTitle>
+<h1>Total Footer Example</h1>
+<p>
+    This example shows how to use the <code>QuickGridWrapper{T}</code> component to simplify the usage of the <code>QuickGrid{T}</code> component
+    with a <code>ColumnManager{T}</code>. The <code>QuickGridWrapper{T}</code> component automatically handles the rendering of the columns
+    based on the provided <code>ColumnManager{T}</code>.
+</p>
+<p>
+    Check source <a href="https://github.com/VaclavElias/QuickGrid.Toolkit/blob/main/src/QuickGrid.Samples/Pages/TotalFooterExample.razor">here</a>.
+</p>
+<h2>Example</h2>
+<QuickGridWrapper Items="@_items.AsQueryable()"
+                  TotalFooter="_totalFooter"
+                  Id="id-total-footer-example"
+                  ColumnManager="_columnManager" />
+@code {
+    private List<SalesDto> _items = new();
+    private ColumnManager<SalesDto> _columnManager = new();
+    private TotalFooter _totalFooter = new TotalFooter() { IsTotalFooter = true };
+    private decimal _totalAmount;
+
+
+    protected override void OnInitialized()
+    {
+        _items = SalesService.GetSales();
+        _totalAmount = _items.Sum(item => item.TotalAmount);
+
+        _columnManager.AddIndexColumn();
+        _columnManager.Add(new() { Property = p => p.Id });
+        _columnManager.AddSimple(p => p.Region, fullTitle: "Region");
+        _columnManager.AddSimple(p => p.Product, fullTitle: "Product");
+        _columnManager.AddStyledNumber<decimal>(p => p.TotalAmount, "Amount", fullTitle: "Total Amount", format: "N2");
+        _columnManager.AddStyledNumber<decimal>(p => p.TotalAmount / _totalAmount, "Average", fullTitle: "Average Amount", format: "N2");
+        _columnManager.AddStyledNumber<decimal>(p => p.TotalAmount / _totalAmount, "Average %", fullTitle: "Average Amount %", format: "P2");
+    }
+}

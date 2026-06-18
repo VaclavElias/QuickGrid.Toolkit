@@ -58,3 +58,8 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+td span[content="zero"] {
+    color: orangered;
+    font-weight: bold;
+}
