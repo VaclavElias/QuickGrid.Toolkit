@@ -187,6 +187,7 @@ public class ColumnBuilder<TGridItem>
         column.IsNumeric = true;
         column.PropertyName = propertyName;
         column.CalculateTotal = calculateTotal;
+        column.Format = format;
 
         return column;
     }
