@@ -52,3 +52,11 @@
 .action {
     cursor: pointer;
 }
+
+input:not(:placeholder-shown).quick-search {
+    background-color: #f6e6ff;
+}
+
+[data-bs-theme="dark"] input:not(:placeholder-shown).quick-search {
+    background-color: #442854;
+}
