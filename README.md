@@ -2,33 +2,65 @@
 
 QuickGrid.Toolkit extends the Blazor QuickGrid with reusable, dynamic column management and small UI utilities. It is especially useful when you render the same kind of data in multiple places but need different visible columns per grid.
 
-- QuickGrid.Toolkit: a library that adds to the official [QuickGrid](https://aspnet.github.io/quickgridsamples/)
-  - ✅ Dynamically add columns at runtime
-  - ✅ Column selection UI (show/hide)
-  - ✅ Predefined, strongly-typed helpers (e.g., `AddCountry()`)
-  - ✅ Sorting support for added columns
-  - ✅ Utility CSS classes: `table-index`, `table-fit`, `table-thead-sticky`
-  - ✅ Custom `ImageColumn`
-    - ⏳ Example
-  - ✅ Custom `TickColumn`
-    - ⏳ Example
-  - ✅ Custom `ToggleColumn`
-    - ⏳ Example
-  - ✅ Clickable columns with callbacks
-    - ⏳ Example
-  - ✅ Custom column styling
-    - ⏳ Example
-  - ✅ Custom row styling (css `:has()`)
-    - ⏳ Example
-  - ⏳ Export to CSV and Json
-    - ⏳ Example
-  - ✅ Quick search across all columns (`QuickGridWrapper`)
-    - ✅ Example
-    - ✅ Pass search value
-      - ⏳ Example
-    - ✅ Exact Match option (`QuickGridWrapper`)
-      - ✅ Example
-- QuickGrid.Samples: a demo app showcasing the toolkit (see the Users pages)
+## Features
+
+**Legend:** ✅ available · ⏳ planned / not yet implemented. Where a feature is demonstrated in the sample app, an `example` flag shows whether that sample exists (✅) or is still planned (⏳).
+
+### Column management
+
+- ✅ Add columns dynamically at runtime
+- ✅ One `ColumnManager<T>` reused across grids - each grid shows a different subset of columns
+- ✅ Show/hide column selection UI (`ColumnSelector`) - example ✅
+- ✅ Predefined, strongly-typed helpers (e.g. `AddCountry()` via extension methods)
+- ✅ Sorting for added columns
+- ✅ Per-column visibility, alignment, format and CSS class
+- ⏳ Saved column views / layouts (selector UI exists; persistence not wired) - example ⏳
+
+### Built-in column types
+
+- ✅ Index column (`AddIndexColumn`) - example ✅
+- ✅ Value column (`AddSimple`) - example ✅
+- ✅ Number column, `int` / `double` / `decimal` (`AddNumber`) - example ⏳
+- ✅ Styled number column with conditional cell styling (`AddStyledNumber`) - example ✅
+- ✅ Date column (`AddSimpleDate`) - example ⏳
+- ✅ Tick / boolean column (`TickColumn`, with true/false styling) - example ✅
+- ✅ Toggle column (`ToggleColumn`, with change callback) - example ✅
+- ✅ Image column (`ImageColumn`) - example ⏳
+- ✅ Template column (`AddTemplateColumn`, custom `RenderFragment`) - example ⏳
+- ✅ Markup column (`AddMarkup`, raw HTML) - example ⏳
+- ✅ Clickable / action columns with callbacks (`AddAction`) - example ⏳
+
+### Styling
+
+- ✅ Conditional cell styling (`CellStyleMap`) - example ✅
+- ✅ Custom column styling (CSS class per column)
+- ✅ Custom row styling via CSS `:has()` - example ⏳
+- ✅ Utility CSS classes: `table-index`, `table-fit`, `table-thead-sticky`, `table-no-empty-lines`
+
+### `QuickGridWrapper` (all-in-one grid)
+
+- ✅ Quick search across all columns - example ✅
+- ✅ Nested / child-property search - example ⏳
+- ✅ Exact-match toggle - example ✅
+- ✅ Preset / external search value (`QuickSearch`) - example ⏳
+- ✅ EF-backed server filtering (`FilterCriteria`) - example ⏳
+- ✅ Pagination - example ⏳
+- ✅ Row selection (`ISelectionDto`) - example ⏳
+- ✅ Toolbar with settings menu and loading indicator
+- ✅ Pluggable icons (`IQuickGridIconProvider`, Bootstrap Icons by default)
+
+### Footers
+
+- ✅ Automatic total footer - sums numeric columns (`TotalFooter`) - example ✅
+- ✅ Per-column total control (`CalculateTotal`) - example ✅
+- ✅ Manual footer cells (`AddFooterColumn`, `AddFooterColumnWithSum`) - example ⏳
+- ✅ Column header tooltips from full titles - example ⏳
+
+### Export
+
+- ⏳ Export to CSV (the wrapper exposes hooks via `Events`; writing is up to the host) - example ⏳
+- ⏳ Export selected columns (preview) - example ⏳
+- ⏳ Export to JSON - example ⏳
 
 ## Requirements
 
