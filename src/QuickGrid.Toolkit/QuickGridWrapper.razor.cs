@@ -190,7 +190,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
             _lastSearchQuery = null;
             _refreshGridAfterRender = true;
 
-            await AddOrUpdateFooterAsync();
+            //await AddOrUpdateFooterAsync();
         }
 
         if (_defaultVisibleColumns.Count == 0)
