@@ -11,7 +11,7 @@ The solution (`QuickGrid.Toolkit.slnx`) contains two projects:
 - `src/QuickGrid.Toolkit` — the reusable library. SDK `Microsoft.NET.Sdk.Razor`; ships static web assets (`wwwroot/app.css` served as `_content/QuickGrid.Toolkit/app.css`).
 - `src/QuickGrid.Samples` — a demo Blazor Web App using Interactive Server render mode, showcasing the toolkit. The `Users*` pages (`Pages/UsersGrid.razor`, `Pages/UsersGridWrapper.razor`) are the reference usage patterns.
 
-There is no separate `BlazorApp1` project, no domain/infrastructure layering, and no `DbContext` in this repository. Sample data comes from an in-memory `UserService`.
+There is no domain/infrastructure layering and no `DbContext` in this repository — sample data comes from an in-memory `UserService`.
 
 ## Target framework & dependencies
 
@@ -25,15 +25,29 @@ There is no separate `BlazorApp1` project, no domain/infrastructure layering, an
 - Run the demo: `dotnet run --project src/QuickGrid.Samples`
 - There is **no test project** — do not assume one exists.
 
-## How the toolkit works (essentials)
+## Architecture
 
-Columns are described as data, then translated into QuickGrid components at render time:
+The library describes columns as data, then translates that data into QuickGrid components at render time. Four types form the pipeline:
 
-- `ColumnManager<TGridItem>` (`ColumnManager.cs`) is the public API callers build up via its `Add*` methods. Every addition must flow through `Add(...)`, which assigns the sequential `Id` and derives `Title`/`PropertyName` from the expression. Never call `Columns.AddRange` directly (it bypasses that initialization).
-- `DynamicColumn<TGridItem>` (`Columns/DynamicColumn.cs`) is the per-column data model (deliberately not a QuickGrid `ColumnBase`).
-- `ColumnBuilder<TGridItem>` (`Builders/ColumnBuilder.cs`) compiles the property expression and builds each column's `ChildContent` via `RenderTreeBuilder`. New column flavors are implemented here.
-- `QuickGridColumns.Columns(columnManager)` (`QuickGridColumns.razor`) renders visible columns, switching on `ColumnType` to emit the matching component. A new `ColumnType` needs a branch here too.
-- `QuickGridWrapper<TGridItem>` is the batteries-included component (grid + toolbar + search + column selector + pagination + footer).
+**`DynamicColumn<TGridItem>`** (`Columns/DynamicColumn.cs`) — the per-column data model. It is a plain class, NOT a QuickGrid `ColumnBase`: QuickGrid columns carry `[Parameter]` attributes that prevent inheriting from them (see the comment in the file). Holds `Property` (always normalized to `Func<TGridItem, object?>`), `ColumnType` (the component to emit), `Title`/`FullTitle`, `Visible`, `Align`, `Format`, `Class`, `CalculateTotal`, `OnActionAsync`, etc.
+
+**`ColumnManager<TGridItem>`** (`ColumnManager.cs`) — the public API surface callers build up. Owns `List<DynamicColumn>` plus `List<FooterColumn>`. Entry points are the `Add*` methods (`Add`, `AddSimple`, `AddNumber`, `AddStyledNumber`, `AddAction`, `AddTickColumn`, `AddToggleColumn`, `AddImageColumn`, `AddTemplateColumn`, `AddIndexColumn`, `AddMarkup`, `AddFooterColumn*`).
+- `Add(...)` is the single funnel: assigns sequential `Id`, derives `Title`/`PropertyName` from the expression when absent. **Always route additions through `Add` — never `Columns.AddRange` directly** (its XML doc explains why: it bypasses ID/title init).
+- `Get()` returns only `Visible` columns.
+
+**`ColumnBuilder<TGridItem>`** (`Builders/ColumnBuilder.cs`) — constructs `DynamicColumn` instances and builds each column's `ChildContent` `RenderFragment` by compiling the property expression and emitting cells via `RenderTreeBuilder`. Formatting, cell styling (`CellStyleMap`), click handlers, and markup rendering are wired here. New column flavors start here, then get surfaced through a `ColumnManager.Add*` method.
+
+**`QuickGridColumns.Columns(columnManager)`** (`QuickGridColumns.razor`) — the renderer: a static `RenderFragment` that loops visible columns and `switch`es on `ColumnType` to emit the matching real component (`EmptyColumn`, `ImageColumn`, `TickColumn`, `ToggleColumn`, `TemplateColumn`, or fallback `PropertyColumn`). **Adding a new `ColumnType` requires a branch here too.**
+
+### Two consumption patterns
+1. **Bare `QuickGrid` + `ColumnManager`** (`Pages/UsersGrid.razor`): caller owns the `<QuickGrid>` markup and drops in `@QuickGridColumns.Columns(_columnManager)`, plus an optional `<ColumnSelector>`. Caller calls `grid.RefreshDataAsync()` on selection change.
+2. **`QuickGridWrapper<TGridItem>`** (`QuickGridWrapper.razor` + `.razor.cs`): batteries-included — encapsulates grid, toolbar, search box, column selector, pagination, and footer. Pass `Items` (in-memory `IQueryable`) and a configured `ColumnManager`.
+
+### QuickGridWrapper specifics worth knowing
+- **In-memory vs EF search**: `FilterCriteria == null` → in-memory quick search via `QuickSearchUtility` (reflection over public properties, property-info cache, configurable depth/exact-match). Non-null `FilterCriteria` → EF-translatable expression filtering against `Items` (`ToListAsync`).
+- **`ItemsVersion`**: callers must increment this `long` whenever the `Items` collection mutates — it's how the wrapper detects changes to invalidate search caches and refresh footer totals.
+- **Footer totals and column titles are rendered via JS interop, not Blazor.** `AddOrUpdateFooterAsync` / `RefreshColumnTitlesAsync` call `JS.InvokeVoidAsync("addOrUpdateFooter", ...)` and `"setColumnTitles", ...`. These JS functions are **not defined in this repo** and only fire when the wrapper's `Id` parameter is set; the host app must provide them. The interop is try/caught and logged as non-critical, so a missing function degrades gracefully.
+- `IQuickGridIconProvider` is resolved lazily from DI; if unregistered it falls back to `DefaultQuickGridIconProvider`. Override it to swap out Bootstrap Icons.
 
 ## Coding style & conventions
 
