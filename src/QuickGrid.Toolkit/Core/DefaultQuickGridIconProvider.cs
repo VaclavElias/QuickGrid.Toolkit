@@ -10,6 +10,8 @@ public class DefaultQuickGridIconProvider : IQuickGridIconProvider
             => builder.AddMarkupContent(0, "<i class=\"bi bi-gear\"></i>"),
         QuickGridIcon.Search => builder
             => builder.AddMarkupContent(0, "<i class=\"bi bi-search me-2\"></i>"),
+        QuickGridIcon.ClearSearch => builder
+            => builder.AddMarkupContent(0, "<i class=\"bi bi-x-circle me-2\"></i>"),
         QuickGridIcon.Filter => builder
             => builder.AddMarkupContent(0, "<i class=\"bi bi-funnel\"></i>"),
         QuickGridIcon.Export => builder
