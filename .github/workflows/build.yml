@@ -1,10 +1,20 @@
 name: Build
 
+# Documentation-only changes don't affect the build, so they don't trigger it.
+# (README.md is packed into the NuGet package, but nothing is published from CI, so skipping is safe.)
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE.txt'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE.txt'
 
 jobs:
   build:
