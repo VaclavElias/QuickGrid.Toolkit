@@ -8,6 +8,11 @@ public class ImageColumn<TGridItem> : PropertyColumnBase<TGridItem>
     {
         var imagePath = CellValueFunc!(item)?.ToString();
 
-        builder.AddMarkupContent(2, $"<img alt=\"\" src=\"{imagePath}\">");
+        // Built as elements rather than markup so Blazor encodes the path: a value containing a quote
+        // would otherwise break out of the src attribute.
+        builder.OpenElement(0, "img");
+        builder.AddAttribute(1, "alt", "");
+        builder.AddAttribute(2, "src", imagePath);
+        builder.CloseElement();
     }
 }
