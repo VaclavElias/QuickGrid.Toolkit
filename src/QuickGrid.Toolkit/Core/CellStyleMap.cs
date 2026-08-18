@@ -3,14 +3,22 @@ namespace QuickGrid.Toolkit.Core;
 /// <summary>
 /// Provides styling mappings for cell values, including support for null values.
 /// </summary>
+/// <remarks>
+/// Lookups are backed by a dictionary, so styling a cell stays constant-time however many mappings are added.
+/// Adding a value that is already mapped keeps the first style, matching the original list-based behaviour.
+/// </remarks>
 /// <typeparam name="TValue">The type of values to map</typeparam>
 public class CellStyleMap<TValue>
 {
-    private readonly List<CellStyle<TValue>> _styleMappings = [];
+    // TValue is deliberately unconstrained so callers can map nullable values. Null never reaches the
+    // dictionary (Add routes it to _nullValueStyle), so the notnull constraint does not apply here.
+#pragma warning disable CS8714
+    private readonly Dictionary<TValue, string> _styleMappings = [];
+#pragma warning restore CS8714
     private string? _nullValueStyle;
 
     /// <summary>
-    /// Adds a style mapping for a specific value.
+    /// Adds a style mapping for a specific value. A null value sets the null style.
     /// </summary>
     /// <param name="value">The value to map</param>
     /// <param name="style">The style to apply</param>
@@ -23,7 +31,7 @@ public class CellStyleMap<TValue>
         }
         else
         {
-            _styleMappings.Add(new CellStyle<TValue>(value, style));
+            _styleMappings.TryAdd(value, style);
         }
 
         return this;
@@ -36,7 +44,10 @@ public class CellStyleMap<TValue>
     /// <returns>This instance for method chaining</returns>
     public CellStyleMap<TValue> AddRange(IEnumerable<CellStyle<TValue>> mappings)
     {
-        _styleMappings.AddRange(mappings);
+        foreach (var mapping in mappings)
+        {
+            Add(mapping.Value, mapping.Style);
+        }
 
         return this;
     }
@@ -65,9 +76,7 @@ public class CellStyleMap<TValue>
             return _nullValueStyle ?? string.Empty;
         }
 
-        var mapping = _styleMappings.FirstOrDefault(m => EqualityComparer<TValue>.Default.Equals(m.Value, value));
-
-        return mapping?.Style ?? string.Empty;
+        return _styleMappings.GetValueOrDefault(value, string.Empty);
     }
 
     /// <summary>
@@ -76,14 +85,7 @@ public class CellStyleMap<TValue>
     /// <param name="value">The value to check</param>
     /// <returns>True if a mapping exists</returns>
     public bool ContainsValue(TValue? value)
-    {
-        if (value is null)
-        {
-            return _nullValueStyle is not null;
-        }
-
-        return _styleMappings.Any(m => EqualityComparer<TValue>.Default.Equals(m.Value, value));
-    }
+        => value is null ? _nullValueStyle is not null : _styleMappings.ContainsKey(value);
 
     /// <summary>
     /// Creates a CellStyleMap from a collection of CellStyle mappings.
@@ -127,7 +129,10 @@ public class CellStyleMap<TValue>
     public CellStyleMap<TValue> ReplaceWith(IEnumerable<CellStyle<TValue>> mappings, string? nullValueStyle = null)
     {
         _styleMappings.Clear();
-        _styleMappings.AddRange(mappings);
+
+        AddRange(mappings);
+
+        // Set last so an explicit null style wins over one carried in the mappings, as it did before.
         _nullValueStyle = nullValueStyle;
 
         return this;
@@ -146,15 +151,6 @@ public class CellStyleMap<TValue>
             return hadNull;
         }
 
-        var idx = _styleMappings.FindIndex(m => EqualityComparer<TValue>.Default.Equals(m.Value, value));
-
-        if (idx >= 0)
-        {
-            _styleMappings.RemoveAt(idx);
-
-            return true;
-        }
-
-        return false;
+        return _styleMappings.Remove(value);
     }
 }
