@@ -1,5 +1,6 @@
 using QuickGrid.Toolkit.Builders;
 using System.Globalization;
+using System.Net;
 
 namespace QuickGrid.Toolkit;
 
@@ -59,7 +60,7 @@ public class ColumnManager<TGridItem>
         bool visible = true,
         string? propertyName = null)
     {
-        Add(expression, columnInfo.Title, columnInfo.FullTitle, format, columnInfo.Class, align, cellStyle, sortBy, visible, propertyName);
+        Add(expression, columnInfo.Title, columnInfo.FullTitle, format, columnInfo.Class, align, cellStyle, sortBy, visible, propertyName ?? columnInfo.PropertyName);
     }
 
     /// <summary>
@@ -340,7 +341,7 @@ public class ColumnManager<TGridItem>
 
         var displayValue = BuildDisplayValue(value, format);
 
-        column.Content = $"<td class=\"{column.Class}\">{displayValue}</td>";
+        column.Content = BuildFooterCell(displayValue, column.Class);
 
         FooterColumns.Add(column);
     }
@@ -383,7 +384,7 @@ public class ColumnManager<TGridItem>
 
             var displayValue = BuildDisplayValue(value, format);
 
-            return $"<td class=\"{column.Class}\">{displayValue}</td>";
+            return BuildFooterCell(displayValue, column.Class);
         };
 
         FooterColumns.Add(column);
@@ -446,5 +447,16 @@ public class ColumnManager<TGridItem>
             return formattableValue.ToString(format, CultureInfo.InvariantCulture);
         else
             return $"{value}";
+    }
+
+    // The footer is injected via tfoot.innerHTML on the JS side, so both the value and the class must be
+    // HTML-encoded here; they may carry caller-supplied data.
+    private static string BuildFooterCell(string? value, string? cssClass)
+    {
+        var classAttribute = string.IsNullOrWhiteSpace(cssClass)
+            ? string.Empty
+            : $" class=\"{WebUtility.HtmlEncode(cssClass)}\"";
+
+        return $"<td{classAttribute}>{WebUtility.HtmlEncode(value)}</td>";
     }
 }
