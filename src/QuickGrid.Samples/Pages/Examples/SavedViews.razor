@@ -1,0 +1,102 @@
+@page "/saved-views"
+
+<ExampleInfo Route="saved-views"
+             Lead="Named column layouts users can switch between, and your own toolbar icons.">
+    <p>
+        The column-layout menu (the first toolbar button) lists the <code>ColumnConfigurations</code> you give the
+        wrapper. Each <code>ColumnConfig</code> is a name plus the columns it shows, matched by their
+        <code>FullTitle</code>. Picking one applies it; <em>Default</em> restores the visibility the columns were
+        declared with.
+    </p>
+    <ul>
+        <li><code>OnSelectView</code> fires when a view is chosen, and <code>OnResetViewToDefault</code> when
+            Default is picked. Persist the choice there, then load it back into
+            <code>ColumnConfigurations</code>.</li>
+        <li><code>OnManageColumns</code> is your hook for a "manage columns" dialog. Leave it unset and the
+            wrapper falls back to its built-in checkbox list.</li>
+        <li>Marking a config <code>Default = true</code> applies it on first render.</li>
+    </ul>
+    <p class="mb-0">
+        Toolbar icons come from <code>IQuickGridIconProvider</code>. Register one in DI to restyle every grid, or
+        pass <code>Icons</code> to a single grid as this page does.
+    </p>
+</ExampleInfo>
+
+<div class="form-check form-switch mb-3">
+    <input class="form-check-input" type="checkbox" role="switch" id="icons" @bind="_useEmojiIcons" />
+    <label class="form-check-label small" for="icons">Emoji icons (custom <code>IQuickGridIconProvider</code>)</label>
+</div>
+
+<EventLog @ref="_log" Title="View events" EmptyText="Pick a layout from the first toolbar button." />
+
+<QuickGridWrapper @ref="_wrapper"
+                  Items="@_items.AsQueryable()"
+                  Id="id-saved-views"
+                  ColumnManager="_columnManager"
+                  ColumnConfigurations="_configurations"
+                  Icons="@(_useEmojiIcons ? _emojiIcons : null)"
+                  Events="_events" />
+
+<ExampleNav Route="saved-views" />
+
+@code {
+    private static readonly SampleIconProvider _emojiIcons = new();
+
+    private List<ProjectDto> _items = [];
+    private ColumnManager<ProjectDto> _columnManager = new();
+    private QuickGridWrapper<ProjectDto>? _wrapper;
+    private QuickGridWrapperEvents<ProjectDto> _events = new();
+    private List<ColumnConfig> _configurations = [];
+    private EventLog? _log;
+    private bool _useEmojiIcons;
+
+    protected override void OnInitialized()
+    {
+        _items = ProjectService.GetProjects();
+
+        _columnManager.AddIndexColumn();
+        _columnManager.AddSimple(p => p.Name, fullTitle: "Project name");
+        _columnManager.AddSimple(p => p.Code, fullTitle: "Code");
+        _columnManager.AddSimple(p => p.Owner.Name, "Owner", "Owner name");
+        _columnManager.AddSimple(p => p.Owner.Team, "Team", "Owning team");
+        _columnManager.AddSimpleDate(p => p.StartedOn, "Started", "Start date");
+        _columnManager.AddNumber(p => p.Tasks, "Tasks", "Task count");
+        _columnManager.AddNumber(p => p.Budget, "Budget", "Approved budget", @class: "text-end");
+        _columnManager.AddStyledNumber<decimal>(p => p.Remaining, "Remaining", "Budget remaining", @class: "text-end");
+
+        _configurations = BuildConfigurations();
+
+        _events = new QuickGridWrapperEvents<ProjectDto>
+        {
+            OnSelectView = EventCallback.Factory.Create<ColumnConfig>(this, config => Log($"Selected view '{config.Name}'")),
+            OnResetViewToDefault = EventCallback.Factory.Create(this, () => Log("Reset to the default view")),
+            WarningRequested = EventCallback.Factory.Create<string>(this, message => Log($"Warning: {message}"))
+        };
+    }
+
+    /// <summary>
+    /// Stands in for whatever store an application uses. Columns are referenced by their FullTitle.
+    /// </summary>
+    private static List<ColumnConfig> BuildConfigurations() =>
+    [
+        new ColumnConfig
+        {
+            Id = 1,
+            Name = "Finance",
+            TableId = "id-saved-views",
+            ColumnSelections = Select("Project name", "Approved budget", "Budget remaining")
+        },
+        new ColumnConfig
+        {
+            Id = 2,
+            Name = "Delivery",
+            TableId = "id-saved-views",
+            ColumnSelections = Select("Project name", "Owner name", "Owning team", "Start date", "Task count")
+        }
+    ];
+
+    private static List<SelectedColumn> Select(params string[] fullTitles)
+        => [.. fullTitles.Select((title, index) => new SelectedColumn { ColumnName = title, DisplayOrder = index })];
+
+    private void Log(string message) => _log?.Add(message);
+}

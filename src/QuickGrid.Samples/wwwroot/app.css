@@ -63,3 +63,42 @@ td span[content="zero"] {
     color: orangered;
     font-weight: bold;
 }
+/* ---- Example-specific styling -------------------------------------------------------------
+   Shows how an application layers its own look on top of what the toolkit emits. */
+
+/* Row classes returned by QuickGridWrapper's RowClass parameter. */
+.row-over-budget td {
+    background-color: #fff5f5;
+}
+
+.row-delivered td {
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Content names produced by a CellStyleMap. */
+td span[content^="status-"] {
+    border-radius: .25rem;
+    padding: .1rem .4rem;
+    font-size: .75rem;
+}
+
+td span[content="status-active"] {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+td span[content="status-planning"] {
+    background-color: #cff4fc;
+    color: #055160;
+}
+
+td span[content="status-onhold"] {
+    background-color: #fff3cd;
+    color: #664d03;
+}
+
+td span[content="status-delivered"] {
+    background-color: #e2e3e5;
+    color: #41464b;
+}

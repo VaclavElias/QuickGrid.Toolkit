@@ -1,0 +1,104 @@
+@page "/search-filtering"
+
+<ExampleInfo Route="search-filtering"
+             Lead="Quick search across every column, plus your own filter panel above the grid.">
+    <p>
+        The wrapper's search box walks each row with reflection and matches any readable property, including
+        nested ones such as <code>Owner.Team</code>. Multiple words are ANDed, so <code>ana data</code> keeps only
+        rows matching both. The settings menu offers <strong>Enable Exact Match</strong>, which switches from
+        "contains" to a whole-value comparison.
+    </p>
+    <ul>
+        <li><code>IsNestedSearch</code> turns nested traversal on or off — off means only top-level properties match.</li>
+        <li><code>@@bind-QuickSearch</code> gives you the term, and lets you clear or preset it from your own code.</li>
+        <li><code>SearchResultChanged</code> reports the matched rows, useful for a count or a chart beside the grid.</li>
+        <li><code>FilterSection</code> renders your own filter markup, revealed by the funnel button in the toolbar.</li>
+    </ul>
+    <p class="mb-0">
+        <code>QuickSearchUtility</code> is also usable on its own, and <code>QuickSearchOptions</code> exposes
+        included and excluded columns, case sensitivity, AND/OR and the traversal depth.
+    </p>
+</ExampleInfo>
+
+<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+    <button class="btn btn-sm btn-outline-primary" @onclick='() => _search = "platform"'>Search "platform"</button>
+    <button class="btn btn-sm btn-outline-secondary" @onclick="() => _search = null">Clear from code</button>
+
+    <div class="form-check form-switch ms-2">
+        <input class="form-check-input" type="checkbox" role="switch" id="nested" @bind="_isNestedSearch" />
+        <label class="form-check-label small" for="nested">Nested search (matches Owner.Team)</label>
+    </div>
+
+    <span class="small text-muted">Term: <code>@(_search ?? "(none)")</code> · Matches: @_matchCount</span>
+</div>
+
+@* TGridItem is stated explicitly: with several generic parameters bound at once, inference needs the hint. *@
+<QuickGridWrapper TGridItem="ProjectDto"
+                  Items="@_items.AsQueryable()"
+                  ColumnManager="_columnManager"
+                  @bind-QuickSearch="_search"
+                  IsNestedSearch="_isNestedSearch"
+                  SearchResultChanged="OnSearchResultChanged">
+    <FilterSection>
+        <div class="border rounded bg-light p-2 mb-2 d-flex flex-wrap gap-3 align-items-center">
+            <span class="small fw-bold">Status</span>
+            @foreach (var status in Enum.GetValues<ProjectStatus>())
+            {
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="@($"status-{status}")"
+                           checked="@_statuses.Contains(status)"
+                           @onchange="e => ToggleStatus(status, e.Value is true)" />
+                    <label class="form-check-label small" for="@($"status-{status}")">@status</label>
+                </div>
+            }
+        </div>
+    </FilterSection>
+</QuickGridWrapper>
+
+<p class="small text-muted mt-2">
+    The status checkboxes live in <code>FilterSection</code>; click the funnel in the toolbar to show them.
+    They filter <code>Items</code> before it reaches the grid, which is how any custom filter should work.
+</p>
+
+<ExampleNav Route="search-filtering" />
+
+@code {
+    private readonly HashSet<ProjectStatus> _statuses = [.. Enum.GetValues<ProjectStatus>()];
+
+    private List<ProjectDto> _allItems = [];
+    private ColumnManager<ProjectDto> _columnManager = new();
+    private string? _search;
+    private bool _isNestedSearch = true;
+    private int _matchCount;
+
+    /// <summary>What the grid receives: the source rows with the custom filter already applied.</summary>
+    private List<ProjectDto> _items => _allItems.FindAll(p => _statuses.Contains(p.Status));
+
+    protected override void OnInitialized()
+    {
+        _allItems = ProjectService.GetProjects();
+        _matchCount = _allItems.Count;
+
+        _columnManager.AddIndexColumn();
+        _columnManager.AddSimple(p => p.Name, fullTitle: "Project name");
+        _columnManager.AddSimple(p => p.Code, "Code");
+        _columnManager.AddSimple(p => p.Owner.Name, "Owner");
+        _columnManager.AddSimple(p => p.Owner.Team, "Team", "Owning team");
+        _columnManager.AddSimple(p => p.Status, "Status");
+        _columnManager.AddNumber(p => p.Tasks, "Tasks");
+    }
+
+    private void OnSearchResultChanged(List<ProjectDto> matches) => _matchCount = matches.Count;
+
+    private void ToggleStatus(ProjectStatus status, bool isChecked)
+    {
+        if (isChecked)
+        {
+            _statuses.Add(status);
+        }
+        else
+        {
+            _statuses.Remove(status);
+        }
+    }
+}

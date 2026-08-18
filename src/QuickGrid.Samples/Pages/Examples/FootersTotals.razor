@@ -1,0 +1,114 @@
+@page "/footers-totals"
+
+<ExampleInfo Route="footers-totals"
+             Lead="Sum numeric columns automatically, or build the footer cells yourself.">
+    <p>
+        Both footer styles need the wrapper to have an <code>Id</code>, since that becomes the table's
+        <code>id</code> and the footer is injected by a small ES module shipped with the toolkit
+        (<code>quickGridToolkit.js</code>). Totals follow the active quick search, so filtering the grid
+        recalculates them.
+    </p>
+    <p><strong>Automatic</strong> — set a <code>TotalFooter</code> with <code>IsTotalFooter = true</code>:</p>
+    <ul>
+        <li>Every numeric column (<code>AddNumber</code>, <code>AddStyledNumber</code>) is summed; the first
+            non-numeric column carries the label.</li>
+        <li><code>CalculateTotal</code> on a column forces a total on or off, and
+            <code>TotalFooterLabelColumnId</code> moves the label.</li>
+        <li>Each column's own <code>format</code> is reused for its total, falling back to
+            <code>DefaultFormat</code>.</li>
+    </ul>
+    <p><strong>Manual</strong> — add footer cells to the <code>ColumnManager</code> instead:</p>
+    <ul>
+        <li><code>AddFooterColumnWithSum(column)</code> sums one column and reuses its CSS class.</li>
+        <li><code>AddFooterColumn(id, items =&gt; ...)</code> takes any aggregate over the displayed rows: an
+            average, a count, a ratio.</li>
+        <li><code>AddFooterColumn(id, value)</code> writes a fixed value, useful for a label.</li>
+        <li>Adding any footer column switches the grid to manual mode, so <code>TotalFooter</code> is ignored.</li>
+    </ul>
+</ExampleInfo>
+
+<div class="btn-group btn-group-sm mb-3" role="group">
+    <button class="btn @(_isManual ? "btn-outline-primary" : "btn-primary")" @onclick="() => _isManual = false">Automatic totals</button>
+    <button class="btn @(_isManual ? "btn-primary" : "btn-outline-primary")" @onclick="() => _isManual = true">Manual footer</button>
+</div>
+
+@if (_isManual)
+{
+    <QuickGridWrapper Items="@_items.AsQueryable()"
+                      Id="id-manual-footer-example"
+                      ColumnManager="_manualColumnManager" />
+
+    <p class="small text-muted mt-2">
+        Region shows a fixed label, Amount is summed, and Average is an aggregate expression over the rows
+        currently displayed.
+    </p>
+}
+else
+{
+    <QuickGridWrapper Items="@_items.AsQueryable()"
+                      TotalFooter="_totalFooter"
+                      Id="id-total-footer-example"
+                      ColumnManager="_columnManager" />
+
+    <p class="small text-muted mt-2">
+        Every numeric column is totalled without being named. Search for a region to see the totals follow.
+    </p>
+}
+
+<ExampleNav Route="footers-totals" />
+
+@code {
+    private List<SalesDto> _items = [];
+    private ColumnManager<SalesDto> _columnManager = new();
+    private ColumnManager<SalesDto> _manualColumnManager = new();
+    private TotalFooter _totalFooter = new() { IsTotalFooter = true };
+    private decimal _totalAmount;
+    private bool _isManual;
+
+    protected override void OnInitialized()
+    {
+        _items = SalesService.GetSales();
+        _totalAmount = _items.Sum(item => item.TotalAmount);
+
+        BuildAutomaticFooterColumns();
+        BuildManualFooterColumns();
+    }
+
+    private void BuildAutomaticFooterColumns()
+    {
+        _columnManager.AddIndexColumn();
+        _columnManager.Add(new() { Property = p => p.Id });
+        _columnManager.AddSimple(p => p.Region, fullTitle: "Region");
+        _columnManager.AddSimple(p => p.Product, fullTitle: "Product");
+        _columnManager.AddStyledNumber<decimal>(p => p.TotalAmount, "Amount", fullTitle: "Total Amount", format: "N2", @class: "text-end");
+        _columnManager.AddStyledNumber<decimal>(p => p.TotalAmount / _totalAmount, "Average", fullTitle: "Average Amount", format: "N2", @class: "text-end");
+        _columnManager.AddStyledNumber<decimal>(p => p.TotalAmount / _totalAmount, "Average %", fullTitle: "Average Amount %", format: "P2", @class: "text-end");
+    }
+
+    private void BuildManualFooterColumns()
+    {
+        _manualColumnManager.AddIndexColumn();
+        _manualColumnManager.AddSimple(p => p.Region, fullTitle: "Region");
+        _manualColumnManager.AddSimple(p => p.Product, fullTitle: "Product");
+        _manualColumnManager.AddNumber(p => p.TotalAmount, "Amount", format: "N2", @class: "text-end");
+        _manualColumnManager.AddNumber(p => p.TotalAmount / _totalAmount, "Share", format: "P2", @class: "text-end");
+
+        // Footer cells are matched to their column by Id, which Add* assigns in declaration order.
+        var regionColumn = _manualColumnManager.Columns.First(c => c.Title == "Region");
+        var amountColumn = _manualColumnManager.Columns.First(c => c.Title == "Amount");
+        var shareColumn = _manualColumnManager.Columns.First(c => c.Title == "Share");
+
+        // A fixed label.
+        _manualColumnManager.AddFooterColumn(regionColumn.Id, "All regions");
+
+        // The column's own sum, reusing its CSS class so the total lines up.
+        _manualColumnManager.AddFooterColumnWithSum(amountColumn);
+
+        // Any aggregate over the rows currently displayed.
+        _manualColumnManager.AddFooterColumn(
+            shareColumn.Id,
+            items => items.Any() ? items.Average(item => item.TotalAmount / _totalAmount) : 0m,
+            format: "P2",
+            @class: "text-end");
+    }
+}

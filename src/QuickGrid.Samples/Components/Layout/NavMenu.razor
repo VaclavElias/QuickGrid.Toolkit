@@ -14,35 +14,15 @@
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="users-grid">
-                <span class="bi bi-grid-ground-image" aria-hidden="true"></span> QuickGrid
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="users-grid-wrapper">
-                <span class="bi bi-grid-ground-image" aria-hidden="true"></span> QuickGridWrapper
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="total-footer-example">
-                <span class="bi bi-grid-ground-image" aria-hidden="true"></span> Total Footer
-            </NavLink>
-        </div>
+        @* Driven by ExampleRegistry, so a new example needs no change here. *@
+        @foreach (var example in ExampleRegistry.Examples)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="@example.Route">
+                    <span class="bi bi-grid-ground-image" aria-hidden="true"></span> @example.Title
+                </NavLink>
+            </div>
+        }
 
         <div class="nav-item nav-item-icon px-3">
             <NavLink class="nav-link" href="https://github.com/VaclavElias/QuickGrid.Toolkit">

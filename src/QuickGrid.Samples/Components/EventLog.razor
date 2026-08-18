@@ -1,0 +1,51 @@
+@* Shows toolkit callbacks as they fire, so an example can demonstrate events rather than just describe them. *@
+
+<div class="border rounded bg-light small p-2 mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-1">
+        <strong>@Title</strong>
+        @if (_entries.Count > 0)
+        {
+            <button class="btn btn-sm btn-light py-0" @onclick="Clear">Clear</button>
+        }
+    </div>
+    @if (_entries.Count == 0)
+    {
+        <div class="text-muted">@EmptyText</div>
+    }
+    else
+    {
+        <ol class="mb-0 ps-3 font-monospace">
+            @foreach (var entry in _entries)
+            {
+                <li>@entry</li>
+            }
+        </ol>
+    }
+</div>
+
+@code {
+    private readonly List<string> _entries = [];
+
+    [Parameter] public string Title { get; set; } = "Events";
+    [Parameter] public string EmptyText { get; set; } = "Nothing yet, interact with the grid above.";
+
+    /// <summary>Most recent entries to keep; older ones are dropped.</summary>
+    [Parameter] public int Capacity { get; set; } = 8;
+
+    public void Add(string message)
+    {
+        _entries.Insert(0, message);
+
+        if (_entries.Count > Capacity)
+        {
+            _entries.RemoveRange(Capacity, _entries.Count - Capacity);
+        }
+
+        StateHasChanged();
+    }
+
+    private void Clear()
+    {
+        _entries.Clear();
+    }
+}

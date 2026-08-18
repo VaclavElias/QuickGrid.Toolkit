@@ -1,0 +1,102 @@
+@page "/row-selection"
+
+<ExampleInfo Route="row-selection"
+             Lead="Let users pick rows, then act on the selection from the toolbar.">
+    <p>
+        Selection is a property on your own model, not hidden grid state. Implement
+        <code>ISelectionDto</code> (a single <code>bool IsSelected</code>), render a toggle or tick column bound
+        to it, and set <code>IsSelection</code> on the wrapper. The toolbar then shows a live count, an
+        <em>Unselect All</em> button, and whatever you put in <code>SelectedItemsActionDropDown</code>.
+    </p>
+    <ul>
+        <li>Because the flag lives on your model, the selection survives sorting, searching and paging, and you
+            can act on it with plain LINQ.</li>
+        <li><code>ItemKey</code> tells Blazor how to identify a row when the list is reordered; give it a stable
+            key such as the primary key.</li>
+        <li><code>RowClass</code> is handy here to highlight the selected rows.</li>
+    </ul>
+</ExampleInfo>
+
+<EventLog @ref="_log" Title="Bulk actions" EmptyText="Select some rows, then choose an action from the toolbar." />
+
+<QuickGridWrapper Items="@_items.AsQueryable()"
+                  ItemsVersion="_itemsVersion"
+                  ColumnManager="_columnManager"
+                  IsSelection="true"
+                  ItemKey="p => p.Id"
+                  RowClass="GetRowClass">
+    <SelectedItemsActionDropDown>
+        <li><button class="dropdown-item" @onclick="() => ApplyAsync(ProjectStatus.Active)">Mark active</button></li>
+        <li><button class="dropdown-item" @onclick="() => ApplyAsync(ProjectStatus.OnHold)">Put on hold</button></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><button class="dropdown-item text-danger" @onclick="DeleteSelectedAsync">Delete selected</button></li>
+    </SelectedItemsActionDropDown>
+</QuickGridWrapper>
+
+<ExampleNav Route="row-selection" />
+
+@code {
+    private List<ProjectDto> _items = [];
+    private ColumnManager<ProjectDto> _columnManager = new();
+    private EventLog? _log;
+    private long _itemsVersion;
+
+    protected override void OnInitialized()
+    {
+        _items = ProjectService.GetProjects();
+
+        // The toggle writes straight to the model's IsSelected, which is what ISelectionDto exposes.
+        _columnManager.AddToggleColumn(p => p.IsSelected, "Pick", onChange: ToggleSelectionAsync);
+        _columnManager.AddIndexColumn();
+        _columnManager.AddSimple(p => p.Name, fullTitle: "Project name");
+        _columnManager.AddSimple(p => p.Owner.Name, "Owner");
+        _columnManager.AddSimple(p => p.Status, "Status");
+        _columnManager.AddNumber(p => p.Tasks, "Tasks");
+    }
+
+    /// <summary>Highlights the picked rows; runs for every row on each render.</summary>
+    private static string? GetRowClass(ProjectDto project) => project.IsSelected ? "table-active" : null;
+
+    private Task ToggleSelectionAsync(ProjectDto project)
+    {
+        project.IsSelected = !project.IsSelected;
+
+        // The count in the toolbar and the row highlight both read from the items, so re-read them.
+        _itemsVersion++;
+
+        return Task.CompletedTask;
+    }
+
+    private Task ApplyAsync(ProjectStatus status)
+    {
+        var selected = _items.FindAll(p => p.IsSelected);
+
+        selected.ForEach(p => p.Status = status);
+
+        _log?.Add($"Set {selected.Count} project(s) to {status}");
+
+        return ClearSelectionAsync(selected);
+    }
+
+    private Task DeleteSelectedAsync()
+    {
+        var selected = _items.FindAll(p => p.IsSelected);
+
+        _items.RemoveAll(p => p.IsSelected);
+
+        _log?.Add($"Deleted {selected.Count} project(s)");
+
+        _itemsVersion++;
+
+        return Task.CompletedTask;
+    }
+
+    private Task ClearSelectionAsync(List<ProjectDto> selected)
+    {
+        selected.ForEach(p => p.IsSelected = false);
+
+        _itemsVersion++;
+
+        return Task.CompletedTask;
+    }
+}

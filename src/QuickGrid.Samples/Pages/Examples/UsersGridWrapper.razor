@@ -1,7 +1,6 @@
 @page "/users-grid-wrapper"
 
-<ExampleInfo Title="QuickGridWrapper"
-             SourceFile="UsersGridWrapper.razor"
+<ExampleInfo Route="users-grid-wrapper"
              Lead="The same columns as the QuickGrid example, in an all-in-one component.">
     <p>
         <code>QuickGridWrapper&lt;T&gt;</code> wraps the grid together with a toolbar, quick search across all
@@ -12,7 +11,7 @@
     <ul>
         <li>The column setup below is identical to the <a href="users-grid">QuickGrid + ColumnManager</a> example, only the host component changes.</li>
         <li>Try the <strong>quick search</strong> box above the grid; it matches across every column (and nested properties). The settings menu also offers an exact-match toggle.</li>
-        <li>To add an automatic totals row, see the <a href="total-footer-example">Total Footer</a> example, which builds on this one.</li>
+        <li>To add an automatic totals row, see the <a href="footers-totals">Total Footer</a> example, which builds on this one.</li>
     </ul>
 </ExampleInfo>
 
@@ -53,3 +52,4 @@
         StateHasChanged();
     }
 }
+<ExampleNav Route="users-grid-wrapper" />

@@ -1,0 +1,33 @@
+@* Previous/next links, placed at the foot of an example page so the set reads as a progression. *@
+
+@if (_previous is not null || _next is not null)
+{
+    <nav class="d-flex justify-content-between border-top mt-4 pt-3">
+        <div>
+            @if (_previous is not null)
+            {
+                <a href="@_previous.Route" class="text-decoration-none">&larr; @_previous.Title</a>
+            }
+        </div>
+        <div>
+            @if (_next is not null)
+            {
+                <a href="@_next.Route" class="text-decoration-none">@_next.Title &rarr;</a>
+            }
+        </div>
+    </nav>
+}
+
+@code {
+    private Example? _previous;
+    private Example? _next;
+
+    /// <summary>Route of the current example, matching its entry in <see cref="ExampleRegistry"/>.</summary>
+    [Parameter, EditorRequired] public string Route { get; set; } = default!;
+
+    protected override void OnParametersSet()
+    {
+        _previous = ExampleRegistry.Previous(Route);
+        _next = ExampleRegistry.Next(Route);
+    }
+}

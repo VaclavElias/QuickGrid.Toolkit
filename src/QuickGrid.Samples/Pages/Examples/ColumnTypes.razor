@@ -1,0 +1,114 @@
+@page "/column-types"
+
+<ExampleInfo Route="column-types"
+             Lead="One grid showing every column helper the ColumnManager offers.">
+    <p>
+        Columns are data, not markup: you describe them once on a <code>ColumnManager&lt;T&gt;</code> and the
+        toolkit renders the right column type for each. The grid below uses every helper, in the order they are
+        declared in code.
+    </p>
+    <table class="table table-sm table-bordered small w-auto">
+        <thead>
+            <tr><th>Helper</th><th>Renders</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>AddIndexColumn</code></td><td>Row number</td><td>Numbered by CSS, so it follows sorting and paging.</td></tr>
+            <tr><td><code>AddSimple</code></td><td>Any value as text</td><td>The workhorse. Takes an optional <code>format</code> for <code>IFormattable</code> values.</td></tr>
+            <tr><td><code>AddSimpleDate</code></td><td>A date</td><td><code>AddSimple</code> with <code>dd/MM/yyyy</code> and centre alignment as defaults.</td></tr>
+            <tr><td><code>AddNumber</code></td><td>Right-aligned number</td><td>Overloads for <code>int</code>, <code>decimal</code> and <code>double</code>.</td></tr>
+            <tr><td><code>AddStyledNumber</code></td><td>Number + state</td><td>Emits <code>content="positive|negative|zero"</code> for CSS to colour. See <a href="formatting-styling">Formatting &amp; Styling</a>.</td></tr>
+            <tr><td><code>AddTickColumn</code></td><td>✔ / ✖</td><td><code>showOnlyTrue</code> hides the cross; <code>trueClass</code>/<code>falseClass</code> swap in your own icons.</td></tr>
+            <tr><td><code>AddToggleColumn</code></td><td>Switch</td><td>Calls back on change so you can persist the new value.</td></tr>
+            <tr><td><code>AddImageColumn</code></td><td><code>&lt;img&gt;</code></td><td>The value is used as the <code>src</code>.</td></tr>
+            <tr><td><code>AddMarkup</code></td><td>Raw HTML</td><td>Rendered unencoded, so only pass markup you build yourself.</td></tr>
+            <tr><td><code>AddTemplateColumn</code></td><td>A <code>RenderFragment</code></td><td>Full Blazor markup when a helper is not enough.</td></tr>
+            <tr><td><code>AddAction</code></td><td>Clickable cell</td><td>Static text or a value, with an async click handler.</td></tr>
+            <tr><td><code>Add</code></td><td>Whatever you configure</td><td>The raw <code>DynamicColumn</code> escape hatch.</td></tr>
+        </tbody>
+    </table>
+</ExampleInfo>
+
+<EventLog @ref="_log" Title="Column callbacks" EmptyText="Toggle a flag or click an action cell in the grid below." />
+
+<QuickGridWrapper Items="@_items.AsQueryable()"
+                  ItemsVersion="_itemsVersion"
+                  ColumnManager="_columnManager" />
+
+<ExampleNav Route="column-types" />
+
+@code {
+    private List<ProjectDto> _items = [];
+    private ColumnManager<ProjectDto> _columnManager = new();
+    private EventLog? _log;
+    private long _itemsVersion;
+
+    protected override void OnInitialized()
+    {
+        _items = ProjectService.GetProjects();
+
+        _columnManager.AddIndexColumn();
+
+        // Text. fullTitle is the long form used for the tooltip and the column selector.
+        _columnManager.AddSimple(p => p.Name, fullTitle: "Project name");
+        _columnManager.AddSimple(p => p.Owner.Name, "Owner", "Project owner");
+
+        // Dates. Defaults to dd/MM/yyyy, centred. A null date renders as an empty cell.
+        _columnManager.AddSimpleDate(p => p.StartedOn, "Started");
+        _columnManager.AddSimpleDate(p => p.CompletedOn, "Completed", format: "dd MMM yyyy");
+
+        // Numbers. AddNumber for plain values, AddStyledNumber to mark the value's state.
+        _columnManager.AddNumber(p => p.Tasks, "Tasks");
+        _columnManager.AddNumber(p => p.Budget, "Budget", format: "N0", @class: "text-end");
+        _columnManager.AddStyledNumber<decimal>(p => p.Remaining, "Remaining", "Budget remaining", format: "N0", @class: "text-end");
+
+        // Booleans. A tick is read-only, a toggle calls back.
+        _columnManager.AddTickColumn(p => p.IsActive, "Active");
+        _columnManager.AddToggleColumn(p => p.IsFlagged, "Flag", onChange: ToggleFlagAsync);
+
+        // Images: the value becomes the src attribute.
+        _columnManager.AddImageColumn(p => p.Owner.AvatarUrl, "Avatar");
+
+        // Markup: rendered as-is, so build the HTML yourself and never interpolate untrusted input.
+        _columnManager.AddMarkup(p => $"<span class=\"badge text-bg-secondary\">{p.Code}</span>", "Code");
+
+        // Template: any Blazor markup, with your own sort expression.
+        _columnManager.AddTemplateColumn(StatusTemplate, "Status", sortBy: GridSort<ProjectDto>.ByAscending(p => p.Status));
+
+        // Actions: static text, or the row's own value, with an async handler.
+        _columnManager.AddAction("Open", "Link", onClick: OpenAsync);
+        _columnManager.AddAction(p => p.Code, "Code action", onClick: OpenAsync);
+
+        // The escape hatch: configure a DynamicColumn directly.
+        _columnManager.Add(new() { Property = p => p.Id, Title = "Id", Align = Align.Right });
+    }
+
+    private RenderFragment<ProjectDto> StatusTemplate => project =>
+        @<span class="badge @StatusCss(project.Status)">@project.Status</span>;
+
+    private static string StatusCss(ProjectStatus status) => status switch
+    {
+        ProjectStatus.Active => "text-bg-success",
+        ProjectStatus.Planning => "text-bg-info",
+        ProjectStatus.OnHold => "text-bg-warning",
+        _ => "text-bg-secondary"
+    };
+
+    private Task ToggleFlagAsync(ProjectDto project)
+    {
+        project.IsFlagged = !project.IsFlagged;
+
+        // The list changed in place, so tell the grid to re-read it.
+        _itemsVersion++;
+
+        _log?.Add($"Toggle: {project.Name} flagged = {project.IsFlagged}");
+
+        return Task.CompletedTask;
+    }
+
+    private Task OpenAsync(ProjectDto project)
+    {
+        _log?.Add($"Action: opened {project.Name} ({project.Code})");
+
+        return Task.CompletedTask;
+    }
+}

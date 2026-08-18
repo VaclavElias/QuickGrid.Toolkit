@@ -1,0 +1,67 @@
+@page "/app-quickgrid"
+@implements IDisposable
+@inject ToastService Toasts
+
+<ExampleInfo Route="app-quickgrid"
+             Lead="Wrap the wrapper once, and every grid in your application inherits the same behaviour.">
+    <p>
+        Every example so far configured the wrapper inline. In a real application that repetition is the problem:
+        the same CSS classes, the same export handler, the same toast wiring on every page. Subclass
+        <code>QuickGridWrapper&lt;T&gt;</code> once and pages are left with just their data and columns.
+    </p>
+    <ul>
+        <li><strong>Constructor</strong> — assign parameters such as <code>Class</code>, <code>Theme</code>,
+            <code>ItemsPerPage</code> or <code>IsExportEnabled</code>. They behave as defaults, so a page can
+            still override any of them.</li>
+        <li><strong><code>OnInitialized</code></strong> — fill in <code>Events</code> callbacks, guarding each
+            with <code>HasDelegate</code> so a page can still handle one itself.</li>
+        <li><strong><code>[Inject]</code></strong> — pull in your own services (toasts, export, saved-view
+            storage) that individual pages should not have to know about.</li>
+    </ul>
+    <p class="mb-0">
+        See <code>Components/AppQuickGrid.cs</code> for the component itself; the page below is the whole usage.
+    </p>
+</ExampleInfo>
+
+@if (Toasts.Toasts.Count > 0)
+{
+    <div class="mb-3">
+        @foreach (var toast in Toasts.Toasts)
+        {
+            <div class="alert alert-@(toast.Level == "warning" ? "warning" : "info") py-1 px-2 small mb-1">@toast.Message</div>
+        }
+        <button class="btn btn-sm btn-light py-0" @onclick="Toasts.Clear">Clear messages</button>
+    </div>
+}
+
+<AppQuickGrid Items="@_items.AsQueryable()" ColumnManager="_columnManager" IsPaginator="true" />
+
+<p class="small text-muted mt-2">
+    No <code>Class</code>, no <code>IsExportEnabled</code>, no <code>Events</code> here: they come from
+    <code>AppQuickGrid</code>. Use the gear menu to export and the shared toast service reports it.
+</p>
+
+<ExampleNav Route="app-quickgrid" />
+
+@code {
+    private List<ProjectDto> _items = [];
+    private ColumnManager<ProjectDto> _columnManager = new();
+
+    protected override void OnInitialized()
+    {
+        Toasts.Changed += OnToastsChanged;
+
+        _items = ProjectService.GetProjects();
+
+        _columnManager.AddIndexColumn();
+        _columnManager.AddSimple(p => p.Name, fullTitle: "Project name");
+        _columnManager.AddSimple(p => p.Owner.Name, "Owner");
+        _columnManager.AddSimpleDate(p => p.StartedOn, "Started");
+        _columnManager.AddNumber(p => p.Tasks, "Tasks");
+        _columnManager.AddStyledNumber<decimal>(p => p.Remaining, "Remaining", format: "N0", @class: "text-end");
+    }
+
+    private void OnToastsChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Toasts.Changed -= OnToastsChanged;
+}

@@ -1,0 +1,131 @@
+@page "/loading-paging"
+
+<ExampleInfo Route="loading-paging"
+             Lead="Show a loading state, page through rows, and keep the grid in step with changing data.">
+    <p>
+        <code>IsLoading</code> replaces the toolbar with a loading note while you fetch, and
+        <code>IsPaginator</code> with <code>ItemsPerPage</code> adds a pager below the grid.
+    </p>
+    <p>
+        The third piece is refreshing. QuickGrid only re-reads its rows when the <code>Items</code>
+        <em>reference</em> changes, and the wrapper caches the quick search result, so neither notices when rows
+        are added to or edited inside a collection it already holds. Two ways to say "the data changed":
+    </p>
+    <ul>
+        <li><strong><code>ItemsVersion</code></strong> — increment it after mutating the list. Declarative, no
+            component reference needed.</li>
+        <li><strong><code>RefreshDataAsync()</code></strong> — call it on the wrapper through <code>@@ref</code>.
+            Same effect, imperative.</li>
+    </ul>
+    <p class="mb-0">
+        Try it: type a quick search such as <code>a</code>, then add a row with and without a refresh signal.
+    </p>
+</ExampleInfo>
+
+<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+    <button class="btn btn-sm btn-primary" @onclick="LoadAsync">Reload (shows IsLoading)</button>
+    <button class="btn btn-sm btn-outline-secondary" @onclick="AddSilently">Add row, no signal</button>
+    <button class="btn btn-sm btn-outline-primary" @onclick="AddWithVersion">Add row, bump ItemsVersion</button>
+    <button class="btn btn-sm btn-outline-primary" @onclick="AddWithRefreshAsync">Add row, call RefreshDataAsync()</button>
+
+    <div class="form-check form-switch ms-3">
+        <input class="form-check-input" type="checkbox" role="switch" id="paginator" @bind="_isPaginator" />
+        <label class="form-check-label small" for="paginator">Paginator</label>
+    </div>
+
+    <span class="small text-muted">Rows: @_items.Count · ItemsVersion: @_itemsVersion</span>
+</div>
+
+<QuickGridWrapper @ref="_wrapper"
+                  Items="@_queryable"
+                  ItemsVersion="_itemsVersion"
+                  IsLoading="_isLoading"
+                  IsPaginator="_isPaginator"
+                  ItemsPerPage="5"
+                  ColumnManager="_columnManager" />
+
+<ExampleNav Route="loading-paging" />
+
+@code {
+    private List<ProjectDto> _items = [];
+    private ColumnManager<ProjectDto> _columnManager = new();
+    private QuickGridWrapper<ProjectDto>? _wrapper;
+
+    // Held in a field rather than rebuilt inline, so the reference stays stable between renders.
+    // That is what makes the "no signal" button below visibly do nothing.
+    private IQueryable<ProjectDto> _queryable = Enumerable.Empty<ProjectDto>().AsQueryable();
+
+    private long _itemsVersion;
+    private bool _isLoading;
+    private bool _isPaginator = true;
+    private int _added;
+
+    protected override void OnInitialized()
+    {
+        _items = ProjectService.GetProjects();
+        _queryable = _items.AsQueryable();
+
+        _columnManager.AddIndexColumn();
+        _columnManager.AddSimple(p => p.Name, fullTitle: "Project name");
+        _columnManager.AddSimple(p => p.Owner.Team, "Team");
+        _columnManager.AddSimpleDate(p => p.StartedOn, "Started");
+        _columnManager.AddNumber(p => p.Tasks, "Tasks");
+        _columnManager.AddStyledNumber<decimal>(p => p.Remaining, "Remaining", format: "N0", @class: "text-end");
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+
+        // Stand-in for a real fetch.
+        await Task.Delay(600);
+
+        _items = ProjectService.GetProjects();
+        _queryable = _items.AsQueryable();
+        _added = 0;
+        _isLoading = false;
+
+        // A new collection means a new reference, so the grid re-reads on its own. The bump is still
+        // needed to clear a cached quick search result.
+        _itemsVersion++;
+    }
+
+    private void AddSilently() => AddRow();
+
+    private void AddWithVersion()
+    {
+        AddRow();
+
+        _itemsVersion++;
+    }
+
+    private async Task AddWithRefreshAsync()
+    {
+        AddRow();
+
+        if (_wrapper is not null)
+        {
+            await _wrapper.RefreshDataAsync();
+        }
+    }
+
+    /// <summary>Mutates the existing list in place, which is the case the grid cannot detect by itself.</summary>
+    private void AddRow()
+    {
+        _added++;
+
+        _items.Add(new ProjectDto
+        {
+            Id = 100 + _added,
+            Name = $"Added project {_added}",
+            Code = $"NEW-{_added:00}",
+            Owner = new OwnerDto { Name = "New Owner", Team = "Platform" },
+            StartedOn = DateTime.Today,
+            Tasks = _added,
+            Budget = 10_000m,
+            Spent = 2_500m,
+            Status = ProjectStatus.Planning,
+            IsActive = true
+        });
+    }
+}

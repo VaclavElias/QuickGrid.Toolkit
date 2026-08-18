@@ -1,0 +1,149 @@
+@page "/export"
+
+<ExampleInfo Route="export"
+             Lead="Turn on the export menu and produce a CSV of what the user is looking at.">
+    <p>
+        Set <code>IsExportEnabled</code> and the settings menu gains two entries. The toolkit does not write files
+        itself: it hands you the data and you decide the format and delivery. Both callbacks live on
+        <code>QuickGridWrapperEvents&lt;T&gt;</code>.
+    </p>
+    <ul>
+        <li><code>OnExport</code> receives the rows as <code>IQueryable&lt;T&gt;</code>, already narrowed by the
+            active quick search. Export whichever properties you like.</li>
+        <li><code>OnSelectedColumnsExport</code> receives one dictionary per row containing only the
+            <em>visible</em> columns, keyed by property name. Hide a column and it disappears from the export.</li>
+        <li><code>WarningRequested</code> is how the wrapper reports problems such as "nothing to export"; wire it
+            to your toast or alert system.</li>
+    </ul>
+    <p class="mb-0">
+        Only columns with a <code>PropertyName</code> can be exported by the second option, which the helpers set
+        for you from the expression.
+    </p>
+</ExampleInfo>
+
+<p class="small text-muted">
+    Open the <strong>gear menu</strong> above the grid and choose an export. Try it again after hiding a column,
+    or with a quick search active, and compare the output.
+</p>
+
+<QuickGridWrapper Items="@_items.AsQueryable()"
+                  ColumnManager="_columnManager"
+                  IsExportEnabled="true"
+                  Events="_events" />
+
+@if (_csv is not null)
+{
+    <div class="mt-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <strong class="small">@_csvTitle (@_csvRowCount rows)</strong>
+            <button class="btn btn-sm btn-light py-0" @onclick="() => _csv = null">Clear</button>
+        </div>
+        <pre class="border rounded bg-light small p-2 mb-0" style="max-height: 16rem; overflow: auto">@_csv</pre>
+    </div>
+}
+
+@if (_warning is not null)
+{
+    <div class="alert alert-warning py-1 px-2 small mt-2 mb-0">@_warning</div>
+}
+
+<ExampleNav Route="export" />
+
+@code {
+    private List<ProjectDto> _items = [];
+    private ColumnManager<ProjectDto> _columnManager = new();
+    private QuickGridWrapperEvents<ProjectDto> _events = new();
+
+    private string? _csv;
+    private string? _csvTitle;
+    private string? _warning;
+    private int _csvRowCount;
+
+    protected override void OnInitialized()
+    {
+        _items = ProjectService.GetProjects();
+
+        _columnManager.AddIndexColumn();
+        _columnManager.AddSimple(p => p.Name, fullTitle: "Project name");
+        _columnManager.AddSimple(p => p.Code, "Code");
+        _columnManager.AddSimple(p => p.Owner.Name, "Owner");
+        _columnManager.AddSimpleDate(p => p.StartedOn, "Started");
+        _columnManager.AddNumber(p => p.Tasks, "Tasks");
+        _columnManager.AddNumber(p => p.Budget, "Budget", @class: "text-end");
+
+        _events = new QuickGridWrapperEvents<ProjectDto>
+        {
+            OnExport = EventCallback.Factory.Create<IQueryable<ProjectDto>>(this, ExportAll),
+            OnSelectedColumnsExport = EventCallback.Factory
+                .Create<IEnumerable<IDictionary<string, object?>?>?>(this, ExportVisibleColumns),
+            WarningRequested = EventCallback.Factory.Create<string>(this, ShowWarning)
+        };
+    }
+
+    /// <summary>Full control: you pick the columns and the order.</summary>
+    private void ExportAll(IQueryable<ProjectDto> rows)
+    {
+        var items = rows.ToList();
+
+        var builder = new StringBuilder();
+        builder.AppendLine("Name,Code,Owner,Started,Tasks,Budget");
+
+        foreach (var project in items)
+        {
+            builder.AppendLine(string.Join(',',
+                Csv(project.Name), Csv(project.Code), Csv(project.Owner.Name),
+                project.StartedOn.ToString("yyyy-MM-dd"), project.Tasks, project.Budget));
+        }
+
+        Show("Export CSV", builder.ToString(), items.Count);
+    }
+
+    /// <summary>Column-driven: the toolkit has already reduced each row to the visible columns.</summary>
+    private void ExportVisibleColumns(IEnumerable<IDictionary<string, object?>?>? rows)
+    {
+        var items = rows?.Where(row => row is not null).Select(row => row!).ToList() ?? [];
+
+        if (items.Count == 0)
+        {
+            ShowWarning("Nothing to export.");
+
+            return;
+        }
+
+        var headers = items[0].Keys.ToList();
+
+        var builder = new StringBuilder();
+        builder.AppendLine(string.Join(',', headers));
+
+        foreach (var row in items)
+        {
+            builder.AppendLine(string.Join(',', headers.Select(header => Csv(row[header]?.ToString()))));
+        }
+
+        Show("Export CSV, selected columns", builder.ToString(), items.Count);
+    }
+
+    private void ShowWarning(string message)
+    {
+        _warning = message;
+        _csv = null;
+    }
+
+    private void Show(string title, string csv, int rowCount)
+    {
+        _csvTitle = title;
+        _csv = csv;
+        _csvRowCount = rowCount;
+        _warning = null;
+    }
+
+    /// <summary>Minimal CSV quoting, enough for the demo.</summary>
+    private static string Csv(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return string.Empty;
+
+        return value.Contains(',') || value.Contains('"')
+            ? $"\"{value.Replace("\"", "\"\"")}\""
+            : value;
+    }
+}

@@ -18,28 +18,16 @@
 
 <h2>Examples</h2>
 
-<p>Each example below shares the same column setup and links to the next, so they read as a progression.</p>
+<p>They run from the simplest to the most involved, and each one links to the next.</p>
 
 <div class="list-group mb-4">
-    <a class="list-group-item list-group-item-action" href="users-grid">
-        <strong>QuickGrid + ColumnManager</strong>
-        <div class="small text-muted">
-            Write your own <code>&lt;QuickGrid&gt;</code> and render columns from a <code>ColumnManager</code>,
-            with a <code>ColumnSelector</code> for show/hide. The low-level building blocks.
-        </div>
-    </a>
-    <a class="list-group-item list-group-item-action" href="users-grid-wrapper">
-        <strong>QuickGridWrapper</strong>
-        <div class="small text-muted">
-            The same columns inside one component that adds a toolbar, quick search and pagination.
-        </div>
-    </a>
-    <a class="list-group-item list-group-item-action" href="total-footer-example">
-        <strong>Total Footer</strong>
-        <div class="small text-muted">
-            Add an automatic, summed totals row to a <code>QuickGridWrapper</code>.
-        </div>
-    </a>
+    @foreach (var example in ExampleRegistry.Examples)
+    {
+        <a class="list-group-item list-group-item-action" href="@example.Route">
+            <strong>@example.Title</strong>
+            <div class="small text-muted">@example.Summary</div>
+        </a>
+    }
 </div>
 
 <p>
