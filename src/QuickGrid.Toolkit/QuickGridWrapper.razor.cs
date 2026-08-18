@@ -26,8 +26,17 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     [Parameter] public string? QuickSearch { get; set; }
 
     /// <summary>
-    /// A version number that should be incremented whenever the Items collection changes. It is used to detect changes and refresh the grid accordingly, specifically footer totals and if external filter is applied while search is active.
+    /// Increment this whenever the contents of <see cref="Items"/> change, to have the grid re-read them and
+    /// rebuild the quick search result and footer totals.
     /// </summary>
+    /// <remarks>
+    /// <para>QuickGrid only re-queries when the <c>Items</c> <em>reference</em> changes, and the wrapper caches the
+    /// quick search result keyed on the search text. Neither can see rows being added to, removed from or edited
+    /// inside a collection they were already handed, which is what this parameter signals.</para>
+    /// <para>It is not needed when the caller assigns a new collection each time (for example
+    /// <c>Items="@(_items.AsQueryable())"</c> with no search active), since the changed reference is detected
+    /// on its own. <see cref="RefreshDataAsync"/> does the same job imperatively if you hold an <c>@ref</c>.</para>
+    /// </remarks>
     [Parameter] public long ItemsVersion { get; set; }
 
     // ToDo: If most callers already have a List and use in-memory search, consider changing Items to IEnumerable<TGridItem> (or IReadOnlyList<TGridItem>) and add QueryableItems for EF-backed scenarios. Use the branching above to support both safely.
@@ -72,14 +81,24 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     [Inject] protected IServiceProvider ServiceProvider { get; set; } = default!;
     [Inject] protected ILogger<QuickGridWrapper<TGridItem>> Logger { get; set; } = default!;
 
-    public List<ColumnConfig> ColumnConfigurations { get; set; } = [];
+    /// <summary>
+    /// Named column layouts offered in the column-layout menu. Supply them from markup, or assign them from a
+    /// subclass once they have been loaded from storage.
+    /// </summary>
+    [Parameter] public List<ColumnConfig> ColumnConfigurations { get; set; } = [];
     public ColumnManager<TGridItem> UsedColumnManager { get; set; } = new();
     public ColumnConfig? SelectedConfiguration { get; set; }
+
+    /// <summary>
+    /// Icon set for this grid's toolbar. Overrides any <see cref="IQuickGridIconProvider"/> registered in DI,
+    /// which is normally where the application sets its icons once for every grid.
+    /// </summary>
+    [Parameter] public IQuickGridIconProvider? Icons { get; set; }
 
     // Resolve icon provider lazily with a safe default so the component doesn't throw if it's not registered in DI
     private IQuickGridIconProvider? _iconProvider;
     protected IQuickGridIconProvider IconProvider =>
-        _iconProvider ??= ServiceProvider.GetService<IQuickGridIconProvider>() ?? new DefaultQuickGridIconProvider();
+        Icons ?? (_iconProvider ??= ServiceProvider.GetService<IQuickGridIconProvider>() ?? new DefaultQuickGridIconProvider());
 
     /// <summary>
     /// Minimum number of characters before a <see cref="FilterCriteria"/> backed search queries the source.
@@ -107,8 +126,11 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     private ColumnManager<TGridItem> _defaultColumnManager = new();
 
     private List<TGridItem>? _cachedFilteredItems;
+    private IQueryable<TGridItem>? _cachedFilteredQueryable;
     private List<string> _defaultVisibleColumns = [];
     private List<TGridItem>? _evaluatedItems;
+    private List<TGridItem>? _evaluatedSource;
+    private IQueryable<TGridItem>? _evaluatedQueryable;
     private IJSObjectReference? _module;
 
     // AsEnumerable() keeps the pattern match in C#: counting straight off the IQueryable would build an
@@ -137,15 +159,26 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
                 if (_searchQuery != _lastSearchQuery)
                 {
                     _cachedFilteredItems = Items?.Where(item => QuickSearchAction(item, _searchQuery, searchOptions)).ToList();
+
+                    // Cache the queryable too, not just the list. AsQueryable() allocates a new wrapper every
+                    // call, and QuickGrid re-queries whenever its Items reference changes, so returning a fresh
+                    // one from this getter would make the grid refresh on every single render.
+                    _cachedFilteredQueryable = _cachedFilteredItems?.AsQueryable();
                 }
 
-                result = _cachedFilteredItems?.AsQueryable();
+                result = _cachedFilteredQueryable;
             }
             else
             {
                 // No server-side result yet (e.g. the search term is still below MinFilterSearchLength),
                 // so fall back to the unfiltered items rather than blanking the grid.
-                result = _evaluatedItems?.AsQueryable() ?? Items;
+                if (!ReferenceEquals(_evaluatedItems, _evaluatedSource))
+                {
+                    _evaluatedSource = _evaluatedItems;
+                    _evaluatedQueryable = _evaluatedItems?.AsQueryable();
+                }
+
+                result = _evaluatedQueryable ?? Items;
             }
 
             if (_searchQuery != _lastSearchQuery)
@@ -536,13 +569,24 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         await Events.OnSelectedColumnsExport.InvokeAsync(exportItems);
     }
 
+    /// <summary>
+    /// Re-reads the items and rebuilds anything derived from them: the quick search result, the footer totals
+    /// and the grid's own rows. Call this after changing the contents of <see cref="Items"/> in place.
+    /// </summary>
+    /// <remarks>
+    /// This is the imperative equivalent of bumping <see cref="ItemsVersion"/>; use whichever suits the caller.
+    /// </remarks>
     public async Task RefreshDataAsync()
     {
-        if (_grid is null) return;
+        // Drop the cached search result: an in-place change to Items leaves it stale, and the cache key is the
+        // search text, which has not changed.
+        _lastSearchQuery = null;
 
         // The footer lives in the DOM outside Blazor's render tree, so forget the cached markup here:
         // a rebuilt grid must get the footer pushed again even when the totals themselves are unchanged.
         _lastRenderedFooter = null;
+
+        if (_grid is null) return;
 
         await _grid.RefreshDataAsync();
     }
