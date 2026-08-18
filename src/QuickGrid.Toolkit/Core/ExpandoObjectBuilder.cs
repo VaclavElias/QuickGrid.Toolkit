@@ -22,11 +22,11 @@ public static class ExpandoObjectBuilder<TGridItem>
 
             if (IsNestedProperty(column))
             {
-                ExpandoObjectBuilder<TGridItem>.ExtractNestedProperty(obj, item, column);
+                ExtractNestedProperty(obj, item, column);
             }
             else
             {
-                ExpandoObjectBuilder<TGridItem>.ExtractSimpleProperty(obj, item, column);
+                ExtractSimpleProperty(obj, item, column);
             }
         }
 
@@ -39,7 +39,8 @@ public static class ExpandoObjectBuilder<TGridItem>
     private static bool IsNestedProperty(string propertyName) => propertyName.Contains('.');
 
     /// <summary>
-    /// Extracts a nested property value from an item and adds it to the provided dictionary.
+    /// Walks a dotted property path (for example <c>Client.Address.City</c>) and adds the value it resolves to.
+    /// Nothing is added when any step in the path is missing or null. Any depth is supported.
     /// </summary>
     private static void ExtractNestedProperty(IDictionary<string, object?> dict, TGridItem item, string propertyPath)
     {
@@ -47,36 +48,20 @@ public static class ExpandoObjectBuilder<TGridItem>
 
         if (propertyParts.Length < 2) return;
 
-        var rootProperty = item!.GetType().GetProperty(propertyParts[0]);
+        object? current = item;
 
-        if (rootProperty is null) return;
-
-        var rootValue = rootProperty.GetValue(item);
-
-        if (rootValue is null) return;
-
-        var childProperty1 = rootValue.GetType().GetProperty(propertyParts[1]);
-
-        if (childProperty1 is null) return;
-
-        var childValue1 = childProperty1.GetValue(rootValue);
-
-        if (childValue1 is null) return;
-
-        if (propertyParts.Length > 2)
+        foreach (var part in propertyParts)
         {
-            var childProperty2 = childValue1.GetType().GetProperty(propertyParts[2]);
+            if (current is null) return;
 
-            if (childProperty2 is null) return;
+            var property = current.GetType().GetProperty(part);
 
-            var childValue2 = childProperty2.GetValue(childValue1);
+            if (property is null) return;
 
-            dict.Add(propertyPath, childValue2);
-
-            return;
+            current = property.GetValue(current);
         }
 
-        dict.Add(propertyPath, childValue1);
+        dict[propertyPath] = current;
     }
 
     /// <summary>
@@ -88,8 +73,6 @@ public static class ExpandoObjectBuilder<TGridItem>
 
         if (property is null) return;
 
-        var value = property.GetValue(item);
-
-        dict.Add(propertyName, value);
+        dict[propertyName] = property.GetValue(item);
     }
 }
