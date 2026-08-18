@@ -158,31 +158,41 @@ public class ColumnManager<TGridItem>
         Add(column);
     }
 
-    // ToDo: Consider merging, these are good candidates to merge into one generic method, including AddStyledNumber
+    // Note: these overloads are deliberately NOT merged into one generic AddNumber<TValue>. A generic parameter
+    // of type Expression<Func<TGridItem, TValue?>> cannot infer TValue from a non-nullable property such as
+    // `s => s.Count` (int), so every such call site would have to name the type argument explicitly.
+    // The signatures are kept identical to each other so the same arguments work whatever the numeric type.
+
     /// <summary>
-    /// Adds a decimal numeric column to the grid.
+    /// Adds a right-aligned decimal column to the grid.
     /// </summary>
-    public void AddNumber(Expression<Func<TGridItem, decimal?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true)
+    /// <param name="format">Format string applied with the invariant culture.</param>
+    /// <param name="propertyName">Property name used when exporting selected columns.</param>
+    public void AddNumber(Expression<Func<TGridItem, decimal?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null)
     {
-        var column = _columnBuilder.BuildNumberColumn(expression, title, fullTitle, format, @class, align, visible);
+        var column = _columnBuilder.BuildNumberColumn(expression, title, fullTitle, format, @class, align, visible, propertyName);
         Add(column);
     }
 
     /// <summary>
-    /// Adds a double numeric column to the grid.
+    /// Adds a right-aligned double column to the grid.
     /// </summary>
-    public void AddNumber(Expression<Func<TGridItem, double?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true)
+    /// <param name="format">Format string applied with the invariant culture.</param>
+    /// <param name="propertyName">Property name used when exporting selected columns.</param>
+    public void AddNumber(Expression<Func<TGridItem, double?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null)
     {
-        var column = _columnBuilder.BuildNumberColumn(expression, title, fullTitle, format, @class, align, visible);
+        var column = _columnBuilder.BuildNumberColumn(expression, title, fullTitle, format, @class, align, visible, propertyName);
         Add(column);
     }
 
     /// <summary>
-    /// Adds a int numeric column to the grid.
+    /// Adds a right-aligned int column to the grid.
     /// </summary>
-    public void AddNumber(Expression<Func<TGridItem, int?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, string? propertyName = null)
+    /// <param name="format">Format string applied with the invariant culture.</param>
+    /// <param name="propertyName">Property name used when exporting selected columns.</param>
+    public void AddNumber(Expression<Func<TGridItem, int?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null)
     {
-        var column = _columnBuilder.BuildNumberColumn(expression, title, fullTitle, format, @class, align, propertyName: propertyName);
+        var column = _columnBuilder.BuildNumberColumn(expression, title, fullTitle, format, @class, align, visible, propertyName);
         Add(column);
     }
 
