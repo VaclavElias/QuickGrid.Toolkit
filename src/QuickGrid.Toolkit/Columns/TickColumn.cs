@@ -32,7 +32,12 @@ public class TickColumn<TGridItem> : PropertyColumnBase<TGridItem>
             return;
         }
 
-        var isTrue = rawValue.ToString() == "True";
+        // Property is object-typed, so the value is usually a boxed bool; anything else falls back to its text.
+        var isTrue = rawValue switch
+        {
+            bool boolValue => boolValue,
+            _ => string.Equals(rawValue.ToString(), "True", StringComparison.OrdinalIgnoreCase)
+        };
 
         if (ShowOnlyTrue && !isTrue)
         {
