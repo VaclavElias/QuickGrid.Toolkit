@@ -25,6 +25,7 @@ app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+    .AddInteractiveServerRenderMode()
+    .AddAdditionalAssemblies(typeof(QuickGrid.Samples.Core.ExampleRegistry).Assembly);
 
 app.Run();

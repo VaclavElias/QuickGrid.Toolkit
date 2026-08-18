@@ -1,0 +1,8 @@
+@namespace QuickGrid.Samples.Wasm
+
+<Router AppAssembly="typeof(App).Assembly" AdditionalAssemblies="[typeof(QuickGrid.Samples.Core.ExampleRegistry).Assembly]">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(QuickGrid.Samples.Components.Layout.MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>
