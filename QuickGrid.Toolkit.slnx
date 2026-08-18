@@ -4,4 +4,5 @@
   </Folder>
   <Project Path="src/QuickGrid.Samples/QuickGrid.Samples.csproj" Id="f46048cf-74e7-493f-aa2a-68023987fd17" />
   <Project Path="src/QuickGrid.Toolkit/QuickGrid.Toolkit.csproj" />
+  <Project Path="tests/QuickGrid.Toolkit.Tests/QuickGrid.Toolkit.Tests.csproj" />
 </Solution>
