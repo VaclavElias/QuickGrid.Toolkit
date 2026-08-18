@@ -12,7 +12,7 @@ Eleven example pages, from the low-level building blocks to a full application-g
 
 | Example | Shows | Source |
 | --- | --- | --- |
-| [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) | Your own `<QuickGrid>` with columns rendered from a `ColumnManager`, plus a `ColumnSelector` — the low-level pattern | [UsersGrid.razor](src/QuickGrid.Samples.Shared/Pages/Examples/UsersGrid.razor) |
+| [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) | Your own `<QuickGrid>` with columns rendered from a `ColumnManager`, plus a `ColumnSelector` - the low-level pattern | [UsersGrid.razor](src/QuickGrid.Samples.Shared/Pages/Examples/UsersGrid.razor) |
 | [QuickGridWrapper](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper) | The same columns in one component with toolbar, quick search and a column selector | [UsersGridWrapper.razor](src/QuickGrid.Samples.Shared/Pages/Examples/UsersGridWrapper.razor) |
 | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) | Every column helper side by side: text, dates, numbers, ticks, toggles, markup, images, templates and actions | [ColumnTypes.razor](src/QuickGrid.Samples.Shared/Pages/Examples/ColumnTypes.razor) |
 | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) | Format strings, conditional cell styling with `CellStyleMap`, row classes, shared `ColumnInfo` definitions | [FormattingStyling.razor](src/QuickGrid.Samples.Shared/Pages/Examples/FormattingStyling.razor) |
@@ -33,7 +33,7 @@ Eleven example pages, from the low-level building blocks to a full application-g
 | Feature | Example |
 | --- | --- |
 | ✅ Add columns dynamically at runtime with `ColumnManager<T>` | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
-| ✅ One column setup reused across grids — each grid shows a different subset | [QuickGridWrapper](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper) |
+| ✅ One column setup reused across grids - each grid shows a different subset | [QuickGridWrapper](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper) |
 | ✅ Show/hide column selection UI (`ColumnSelector`) | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
 | ✅ Predefined, strongly-typed helpers via extension methods (e.g. `AddCountry()`) | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
 | ✅ Sorting for added columns | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
@@ -63,7 +63,7 @@ Eleven example pages, from the low-level building blocks to a full application-g
 | ✅ Conditional cell styling (`CellStyleMap`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
 | ✅ Custom column styling (CSS class per column) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
 | ✅ Custom row styling (row classes, CSS `:has()`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
-| ✅ Utility CSS classes: `table-index`, `table-fit`, `table-thead-sticky`, `table-no-empty-lines` | — |
+| ✅ Utility CSS classes: `table-index`, `table-fit`, `table-thead-sticky`, `table-no-empty-lines` | - |
 
 ### `QuickGridWrapper` (all-in-one grid)
 
@@ -85,7 +85,7 @@ Eleven example pages, from the low-level building blocks to a full application-g
 
 | Feature | Example |
 | --- | --- |
-| ✅ Automatic total footer — sums numeric columns (`TotalFooter`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
+| ✅ Automatic total footer - sums numeric columns (`TotalFooter`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
 | ✅ Per-column total control (`CalculateTotal`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
 | ✅ Manual footer cells (`AddFooterColumn`, `AddFooterColumnWithSum`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
 | ✅ Column header tooltips from full titles (needs the wrapper `Id`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
@@ -96,7 +96,7 @@ Eleven example pages, from the low-level building blocks to a full application-g
 | --- | --- |
 | ✅ Export to CSV (the wrapper raises `Events`; writing the file is up to the host) | [Export](https://vaclavelias.github.io/QuickGrid.Toolkit/export) |
 | ✅ Export selected columns only | [Export](https://vaclavelias.github.io/QuickGrid.Toolkit/export) |
-| ⏳ Export to JSON | — |
+| ⏳ Export to JSON | - |
 
 ## Requirements
 
