@@ -6,6 +6,26 @@
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
+    <PropertyGroup Label="Packaging">
+        <PackageId>QuickGrid.Toolkit</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>Vaclav Elias</Authors>
+        <Description>Extends the Blazor QuickGrid with dynamic, data-driven column management and an all-in-one grid wrapper: quick search, pagination, footers and totals, column show/hide with saved views, CSV export hooks and pluggable icons.</Description>
+        <PackageTags>blazor;quickgrid;datagrid;grid;table;columns</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageProjectUrl>https://github.com/VaclavElias/QuickGrid.Toolkit</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/VaclavElias/QuickGrid.Toolkit</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <!-- CS1591/CS1573 (missing XML docs on public members/params): docs are being added incrementally; do not fail the warning-clean build on the gaps. -->
+        <NoWarn>$(NoWarn);CS1591;CS1573</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
 
     <ItemGroup>
         <SupportedPlatform Include="browser" />
