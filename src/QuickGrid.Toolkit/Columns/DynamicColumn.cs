@@ -5,7 +5,6 @@ public class DynamicColumn<TGridItem>
 {
     private readonly static RenderFragment<TGridItem> EmptyChildContent = _ => builder => { };
 
-    private string? _fullTitle;
     private Expression<Func<TGridItem, object?>>? _compiledFrom;
     private Func<TGridItem, object?>? _compiledProperty;
 
@@ -19,14 +18,17 @@ public class DynamicColumn<TGridItem>
     /// </summary>
     public string? PropertyName { get; set; }
     public bool Visible { get; set; } = true;
-    public bool Sortable { get; set; } = true;
     public bool IsNumeric { get; set; }
     public bool? CalculateTotal { get; set; }
     public string? Title { get; set; } = string.Empty;
+    /// <summary>
+    /// The long form of the column heading, used for tooltips and the column selector.
+    /// Falls back to <see cref="Title"/> when not set.
+    /// </summary>
     public string? FullTitle
     {
-        get => string.IsNullOrWhiteSpace(_fullTitle) ? Title : _fullTitle;
-        set => _fullTitle = value;
+        get => string.IsNullOrWhiteSpace(field) ? Title : field;
+        set;
     }
     public Align Align { get; set; }
     public string? Format { get; set; }
@@ -35,7 +37,6 @@ public class DynamicColumn<TGridItem>
 
     public RenderFragment<TGridItem> ChildContent { get; set; } = EmptyChildContent;
     public GridSort<TGridItem>? SortBy { get; set; }
-    public Action? OnClick { get; set; }
     public Func<TGridItem, Task>? OnActionAsync { get; set; }
 
     public Type ColumnType { get; set; } = typeof(PropertyColumn<TGridItem, object?>);
