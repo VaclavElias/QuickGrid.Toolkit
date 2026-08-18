@@ -15,7 +15,7 @@
     }
     else
     {
-        <ColumnSelector @bind-Visible="IsColumnItemsSelection" ColumnManager="ColumnManager" SelectionChanged="RefreshDataAsync" />
+        <ColumnSelector @bind-Visible="IsColumnItemsSelection" ColumnManager="UsedColumnManager" SelectionChanged="OnColumnVisibilityChangedAsync" />
         <div class="d-flex justify-content-between">
             <div class="d-flex align-items-baseline">
                 @if (IsToolbar)
@@ -125,7 +125,7 @@
 {
     @FilterSection
 }
-<QuickGrid @ref="_grid" Items="@_filteredItems" Class="@GetTableClass()" Theme="twentyAI" Pagination="@_pagination" id="@Id" ItemKey="ItemKey" RowClass="RowClass">
+<QuickGrid @ref="_grid" Items="@_filteredItems" Class="@GetTableClass()" Theme="@Theme" Pagination="@_pagination" id="@Id" ItemKey="ItemKey" RowClass="RowClass">
     @QuickGridColumns.Columns(UsedColumnManager)
 </QuickGrid>
 @if (IsPaginator && _pagination != null)

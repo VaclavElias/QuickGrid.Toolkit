@@ -11,7 +11,17 @@ namespace QuickGrid.Toolkit;
 public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposable
 {
     [Parameter] public string? Id { get; set; }
-    [Parameter] public string? Class { get; set; } = "table table-sm table-index table-striped small table-fit table-thead-sticky table-no-empty-lines mb-0";
+    /// <summary>
+    /// CSS classes for the rendered table. <c>table-index</c> is not included here: it is appended by
+    /// <see cref="GetTableClass"/> when an index column is actually visible.
+    /// </summary>
+    [Parameter] public string? Class { get; set; } = "table table-sm table-striped small table-fit table-thead-sticky table-no-empty-lines mb-0";
+
+    /// <summary>
+    /// Optional QuickGrid theme name, passed straight through to <c>QuickGrid.Theme</c>.
+    /// Leave unset to render no theme attribute, which opts out of QuickGrid's built-in <c>default</c> styling.
+    /// </summary>
+    [Parameter] public string? Theme { get; set; }
     [Parameter] public string? DownloadFileName { get; set; }
     [Parameter] public string? QuickSearch { get; set; }
 
@@ -65,6 +75,12 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     protected IQuickGridIconProvider IconProvider =>
         _iconProvider ??= ServiceProvider.GetService<IQuickGridIconProvider>() ?? new DefaultQuickGridIconProvider();
 
+    /// <summary>
+    /// Minimum number of characters before a <see cref="FilterCriteria"/> backed search queries the source.
+    /// Shorter terms leave the grid unfiltered.
+    /// </summary>
+    private const int MinFilterSearchLength = 3;
+
     private const string ColumnTitleSetupErrorMessage = "Non-critical: Failed to setup column titles for {Id}. Application continues to run without this feature.";
     private const string FooterSetupErrorMessage = "Non-critical: Failed to setup footer for {Id}. Application continues to run without this feature.";
 
@@ -78,6 +94,8 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     private long _prevItemsVersion;
     private string? _searchQuery;
     private string? _lastSearchQuery;
+    private string? _lastQuickSearchParameter;
+    private string? _lastRenderedFooter;
 
     private QuickGrid<TGridItem>? _grid;
     private PaginationState? _pagination;
@@ -89,7 +107,9 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     private readonly List<FooterColumn<TGridItem>> _footerColumns = [];
     private IJSObjectReference? _module;
 
-    private int _selectedItemsCount => _filteredItems?.Count(item => (ISelectionDto?)item != null && ((ISelectionDto?)item)!.IsSelected) ?? 0;
+    // AsEnumerable() keeps the pattern match in C#: counting straight off the IQueryable would build an
+    // expression tree, which cannot contain an 'is' pattern.
+    private int _selectedItemsCount => _filteredItems?.AsEnumerable().Count(item => item is ISelectionDto { IsSelected: true }) ?? 0;
 
     private IQueryable<TGridItem>? _filteredItems
     {
@@ -119,7 +139,9 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
             }
             else
             {
-                result = _evaluatedItems?.AsQueryable();
+                // No server-side result yet (e.g. the search term is still below MinFilterSearchLength),
+                // so fall back to the unfiltered items rather than blanking the grid.
+                result = _evaluatedItems?.AsQueryable() ?? Items;
             }
 
             if (_searchQuery != _lastSearchQuery)
@@ -133,22 +155,19 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    /// <summary>
+    /// Adopts the current <see cref="ColumnManager"/>. Runs on the first parameter set and again whenever the
+    /// caller swaps in a different instance, so the rendered columns never drift from the bound manager.
+    /// </summary>
+    private void SyncColumnManager()
     {
+        if (ReferenceEquals(_defaultColumnManager, ColumnManager)) return;
+
         _defaultColumnManager = ColumnManager;
+        _titlesLoaded = false;
 
-        //var result = await ColumnConfigurationService.GetConfigurationsAsync(Id, _authenticatedUserId, default);
-
-        //if (result.IsSuccess)
-        //{
-        //    _columnConfigurations = result.Value;
-        //}
-
+        // Repopulates _defaultVisibleColumns from the new manager.
         SetDefaultColumns();
-
-        _isInMemorySearch = FilterCriteria is null;
-
-        await Task.CompletedTask;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -173,6 +192,10 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
     protected override async Task OnParametersSetAsync()
     {
+        SyncColumnManager();
+
+        _isInMemorySearch = FilterCriteria is null;
+
         EnsurePaginationState();
         SetTableIndex();
         UpdateSearchQuery();
@@ -211,10 +234,19 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         _pagination.ItemsPerPage = ItemsPerPage;
     }
 
+    /// <summary>
+    /// Applies the <see cref="QuickSearch"/> parameter, including when the caller clears it.
+    /// </summary>
+    /// <remarks>
+    /// Only an actual change to the parameter is applied. Text typed into the built-in search box lives in
+    /// <c>_searchQuery</c> alone, so comparing against the last parameter value keeps a parent re-render from
+    /// wiping it, while still letting the parent reset the search by setting <see cref="QuickSearch"/> to null or empty.
+    /// </remarks>
     private void UpdateSearchQuery()
     {
-        if (string.IsNullOrWhiteSpace(QuickSearch) || _searchQuery == QuickSearch) return;
+        if (_lastQuickSearchParameter == QuickSearch) return;
 
+        _lastQuickSearchParameter = QuickSearch;
         _searchQuery = QuickSearch;
     }
 
@@ -234,13 +266,26 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         }
     }
 
+    /// <summary>
+    /// Rebuilds the footer row from the rows currently displayed and pushes it to the DOM.
+    /// </summary>
+    /// <remarks>
+    /// Totals are recalculated on every call, so they follow the active search or filter. The JS interop call
+    /// is skipped when the generated markup is unchanged, which keeps the repeated renders of an idle grid cheap.
+    /// </remarks>
     public async ValueTask AddOrUpdateFooterAsync()
     {
         if (Id is null || !HasFooter()) return;
 
+        var footer = GenerateTableFooterWithTotals();
+
+        if (footer == _lastRenderedFooter) return;
+
         try
         {
-            await InvokeModuleVoidAsync("addOrUpdateFooter", Id, GenerateTableFooterWithTotals());
+            await InvokeModuleVoidAsync("addOrUpdateFooter", Id, footer);
+
+            _lastRenderedFooter = footer;
         }
         catch (Exception ex)
         {
@@ -293,17 +338,20 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
     private string GenerateTableFooterWithTotals()
     {
+        // Materialise once: the footer items come from the side-effecting _filteredItems and are walked
+        // again by every total, so re-reading them per column would repeat the whole search.
+        var footerItems = GetFooterItems();
+
         var html = UsedColumnManager.FooterColumns.Count > 0
-            ? GenerateManualFooterCells()
-            : GenerateAutomaticFooterCells();
+            ? GenerateManualFooterCells(footerItems)
+            : GenerateAutomaticFooterCells(footerItems);
 
         return $"<tr class=\"table-warning fw-bold\">{html}</tr>";
     }
 
-    private string GenerateManualFooterCells()
+    private string GenerateManualFooterCells(IReadOnlyList<TGridItem> footerItems)
     {
         StringBuilder html = new();
-        var footerItems = GetFooterItems();
 
         foreach (var column in UsedColumnManager.Columns.Where(w => w.Visible && w.Class != "d-none"))
         {
@@ -326,7 +374,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         return html.ToString();
     }
 
-    private string GenerateAutomaticFooterCells()
+    private string GenerateAutomaticFooterCells(IReadOnlyList<TGridItem> footerItems)
     {
         StringBuilder html = new();
 
@@ -344,7 +392,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
             }
             else if (ShouldCalculateTotal(column))
             {
-                html.Append(BuildTotalFooterCell(column));
+                html.Append(BuildTotalFooterCell(column, footerItems));
             }
             else
             {
@@ -368,10 +416,11 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
             _ => column.IsNumeric
         };
 
-    private string BuildTotalFooterCell(DynamicColumn<TGridItem> column)
+    private string BuildTotalFooterCell(DynamicColumn<TGridItem> column, IReadOnlyList<TGridItem> footerItems)
     {
-        var compiledExpression = column.Property!.Compile();
-        var total = GetFooterItems().Sum(item => Convert.ToDecimal(compiledExpression(item)));
+        // Compiled once per column and reused: compiling here would run on every render of every total.
+        var compiledProperty = column.GetCompiledProperty()!;
+        var total = footerItems.Sum(item => Convert.ToDecimal(compiledProperty(item)));
         var format = column.Format ?? TotalFooter.DefaultFormat;
         var cssClass = TotalFooter.RemoveClass is { Length: > 0 } removeClass
             ? column.Class?.Replace(removeClass, "")
@@ -380,8 +429,11 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         return BuildFooterCell(total.ToString(format, CultureInfo.InvariantCulture), cssClass);
     }
 
-    private IEnumerable<TGridItem> GetFooterItems()
-        => _filteredItems ?? Items ?? Enumerable.Empty<TGridItem>();
+    /// <summary>
+    /// The rows the footer aggregates over: the search/filter result when one is active, otherwise all items.
+    /// </summary>
+    private IReadOnlyList<TGridItem> GetFooterItems()
+        => (_filteredItems ?? Items)?.ToList() ?? [];
 
     private static string BuildFooterCell(string? value, string? cssClass)
     {
@@ -399,19 +451,19 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         if (string.IsNullOrWhiteSpace(text))
         {
             ClearSearch();
-            //await AddOrUpdateFooterAsync();
 
             return;
         }
-        else if (text.Length < 3)
+
+        _searchQuery = text;
+
+        if (text.Length < MinFilterSearchLength)
         {
-            _searchQuery = text;
+            // Too short to query the source, so drop any earlier result and show the unfiltered items
+            // instead of leaving a stale, or empty, grid behind.
+            _evaluatedItems = null;
 
             return;
-        }
-        else
-        {
-            _searchQuery = text;
         }
 
         FilterCriteria.SearchTerm = _searchQuery;
@@ -421,8 +473,6 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         _evaluatedItems = await Items.Where(FilterCriteria.CreateExpression()).ToListAsync();
 
         IsLoading = false;
-
-        //await AddOrUpdateFooterAsync();
     }
 
     private async Task OnInMemorySearchChanged()
@@ -437,10 +487,19 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
     public void ClearSearch() => ClearSearch(true);
 
+    /// <summary>
+    /// Clears the active search and any filtered result, so the grid falls back to the full item set.
+    /// </summary>
+    /// <param name="shouldInvokeCallback">When true, notifies the caller through <see cref="QuickSearchChanged"/>.</param>
     public void ClearSearch(bool shouldInvokeCallback = false)
     {
-        //_filteredItems = Items;
         _searchQuery = null;
+        _evaluatedItems = null;
+
+        if (FilterCriteria is not null)
+        {
+            FilterCriteria.SearchTerm = string.Empty;
+        }
 
         if (shouldInvokeCallback)
         {
@@ -472,11 +531,13 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
         if (visibleColumns.Count == 0)
         {
-            await Events.WarningRequested.InvokeAsync("No columns to export. Contact Vaclav if this should be working.");
+            await Events.WarningRequested.InvokeAsync("No columns to export.");
 
             return;
         }
 
+        // ToList() first: projecting straight off the IQueryable would push the reflection-based builder
+        // into the query tree, which an EF-backed source cannot translate.
         var exportItems = _filteredItems.ToList()
             .Select(item => ExpandoObjectBuilder<TGridItem>.Create(item, visibleColumns))
             .Where(obj => obj != null);
@@ -487,6 +548,10 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     public async Task RefreshDataAsync()
     {
         if (_grid is null) return;
+
+        // The footer lives in the DOM outside Blazor's render tree, so forget the cached markup here:
+        // a rebuilt grid must get the footer pushed again even when the totals themselves are unchanged.
+        _lastRenderedFooter = null;
 
         await _grid.RefreshDataAsync();
     }
@@ -540,8 +605,23 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
             await ColumnSelectionChanged.InvokeAsync();
         }
 
+        SetTableIndex();
+
         await RefreshColumnTitlesAsync();
         await AddOrUpdateFooterAsync();
+    }
+
+    /// <summary>
+    /// Runs after the user toggles column visibility in the <see cref="ColumnSelector{TGridItem}"/>.
+    /// </summary>
+    /// <remarks>
+    /// Refreshing the data alone is not enough: the JS helper maps tooltips onto header cells by index,
+    /// so hiding or showing a column leaves every title shifted until they are pushed again.
+    /// </remarks>
+    private async Task OnColumnVisibilityChangedAsync()
+    {
+        await RefreshDataAsync();
+        await OnColumnSelectionChangedAsync();
     }
 
     private void OnColumnSelectorClose()
@@ -567,7 +647,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         await OnColumnSelectionChangedAsync();
     }
 
-    private async void ResetViewToDefault()
+    private async Task ResetViewToDefault()
     {
         SelectedConfiguration = null;
 
@@ -605,9 +685,10 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     public async Task EnableExactMatch()
     {
         ExactMatch = true;
+        await ExactMatchChanged.InvokeAsync(ExactMatch);
     }
 
-    public string GetTableClass() => $"{Class} {IsTableIndex()}";
+    public string GetTableClass() => _isTableIndex ? $"{Class} table-index".Trim() : Class ?? string.Empty;
 
     public string IsTableIndex() => _isTableIndex ? "table-index" : "";
 
