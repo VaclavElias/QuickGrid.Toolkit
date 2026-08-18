@@ -16,12 +16,19 @@
     </ul>
 </ExampleInfo>
 
+<div class="form-check form-switch mb-2">
+    <input class="form-check-input" type="checkbox" role="switch" id="debug-toggle" @bind="_isDebug" />
+    <label class="form-check-label small" for="debug-toggle">Show debug panel (<code>IsDebug</code>)</label>
+</div>
+
 <QuickGridWrapper Items="@_items.AsQueryable()"
+                  IsDebug="_isDebug"
                   ColumnManager="_columnManager" />
 
 @code {
     private List<UserDto> _items = new();
     private ColumnManager<UserDto> _columnManager = new();
+    private bool _isDebug;
 
     protected override void OnInitialized()
     {
