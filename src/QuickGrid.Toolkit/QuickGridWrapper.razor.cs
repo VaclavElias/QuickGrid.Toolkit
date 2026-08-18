@@ -611,12 +611,16 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
     private async Task ManageColumns()
     {
-        if (Events?.OnResetViewToDefault is null && IsColumnSelection)
+        // No custom handler wired up: fall back to the built-in checkbox selector.
+        if (Events?.OnManageColumns is null)
         {
-            IsColumnItemsSelection = true;
-        }
+            if (IsColumnSelection)
+            {
+                IsColumnItemsSelection = true;
+            }
 
-        if (Events?.OnManageColumns is null) return;
+            return;
+        }
 
         if (Id is null)
         {
