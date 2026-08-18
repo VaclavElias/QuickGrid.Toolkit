@@ -1,18 +1,13 @@
 namespace QuickGrid.Toolkit;
 
-public class FilterCriteria<TGridItem>
+/// <summary>
+/// Turns a search term into a filter expression, letting <see cref="QuickGridWrapper{TGridItem}"/> push the
+/// search down to the data source instead of filtering in memory.
+/// </summary>
+/// <param name="expressionBuilder">Builds the predicate for a given search term.</param>
+public class FilterCriteria<TGridItem>(Func<string, Expression<Func<TGridItem, bool>>> expressionBuilder)
 {
     public string SearchTerm { get; set; } = null!;
 
-    private readonly Func<string, Expression<Func<TGridItem, bool>>> _expressionBuilder;
-
-    public FilterCriteria(Func<string, Expression<Func<TGridItem, bool>>> expressionBuilder)
-    {
-        _expressionBuilder = expressionBuilder;
-    }
-
-    public Expression<Func<TGridItem, bool>> CreateExpression()
-    {
-        return _expressionBuilder(SearchTerm);
-    }
+    public Expression<Func<TGridItem, bool>> CreateExpression() => expressionBuilder(SearchTerm);
 }
