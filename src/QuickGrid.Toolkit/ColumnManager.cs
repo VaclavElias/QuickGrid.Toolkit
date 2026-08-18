@@ -414,7 +414,7 @@ public class ColumnManager<TGridItem>
             column.Id,
             items => items.Sum(item => Convert.ToDecimal(compiledProperty(item))),
             format: "N0",
-            @class: string.IsNullOrEmpty(removeClass) ? column.Class : column.Class?.Replace(removeClass, "")
+            @class: string.IsNullOrEmpty(removeClass) ? column.Class : column.Class?.Replace(removeClass, "").Trim()
         );
     }
 
