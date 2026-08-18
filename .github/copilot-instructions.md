@@ -9,7 +9,7 @@ These repository instructions guide GitHub Copilot (and other AI assistants) whe
 The solution (`QuickGrid.Toolkit.slnx`) contains two projects:
 
 - `src/QuickGrid.Toolkit` — the reusable library. SDK `Microsoft.NET.Sdk.Razor`; ships static web assets (`wwwroot/app.css` served as `_content/QuickGrid.Toolkit/app.css`).
-- `src/QuickGrid.Samples` — a demo Blazor Web App using Interactive Server render mode, showcasing the toolkit. The `Users*` pages (`Pages/UsersGrid.razor`, `Pages/UsersGridWrapper.razor`) are the reference usage patterns.
+- `src/QuickGrid.Samples` — a demo Blazor Web App using Interactive Server render mode, showcasing the toolkit. The example pages under `Pages/Examples/` (registered in `Core/ExampleRegistry.cs`) are the reference usage patterns; start with `UsersGrid.razor` and `UsersGridWrapper.razor`.
 
 There is no domain/infrastructure layering and no `DbContext` in this repository — sample data comes from an in-memory `UserService`.
 
@@ -40,7 +40,7 @@ The library describes columns as data, then translates that data into QuickGrid 
 **`QuickGridColumns.Columns(columnManager)`** (`QuickGridColumns.razor`) — the renderer: a static `RenderFragment` that loops visible columns and `switch`es on `ColumnType` to emit the matching real component (`EmptyColumn`, `ImageColumn`, `TickColumn`, `ToggleColumn`, `TemplateColumn`, or fallback `PropertyColumn`). **Adding a new `ColumnType` requires a branch here too.**
 
 ### Two consumption patterns
-1. **Bare `QuickGrid` + `ColumnManager`** (`Pages/UsersGrid.razor`): caller owns the `<QuickGrid>` markup and drops in `@QuickGridColumns.Columns(_columnManager)`, plus an optional `<ColumnSelector>`. Caller calls `grid.RefreshDataAsync()` on selection change.
+1. **Bare `QuickGrid` + `ColumnManager`** (`Pages/Examples/UsersGrid.razor`): caller owns the `<QuickGrid>` markup and drops in `@QuickGridColumns.Columns(_columnManager)`, plus an optional `<ColumnSelector>`. Caller calls `grid.RefreshDataAsync()` on selection change.
 2. **`QuickGridWrapper<TGridItem>`** (`QuickGridWrapper.razor` + `.razor.cs`): batteries-included — encapsulates grid, toolbar, search box, column selector, pagination, and footer. Pass `Items` (in-memory `IQueryable`) and a configured `ColumnManager`.
 
 ### QuickGridWrapper specifics worth knowing
