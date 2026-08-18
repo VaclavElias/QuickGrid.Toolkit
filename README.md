@@ -1,66 +1,102 @@
 # QuickGrid.Toolkit
 
-QuickGrid.Toolkit extends the Blazor QuickGrid with reusable, dynamic column management and small UI utilities. It is especially useful when you render the same kind of data in multiple places but need different visible columns per grid.
+**▶ Live demo: <https://vaclavelias.github.io/QuickGrid.Toolkit/>**
+
+[![Build](https://github.com/VaclavElias/QuickGrid.Toolkit/actions/workflows/build.yml/badge.svg)](https://github.com/VaclavElias/QuickGrid.Toolkit/actions/workflows/build.yml)
+
+QuickGrid.Toolkit extends the Blazor QuickGrid with reusable, dynamic column management and small UI utilities. It is especially useful when you render the same kind of data in multiple places but need different visible columns per grid: you declare every possible column once in a `ColumnManager<T>`, and because the column configuration is just data, the same setup can drive several grids that each show a different subset.
+
+## Examples
+
+Eleven example pages, from the low-level building blocks to a full application-grade setup. Every page runs in the [live demo](https://vaclavelias.github.io/QuickGrid.Toolkit/); sources live under [`src/QuickGrid.Samples.Shared/Pages/Examples`](src/QuickGrid.Samples.Shared/Pages/Examples) and are registered in [`ExampleRegistry.cs`](src/QuickGrid.Samples.Shared/Core/ExampleRegistry.cs).
+
+| Example | Shows | Source |
+| --- | --- | --- |
+| [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) | Your own `<QuickGrid>` with columns rendered from a `ColumnManager`, plus a `ColumnSelector` — the low-level pattern | [UsersGrid.razor](src/QuickGrid.Samples.Shared/Pages/Examples/UsersGrid.razor) |
+| [QuickGridWrapper](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper) | The same columns in one component with toolbar, quick search and a column selector | [UsersGridWrapper.razor](src/QuickGrid.Samples.Shared/Pages/Examples/UsersGridWrapper.razor) |
+| [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) | Every column helper side by side: text, dates, numbers, ticks, toggles, markup, images, templates and actions | [ColumnTypes.razor](src/QuickGrid.Samples.Shared/Pages/Examples/ColumnTypes.razor) |
+| [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) | Format strings, conditional cell styling with `CellStyleMap`, row classes, shared `ColumnInfo` definitions | [FormattingStyling.razor](src/QuickGrid.Samples.Shared/Pages/Examples/FormattingStyling.razor) |
+| [Loading, Paging & Refresh](https://vaclavelias.github.io/QuickGrid.Toolkit/loading-paging) | `IsLoading`, pagination, and keeping the grid in step with data that changes underneath it (`ItemsVersion`) | [LoadingPaging.razor](src/QuickGrid.Samples.Shared/Pages/Examples/LoadingPaging.razor) |
+| [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) | Quick search across every column, exact match, nested properties, and your own filter panel | [SearchFiltering.razor](src/QuickGrid.Samples.Shared/Pages/Examples/SearchFiltering.razor) |
+| [Row Selection](https://vaclavelias.github.io/QuickGrid.Toolkit/row-selection) | Selecting rows with `ISelectionDto` and acting on the selection from the toolbar | [RowSelection.razor](src/QuickGrid.Samples.Shared/Pages/Examples/RowSelection.razor) |
+| [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) | Automatic totals for numeric columns, or hand-built footer cells for full control | [FootersTotals.razor](src/QuickGrid.Samples.Shared/Pages/Examples/FootersTotals.razor) |
+| [Export](https://vaclavelias.github.io/QuickGrid.Toolkit/export) | Wiring the export events to produce a CSV of what the user is currently looking at | [Export.razor](src/QuickGrid.Samples.Shared/Pages/Examples/Export.razor) |
+| [Saved Views & Icons](https://vaclavelias.github.io/QuickGrid.Toolkit/saved-views) | Column layouts as named views, and swapping the toolbar icons for your own | [SavedViews.razor](src/QuickGrid.Samples.Shared/Pages/Examples/SavedViews.razor) |
+| [Your Own Grid Component](https://vaclavelias.github.io/QuickGrid.Toolkit/app-quickgrid) | Subclassing `QuickGridWrapper` once to fix the styling and wire the events for a whole application | [AppQuickGridExample.razor](src/QuickGrid.Samples.Shared/Pages/Examples/AppQuickGridExample.razor) |
 
 ## Features
 
-**Legend:** ✅ available · ⏳ planned / not yet implemented. Where a feature is demonstrated in the sample app, an `example` flag shows whether that sample exists (✅) or is still planned (⏳).
+**Legend:** ✅ available · ⏳ planned. The *Example* column links to the live demo page showing the feature.
 
 ### Column management
 
-- ✅ Add columns dynamically at runtime
-- ✅ One `ColumnManager<T>` reused across grids - each grid shows a different subset of columns
-- ✅ Show/hide column selection UI (`ColumnSelector`) - example ✅
-- ✅ Predefined, strongly-typed helpers (e.g. `AddCountry()` via extension methods)
-- ✅ Sorting for added columns
-- ✅ Per-column visibility, alignment, format and CSS class
-- ⏳ Saved column views / layouts (selector UI exists; persistence not wired) - example ⏳
+| Feature | Example |
+| --- | --- |
+| ✅ Add columns dynamically at runtime with `ColumnManager<T>` | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
+| ✅ One column setup reused across grids — each grid shows a different subset | [QuickGridWrapper](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper) |
+| ✅ Show/hide column selection UI (`ColumnSelector`) | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
+| ✅ Predefined, strongly-typed helpers via extension methods (e.g. `AddCountry()`) | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
+| ✅ Sorting for added columns | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| ✅ Per-column visibility, alignment, format and CSS class | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
+| ✅ Saved column views / layouts (durable persistence is the host's job, via `Events`) | [Saved Views & Icons](https://vaclavelias.github.io/QuickGrid.Toolkit/saved-views) |
 
 ### Built-in column types
 
-- ✅ Index column (`AddIndexColumn`) - example ✅
-- ✅ Value column (`AddSimple`) - example ✅
-- ✅ Number column, `int` / `double` / `decimal` (`AddNumber`) - example ⏳
-- ✅ Styled number column with conditional cell styling (`AddStyledNumber`) - example ✅
-- ✅ Date column (`AddSimpleDate`) - example ⏳
-- ✅ Tick / boolean column (`TickColumn`, with true/false styling) - example ✅
-- ✅ Toggle column (`ToggleColumn`, with change callback) - example ✅
-- ✅ Image column (`ImageColumn`) - example ⏳
-- ✅ Template column (`AddTemplateColumn`, custom `RenderFragment`) - example ⏳
-- ✅ Markup column (`AddMarkup`, raw HTML) - example ⏳
-- ✅ Clickable / action columns with callbacks (`AddAction`) - example ⏳
+| Column type | Example |
+| --- | --- |
+| ✅ Index column (`AddIndexColumn`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| ✅ Value column (`AddSimple`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| ✅ Number column, `int` / `double` / `decimal` (`AddNumber`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| ✅ Styled number with conditional cell styling (`AddStyledNumber`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
+| ✅ Date column (`AddSimpleDate`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| ✅ Tick / boolean column (`AddTickColumn`, with true/false styling) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| ✅ Toggle column (`AddToggleColumn`, with change callback) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| ✅ Image column (`AddImageColumn`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| ✅ Template column (`AddTemplateColumn`, custom `RenderFragment`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| ✅ Markup column (`AddMarkup`, raw HTML) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| ✅ Clickable / action columns with callbacks (`AddAction`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
 
 ### Styling
 
-- ✅ Conditional cell styling (`CellStyleMap`) - example ✅
-- ✅ Custom column styling (CSS class per column)
-- ✅ Custom row styling via CSS `:has()` - example ⏳
-- ✅ Utility CSS classes: `table-index`, `table-fit`, `table-thead-sticky`, `table-no-empty-lines`
+| Feature | Example |
+| --- | --- |
+| ✅ Conditional cell styling (`CellStyleMap`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
+| ✅ Custom column styling (CSS class per column) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
+| ✅ Custom row styling (row classes, CSS `:has()`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
+| ✅ Utility CSS classes: `table-index`, `table-fit`, `table-thead-sticky`, `table-no-empty-lines` | — |
 
 ### `QuickGridWrapper` (all-in-one grid)
 
-- ✅ Quick search across all columns - example ✅
-- ✅ Nested / child-property search - example ⏳
-- ✅ Exact-match toggle - example ✅
-- ✅ Preset / external search value (`QuickSearch`) - example ⏳
-- ✅ EF-backed server filtering (`FilterCriteria`) - example ⏳
-- ✅ Pagination - example ⏳
-- ✅ Row selection (`ISelectionDto`) - example ⏳
-- ✅ Toolbar with settings menu and loading indicator
-- ✅ Pluggable icons (`IQuickGridIconProvider`, Bootstrap Icons by default)
+| Feature | Example |
+| --- | --- |
+| ✅ Quick search across all columns | [QuickGridWrapper](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper) |
+| ✅ Nested / child-property search | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
+| ✅ Exact-match toggle | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
+| ✅ Preset / external search value (`QuickSearch`) | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
+| ✅ Custom filter panel (`FilterSection`) | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
+| ✅ EF-backed server filtering (`FilterCriteria`) | ⏳ example planned |
+| ✅ Pagination, loading indicator, data refresh (`ItemsVersion`) | [Loading, Paging & Refresh](https://vaclavelias.github.io/QuickGrid.Toolkit/loading-paging) |
+| ✅ Row selection (`ISelectionDto`) with bulk actions | [Row Selection](https://vaclavelias.github.io/QuickGrid.Toolkit/row-selection) |
+| ✅ Toolbar with settings menu | [QuickGridWrapper](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper) |
+| ✅ Pluggable icons (`IQuickGridIconProvider`, Bootstrap Icons by default) | [Saved Views & Icons](https://vaclavelias.github.io/QuickGrid.Toolkit/saved-views) |
+| ✅ App-wide defaults by subclassing the wrapper | [Your Own Grid Component](https://vaclavelias.github.io/QuickGrid.Toolkit/app-quickgrid) |
 
 ### Footers
 
-- ✅ Automatic total footer - sums numeric columns (`TotalFooter`) - example ✅
-- ✅ Per-column total control (`CalculateTotal`) - example ✅
-- ✅ Manual footer cells (`AddFooterColumn`, `AddFooterColumnWithSum`) - example ⏳
-- ✅ Column header tooltips from full titles - example ⏳
+| Feature | Example |
+| --- | --- |
+| ✅ Automatic total footer — sums numeric columns (`TotalFooter`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
+| ✅ Per-column total control (`CalculateTotal`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
+| ✅ Manual footer cells (`AddFooterColumn`, `AddFooterColumnWithSum`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
+| ✅ Column header tooltips from full titles (needs the wrapper `Id`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
 
 ### Export
 
-- ⏳ Export to CSV (the wrapper exposes hooks via `Events`; writing is up to the host) - example ⏳
-- ⏳ Export selected columns (preview) - example ⏳
-- ⏳ Export to JSON - example ⏳
+| Feature | Example |
+| --- | --- |
+| ✅ Export to CSV (the wrapper raises `Events`; writing the file is up to the host) | [Export](https://vaclavelias.github.io/QuickGrid.Toolkit/export) |
+| ✅ Export selected columns only | [Export](https://vaclavelias.github.io/QuickGrid.Toolkit/export) |
+| ⏳ Export to JSON | — |
 
 ## Requirements
 
@@ -72,34 +108,13 @@ QuickGrid.Toolkit extends the Blazor QuickGrid with reusable, dynamic column man
 - Toolkit CSS (Static Web Asset):
   - `<link rel="stylesheet" href="@Assets["_content/QuickGrid.Toolkit/app.css"]" />`
 
-## How it works
-
-You declare every possible column once in a `ColumnManager<T>` using strongly-typed helpers (`AddSimple`, `AddNumber`, `AddToggleColumn`, `AddTickColumn`, `AddImageColumn`, `AddIndexColumn`, …). The toolkit then renders those columns either into a `QuickGrid` you control, or into the all-in-one `QuickGridWrapper`. Because the column configuration is just data, the same setup can drive several grids that each show a different subset of columns.
-
-## Run the samples
-
-**Live demo:** the samples are published to GitHub Pages at <https://vaclavelias.github.io/QuickGrid.Toolkit/> (WebAssembly build, deployed automatically from `main`).
-
-```bash
-dotnet run --project src/QuickGrid.Samples        # Blazor Server (matches how the toolkit is typically consumed)
-dotnet run --project src/QuickGrid.Samples.Wasm   # standalone WebAssembly (what GitHub Pages hosts)
-```
-
-Both hosts render the same example pages from the shared `QuickGrid.Samples.Shared` library. The demo contains eleven example pages, running from the low-level building blocks to a full application-grade setup. They live under [`src/QuickGrid.Samples.Shared/Pages/Examples`](src/QuickGrid.Samples.Shared/Pages/Examples) and are registered in [`ExampleRegistry.cs`](src/QuickGrid.Samples.Shared/Core/ExampleRegistry.cs). The three foundational ones:
-
-| Page | Route | Shows |
-| --- | --- | --- |
-| [QuickGrid + ColumnManager](src/QuickGrid.Samples.Shared/Pages/Examples/UsersGrid.razor) | `/users-grid` | The low-level pattern: your own `QuickGrid` + a `ColumnSelector` for show/hide |
-| [QuickGridWrapper](src/QuickGrid.Samples.Shared/Pages/Examples/UsersGridWrapper.razor) | `/users-grid-wrapper` | The same columns in a component with toolbar, quick search and pagination |
-| [Footers & Totals](src/QuickGrid.Samples.Shared/Pages/Examples/FootersTotals.razor) | `/footers-totals` | Automatic and hand-built totals rows on a `QuickGridWrapper` |
-
 ## Getting started
 
 The snippets below assume you already use Blazor and QuickGrid. Each mirrors a sample page, open the linked source for the full, runnable version.
 
 ### 1. Direct `QuickGrid` with `ColumnManager<T>`
 
-Full control of the `QuickGrid` markup while the toolkit manages columns and the selection UI. See [`UsersGrid.razor`](src/QuickGrid.Samples.Shared/Pages/Examples/UsersGrid.razor).
+Full control of the `QuickGrid` markup while the toolkit manages columns and the selection UI. See [`UsersGrid.razor`](src/QuickGrid.Samples.Shared/Pages/Examples/UsersGrid.razor) · [live](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid).
 
 ```razor
 <ColumnSelector ColumnManager="_columnManager" SelectionChanged="SelectionChangedAsync" />
@@ -142,7 +157,7 @@ Key points:
 
 ### 2. `QuickGridWrapper`
 
-When several grids share similar data but different columns, the wrapper centralizes the grid markup, toolbar, quick search and pagination, you keep just the per-page column configuration. See [`UsersGridWrapper.razor`](src/QuickGrid.Samples.Shared/Pages/Examples/UsersGridWrapper.razor).
+When several grids share similar data but different columns, the wrapper centralizes the grid markup, toolbar, quick search and pagination, you keep just the per-page column configuration. See [`UsersGridWrapper.razor`](src/QuickGrid.Samples.Shared/Pages/Examples/UsersGridWrapper.razor) · [live](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper).
 
 ```razor
 <QuickGridWrapper Items="@_items.AsQueryable()" ColumnManager="_columnManager" />
@@ -154,7 +169,7 @@ You pass `Items` and a configured `ColumnManager<T>`; the column setup is identi
 
 ### 3. Total footer
 
-Add `TotalFooter` and an `Id` to a `QuickGridWrapper` to get an automatic totals row, numeric columns are summed for you. See [`FootersTotals.razor`](src/QuickGrid.Samples.Shared/Pages/Examples/FootersTotals.razor).
+Add `TotalFooter` and an `Id` to a `QuickGridWrapper` to get an automatic totals row, numeric columns are summed for you. See [`FootersTotals.razor`](src/QuickGrid.Samples.Shared/Pages/Examples/FootersTotals.razor) · [live](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals).
 
 ```razor
 <QuickGridWrapper Items="@_items.AsQueryable()"
@@ -173,6 +188,15 @@ The footer is rendered by a small ES module shipped with the toolkit (`quickGrid
 
 <img width="556" height="438" alt="image" src="https://github.com/user-attachments/assets/aa9eb31d-3ea9-47d8-92f0-29557e7bcdc1" />
 
+## Run the samples locally
+
+```bash
+dotnet run --project src/QuickGrid.Samples        # Blazor Server (matches how the toolkit is typically consumed)
+dotnet run --project src/QuickGrid.Samples.Wasm   # standalone WebAssembly (what GitHub Pages hosts)
+```
+
+Both hosts render the same example pages from the shared `QuickGrid.Samples.Shared` library. The live demo is published by the [deploy-pages workflow](.github/workflows/deploy-pages.yml).
+
 ## Utility CSS classes
 
 - `table-index`: adds a compact index column when used with `AddIndexColumn()`.
@@ -182,4 +206,3 @@ The footer is rendered by a small ES module shipped with the toolkit (`quickGrid
 ## Known issues
 
 - The `Format` property is not working for `object` type (formatting is instead applied inside the column's rendered content).
-
