@@ -1,12 +1,29 @@
 @typeparam TGridItem
-@if (_isDebug)
+@if (IsDebug)
 {
-    <p>
-        IsPaginator: @IsPaginator<br />
-        ItemsPerPage: @ItemsPerPage<br />
-        ItemsVersion: @ItemsVersion<br />
-        _pagination: @_pagination<br />
-    </p>
+    <div class="border border-warning bg-light small p-2 mb-2 font-monospace">
+        <div class="fw-bold mb-1">QuickGridWrapper debug @(Id is null ? "" : $"({Id})")</div>
+        <div class="row">
+            <div class="col-md-4">
+                <div>Items: @(Items?.Count().ToString() ?? "null")</div>
+                <div>Displayed: @(_filteredItems?.Count().ToString() ?? "null")</div>
+                <div>ItemsVersion: @ItemsVersion</div>
+                <div>Selected: @_selectedItemsCount</div>
+            </div>
+            <div class="col-md-4">
+                <div>Search mode: @(_isInMemorySearch ? "in-memory" : "FilterCriteria")</div>
+                <div>Query: @(string.IsNullOrEmpty(_searchQuery) ? "(none)" : _searchQuery)</div>
+                <div>ExactMatch: @ExactMatch / Nested: @IsNestedSearch</div>
+                <div>Evaluated: @(_evaluatedItems?.Count.ToString() ?? "null")</div>
+            </div>
+            <div class="col-md-4">
+                <div>Columns: @UsedColumnManager.Columns.Count(w => w.Visible) visible / @UsedColumnManager.Columns.Count</div>
+                <div>Footer: @(HasFooter() ? $"{UsedColumnManager.FooterColumns.Count} manual, totals {TotalFooter.IsTotalFooter}" : "none")</div>
+                <div>Paginator: @(_pagination is null ? "off" : $"page {_pagination.CurrentPageIndex + 1}/{(_pagination.LastPageIndex + 1)?.ToString() ?? "?"}, {ItemsPerPage}/page")</div>
+                <div>View: @(SelectedConfiguration?.Name ?? "Default")</div>
+            </div>
+        </div>
+    </div>
 }
 <div class="mx-2">
     @if (IsLoading)
