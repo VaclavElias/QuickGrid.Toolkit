@@ -6,6 +6,8 @@ public class DynamicColumn<TGridItem>
     private readonly static RenderFragment<TGridItem> EmptyChildContent = _ => builder => { };
 
     private string? _fullTitle;
+    private Expression<Func<TGridItem, object?>>? _compiledFrom;
+    private Func<TGridItem, object?>? _compiledProperty;
 
     // We need id so we could list all columns e.g. as checkbox and select which one is visible
     public int Id { get; set; }
@@ -37,4 +39,25 @@ public class DynamicColumn<TGridItem>
     public Func<TGridItem, Task>? OnActionAsync { get; set; }
 
     public Type ColumnType { get; set; } = typeof(PropertyColumn<TGridItem, object?>);
+
+    /// <summary>
+    /// Returns the compiled <see cref="Property"/> accessor, or <see langword="null"/> when the column has no property.
+    /// </summary>
+    /// <remarks>
+    /// Compiling an expression is expensive, so the delegate is built once and reused. It is rebuilt automatically
+    /// if <see cref="Property"/> is reassigned. Callers on a render path (footer totals, exports) should use this
+    /// instead of calling <c>Property.Compile()</c> themselves.
+    /// </remarks>
+    public Func<TGridItem, object?>? GetCompiledProperty()
+    {
+        if (Property is null) return null;
+
+        if (!ReferenceEquals(_compiledFrom, Property))
+        {
+            _compiledFrom = Property;
+            _compiledProperty = Property.Compile();
+        }
+
+        return _compiledProperty;
+    }
 }

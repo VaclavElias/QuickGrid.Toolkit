@@ -303,6 +303,14 @@ public class ColumnManager<TGridItem>
         });
     }
 
+    /// <summary>
+    /// Adds a footer cell holding a fixed, pre-computed value. The value is rendered once and does not
+    /// change as the grid is searched or filtered.
+    /// </summary>
+    /// <param name="id">The <see cref="DynamicColumn{TGridItem}.Id"/> of the column this footer cell sits under.</param>
+    /// <param name="value">The value to render. <see cref="IFormattable"/> values are formatted with <paramref name="format"/> using the invariant culture.</param>
+    /// <param name="format">Optional format string applied to <paramref name="value"/>.</param>
+    /// <param name="class">Optional CSS class for the generated <c>&lt;td&gt;</c>.</param>
     public void AddFooterColumn(
         int id,
         object? value,
@@ -327,6 +335,17 @@ public class ColumnManager<TGridItem>
         FooterColumns.Add(column);
     }
 
+    /// <summary>
+    /// Adds a footer cell whose value is calculated from the rows currently shown in the grid.
+    /// </summary>
+    /// <remarks>
+    /// The expression is compiled once, then re-evaluated every time the footer is rendered, so the
+    /// result follows the active quick search or filter.
+    /// </remarks>
+    /// <param name="id">The <see cref="DynamicColumn{TGridItem}.Id"/> of the column this footer cell sits under.</param>
+    /// <param name="expression">An aggregation over the displayed rows, for example <c>items =&gt; items.Sum(i =&gt; i.Amount)</c>.</param>
+    /// <param name="format">Optional format string applied to the result.</param>
+    /// <param name="class">Optional CSS class for the generated <c>&lt;td&gt;</c>.</param>
     public void AddFooterColumn<TValue>(
         int id,
         Expression<Func<IEnumerable<TGridItem>, TValue?>> expression,
@@ -360,15 +379,31 @@ public class ColumnManager<TGridItem>
         FooterColumns.Add(column);
     }
 
-    public void AddFooterColumnWithSum(DynamicColumn<TGridItem> column, string removeClass = "")
+    /// <summary>
+    /// Adds a footer cell that sums <paramref name="column"/> over the rows currently shown in the grid,
+    /// reusing the column's own CSS class so the total lines up with the cells above it.
+    /// </summary>
+    /// <remarks>
+    /// The sum is re-evaluated every time the footer is rendered, so it follows the active quick search or
+    /// filter. The column must expose a <see cref="DynamicColumn{TGridItem}.Property"/> whose values convert
+    /// to <see cref="decimal"/>.
+    /// </remarks>
+    /// <param name="column">The column to total. Its <see cref="DynamicColumn{TGridItem}.Id"/> decides where the footer cell lands.</param>
+    /// <param name="removeClass">
+    /// Optional CSS class to strip from the column's class when styling the footer cell, for example a per-cell
+    /// colour that should not repeat on the totals row. Ignored when null or empty.
+    /// </param>
+    /// <exception cref="InvalidOperationException">The column has no <see cref="DynamicColumn{TGridItem}.Property"/> to sum.</exception>
+    public void AddFooterColumnWithSum(DynamicColumn<TGridItem> column, string? removeClass = null)
     {
-        var compiledExpression = column.Property!.Compile();
+        var compiledProperty = column.GetCompiledProperty()
+            ?? throw new InvalidOperationException($"Column '{column.Title}' has no Property, so it cannot be summed.");
 
         AddFooterColumn(
             column.Id,
-            items => items.Sum(item => Convert.ToDecimal(compiledExpression(item))),
+            items => items.Sum(item => Convert.ToDecimal(compiledProperty(item))),
             format: "N0",
-            @class: column.Class?.Replace(removeClass, "")
+            @class: string.IsNullOrEmpty(removeClass) ? column.Class : column.Class?.Replace(removeClass, "")
         );
     }
 
