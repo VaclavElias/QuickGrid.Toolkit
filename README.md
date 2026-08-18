@@ -78,17 +78,20 @@ You declare every possible column once in a `ColumnManager<T>` using strongly-ty
 
 ## Run the samples
 
+**Live demo:** the samples are published to GitHub Pages at <https://vaclavelias.github.io/QuickGrid.Toolkit/> (WebAssembly build, deployed automatically from `main`).
+
 ```bash
-dotnet run --project src/QuickGrid.Samples
+dotnet run --project src/QuickGrid.Samples        # Blazor Server (matches how the toolkit is typically consumed)
+dotnet run --project src/QuickGrid.Samples.Wasm   # standalone WebAssembly (what GitHub Pages hosts)
 ```
 
-The demo app contains eleven example pages, running from the low-level building blocks to a full application-grade setup. They live under [`src/QuickGrid.Samples/Pages/Examples`](src/QuickGrid.Samples/Pages/Examples) and are registered in [`ExampleRegistry.cs`](src/QuickGrid.Samples/Core/ExampleRegistry.cs). The three foundational ones:
+Both hosts render the same example pages from the shared `QuickGrid.Samples.Shared` library. The demo contains eleven example pages, running from the low-level building blocks to a full application-grade setup. They live under [`src/QuickGrid.Samples.Shared/Pages/Examples`](src/QuickGrid.Samples.Shared/Pages/Examples) and are registered in [`ExampleRegistry.cs`](src/QuickGrid.Samples.Shared/Core/ExampleRegistry.cs). The three foundational ones:
 
 | Page | Route | Shows |
 | --- | --- | --- |
-| [QuickGrid + ColumnManager](src/QuickGrid.Samples/Pages/Examples/UsersGrid.razor) | `/users-grid` | The low-level pattern: your own `QuickGrid` + a `ColumnSelector` for show/hide |
-| [QuickGridWrapper](src/QuickGrid.Samples/Pages/Examples/UsersGridWrapper.razor) | `/users-grid-wrapper` | The same columns in a component with toolbar, quick search and pagination |
-| [Footers & Totals](src/QuickGrid.Samples/Pages/Examples/FootersTotals.razor) | `/footers-totals` | Automatic and hand-built totals rows on a `QuickGridWrapper` |
+| [QuickGrid + ColumnManager](src/QuickGrid.Samples.Shared/Pages/Examples/UsersGrid.razor) | `/users-grid` | The low-level pattern: your own `QuickGrid` + a `ColumnSelector` for show/hide |
+| [QuickGridWrapper](src/QuickGrid.Samples.Shared/Pages/Examples/UsersGridWrapper.razor) | `/users-grid-wrapper` | The same columns in a component with toolbar, quick search and pagination |
+| [Footers & Totals](src/QuickGrid.Samples.Shared/Pages/Examples/FootersTotals.razor) | `/footers-totals` | Automatic and hand-built totals rows on a `QuickGridWrapper` |
 
 ## Getting started
 
@@ -96,7 +99,7 @@ The snippets below assume you already use Blazor and QuickGrid. Each mirrors a s
 
 ### 1. Direct `QuickGrid` with `ColumnManager<T>`
 
-Full control of the `QuickGrid` markup while the toolkit manages columns and the selection UI. See [`UsersGrid.razor`](src/QuickGrid.Samples/Pages/Examples/UsersGrid.razor).
+Full control of the `QuickGrid` markup while the toolkit manages columns and the selection UI. See [`UsersGrid.razor`](src/QuickGrid.Samples.Shared/Pages/Examples/UsersGrid.razor).
 
 ```razor
 <ColumnSelector ColumnManager="_columnManager" SelectionChanged="SelectionChangedAsync" />
@@ -139,7 +142,7 @@ Key points:
 
 ### 2. `QuickGridWrapper`
 
-When several grids share similar data but different columns, the wrapper centralizes the grid markup, toolbar, quick search and pagination, you keep just the per-page column configuration. See [`UsersGridWrapper.razor`](src/QuickGrid.Samples/Pages/Examples/UsersGridWrapper.razor).
+When several grids share similar data but different columns, the wrapper centralizes the grid markup, toolbar, quick search and pagination, you keep just the per-page column configuration. See [`UsersGridWrapper.razor`](src/QuickGrid.Samples.Shared/Pages/Examples/UsersGridWrapper.razor).
 
 ```razor
 <QuickGridWrapper Items="@_items.AsQueryable()" ColumnManager="_columnManager" />
@@ -151,7 +154,7 @@ You pass `Items` and a configured `ColumnManager<T>`; the column setup is identi
 
 ### 3. Total footer
 
-Add `TotalFooter` and an `Id` to a `QuickGridWrapper` to get an automatic totals row, numeric columns are summed for you. See [`FootersTotals.razor`](src/QuickGrid.Samples/Pages/Examples/FootersTotals.razor).
+Add `TotalFooter` and an `Id` to a `QuickGridWrapper` to get an automatic totals row, numeric columns are summed for you. See [`FootersTotals.razor`](src/QuickGrid.Samples.Shared/Pages/Examples/FootersTotals.razor).
 
 ```razor
 <QuickGridWrapper Items="@_items.AsQueryable()"

@@ -9,7 +9,9 @@ These repository instructions guide GitHub Copilot (and other AI assistants) whe
 The solution (`QuickGrid.Toolkit.slnx`) contains two projects:
 
 - `src/QuickGrid.Toolkit` — the reusable library. SDK `Microsoft.NET.Sdk.Razor`; ships static web assets (`wwwroot/app.css` served as `_content/QuickGrid.Toolkit/app.css`).
-- `src/QuickGrid.Samples` — a demo Blazor Web App using Interactive Server render mode, showcasing the toolkit. The example pages under `Pages/Examples/` (registered in `Core/ExampleRegistry.cs`) are the reference usage patterns; start with `UsersGrid.razor` and `UsersGridWrapper.razor`.
+- `src/QuickGrid.Samples.Shared` — a Razor class library holding the example pages, services and layout shared by both sample hosts. The example pages under `Pages/Examples/` (registered in `Core/ExampleRegistry.cs`) are the reference usage patterns; start with `UsersGrid.razor` and `UsersGridWrapper.razor`.
+- `src/QuickGrid.Samples` — a thin Blazor Web App head using Interactive Server render mode (matches how the toolkit is typically consumed; prefer it when verifying changes).
+- `src/QuickGrid.Samples.Wasm` — a thin standalone WebAssembly head; `.github/workflows/deploy-pages.yml` publishes it to GitHub Pages.
 
 There is no domain/infrastructure layering and no `DbContext` in this repository — sample data comes from an in-memory `UserService`.
 
@@ -22,7 +24,7 @@ There is no domain/infrastructure layering and no `DbContext` in this repository
 ## Build & run
 
 - Build: `dotnet build QuickGrid.Toolkit.slnx`
-- Run the demo: `dotnet run --project src/QuickGrid.Samples`
+- Run the demo: `dotnet run --project src/QuickGrid.Samples` (Server) or `dotnet run --project src/QuickGrid.Samples.Wasm` (WebAssembly)
 - Tests: `dotnet test QuickGrid.Toolkit.slnx` — xUnit unit tests in `tests/QuickGrid.Toolkit.Tests` cover the pure logic (expression helpers, quick search, cell styling, footer arithmetic). Add or extend tests there when changing those areas; component/render behaviour is verified through the sample pages.
 
 ## Architecture

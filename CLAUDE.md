@@ -7,14 +7,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Read [`.github/copilot-instructions.md`](.github/copilot-instructions.md) first — it covers the project overview, target framework (.NET 10), build/run commands, coding conventions, and change-scope rules. This file does **not** repeat those; it adds the deeper architecture detail and the sharp edges that aren't obvious from reading any single file.
 
 Quick reminders that matter most often:
-- Build: `dotnet build QuickGrid.Toolkit.slnx` · Run demo: `dotnet run --project src/QuickGrid.Samples`
+- Build: `dotnet build QuickGrid.Toolkit.slnx` · Run demo: `dotnet run --project src/QuickGrid.Samples` (Blazor Server head) or `dotnet run --project src/QuickGrid.Samples.Wasm` (WebAssembly head, deployed to GitHub Pages). Example pages/services live in the shared RCL `src/QuickGrid.Samples.Shared`; the heads are thin hosts.
 - Tests: `dotnet test QuickGrid.Toolkit.slnx` — xUnit unit tests live in `tests/QuickGrid.Toolkit.Tests`, covering the pure logic (`ExpressionHelper`, `QuickSearchUtility`, `CellStyleHelper`/`CellStyleMap`, `ColumnManager` footers). Component/render behaviour is still verified through the sample pages, not tests.
 
 ## Architecture
 
 The full architecture lives in [`.github/copilot-instructions.md`](.github/copilot-instructions.md) — the column-as-data pipeline (`ColumnManager` → `DynamicColumn` → `ColumnBuilder` → `QuickGridColumns`), the two consumption patterns, and the `QuickGridWrapper` specifics (in-memory vs EF search, `ItemsVersion`, JS-interop footers, icon-provider DI). Read that section before changing column rendering or the wrapper. The gotchas below are the failure modes that aren't visible from the code alone.
 
-The footer/column-title JS interop is self-contained: the wrapper imports `_content/QuickGrid.Toolkit/quickGridToolkit.js` (source: `src/QuickGrid.Toolkit/wwwroot/quickGridToolkit.js`) on demand. It runs only when the wrapper's `Id` is set. The example pages under `src/QuickGrid.Samples/Pages/Examples` (11 of them, registered in `src/QuickGrid.Samples/Core/ExampleRegistry.cs`) are the canonical, working usage references and share a header via the `ExampleInfo` component. Start with `UsersGrid`, `UsersGridWrapper` and `FootersTotals`.
+The footer/column-title JS interop is self-contained: the wrapper imports `_content/QuickGrid.Toolkit/quickGridToolkit.js` (source: `src/QuickGrid.Toolkit/wwwroot/quickGridToolkit.js`) on demand. It runs only when the wrapper's `Id` is set. The example pages under `src/QuickGrid.Samples.Shared/Pages/Examples` (11 of them, registered in `src/QuickGrid.Samples.Shared/Core/ExampleRegistry.cs`) are the canonical, working usage references and share a header via the `ExampleInfo` component. Start with `UsersGrid`, `UsersGridWrapper` and `FootersTotals`. When testing toolkit changes, prefer the Server head — both production consumers run Blazor Server, so it is the higher-fidelity environment.
 
 ## Known issues / sharp edges (from README and code comments)
 
