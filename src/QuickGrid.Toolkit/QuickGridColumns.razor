@@ -28,12 +28,12 @@
                             ShowOnlyTrue="@tickPropertyColumn.ShowOnlyTrue"
                             Sortable="true" />
             }
-            else if (col.ColumnType == typeof(ToggleColumn<TGridItem>) && col is DynamicColumn<TGridItem> dynamicColumn)
+            else if (col.ColumnType == typeof(ToggleColumn<TGridItem>))
             {
                 <ToggleColumn TGridItem="TGridItem" Title="@col.Title"
                             Align="@col.Align"
                             Class="@col.Class"
-                            OnChangeAsync="@dynamicColumn.OnActionAsync"
+                            OnChangeAsync="@col.OnActionAsync"
                             Property="@col.Property"
                             Sortable="true" />
             }

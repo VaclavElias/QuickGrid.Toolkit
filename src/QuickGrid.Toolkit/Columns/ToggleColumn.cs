@@ -18,7 +18,14 @@ public class ToggleColumn<TGridItem> : PropertyColumnBase<TGridItem>
     protected override void CellContent(RenderTreeBuilder builder, TGridItem item)
     {
         var rawValue = CellValueFunc!(item);
-        var isTrue = rawValue is not null && rawValue.ToString() == "True";
+
+        // Property is object-typed, so the value is usually a boxed bool; anything else falls back to its text.
+        var isTrue = rawValue switch
+        {
+            null => false,
+            bool boolValue => boolValue,
+            _ => string.Equals(rawValue.ToString(), "True", StringComparison.OrdinalIgnoreCase)
+        };
 
         builder.OpenElement(0, "div");
         builder.AddAttribute(1, "class", "form-switch d-inline-block");
