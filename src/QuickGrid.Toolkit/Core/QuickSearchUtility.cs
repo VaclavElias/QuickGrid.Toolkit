@@ -121,7 +121,9 @@ public static class QuickSearchUtility
                 .Where(static property => property.CanRead && property.GetIndexParameters().Length == 0)
                 .ToArray());
 
-        if (depth > 0)
+        // Nested levels are never filtered, and with no include/exclude list there is nothing to filter at the
+        // root either. Returning the cached array in both cases avoids allocating one per item per search term.
+        if (depth > 0 || (options.ColumnNames is null or { Count: 0 } && options.ExcludedColumns is null or { Count: 0 }))
         {
             return properties;
         }
