@@ -40,12 +40,18 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     [Parameter] public bool IsColumnSelection { get; set; } = true;
     [Parameter] public bool IsColumnItemsSelection { get; set; }
     [Parameter] public bool IsFilter { get; set; } = true;
+
+    /// <summary>
+    /// Renders a diagnostics panel above the grid showing the wrapper's live state: item counts, the active
+    /// search and its mode, pagination, and column visibility. Intended for development only.
+    /// </summary>
+    [Parameter] public bool IsDebug { get; set; }
+
     [Parameter] public bool IsToolbar { get; set; } = true;
     [Parameter] public bool IsNestedSearch { get; set; } = true;
     [Parameter] public TotalFooter TotalFooter { get; set; } = new();
     [Parameter] public bool ExactMatch { get; set; }
     [Parameter] public bool IsExportEnabled { get; set; }
-    [Parameter] public bool IsPreviewFeature { get; set; }
     [Parameter] public Func<TGridItem, object> ItemKey { get; set; } = x => x!;
     [Parameter] public Func<TGridItem, string?>? RowClass { get; set; }
     [Parameter] public EventCallback ColumnSelectionChanged { get; set; }
@@ -88,7 +94,6 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     private bool _isTableIndex;
     private bool _isInMemorySearch;
     private bool _showFilterSection;
-    private bool _isDebug = false;
     private bool _refreshGridAfterRender;
 
     private long _prevItemsVersion;
@@ -104,7 +109,6 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     private List<TGridItem>? _cachedFilteredItems;
     private List<string> _defaultVisibleColumns = [];
     private List<TGridItem>? _evaluatedItems;
-    private readonly List<FooterColumn<TGridItem>> _footerColumns = [];
     private IJSObjectReference? _module;
 
     // AsEnumerable() keeps the pattern match in C#: counting straight off the IQueryable would build an
@@ -315,19 +319,6 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         }
 
         UsedColumnManager = _defaultColumnManager;
-
-        //StateHasChanged();
-
-        //foreach (var column in _defaultColumnManager.Columns)
-        //{
-        //    column.Visible = _selectedConfiguration.IsColumnSelected(column.FullTitle);
-
-        //    _usedColumnManager.Add(column);
-        //}
-
-        //ColumnManager.SetVisibleColumns(_selectedConfiguration.ColumnSelections.Select(s => s.ColumnName));
-
-        //ColumnManager.ResetColumnVisibility();
     }
 
     private void InitializeDefaultColumnVisibility()
@@ -624,20 +615,11 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         await OnColumnSelectionChangedAsync();
     }
 
-    private void OnColumnSelectorClose()
-    {
-        Console.WriteLine("Test");
-    }
-
     private async Task SelectView(ColumnConfig config)
     {
         SelectedConfiguration = config;
 
         SetColumnVisibility(SelectedConfiguration);
-
-        //ColumnManager.SetVisibleColumns(config.ColumnSelections.Select(s => s.ColumnName));
-
-        //ColumnManager.ResetColumnVisibility();
 
         if (Events is not null)
         {
@@ -674,7 +656,6 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         }
     }
 
-    //public string GetTableClass() => $"table table-sm {IsTableIndex()} table-striped small table-blazor table-fit table-thead-sticky table-bg-transparent mb-0";
 
     public async Task DisableExactMatch()
     {
