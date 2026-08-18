@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace QuickGrid.Toolkit.Helpers;
 
 /// <summary>
@@ -34,22 +36,31 @@ public static class CellStyleHelper
             }
         }
 
-        // Default numeric value nature determination
+        // Default numeric value nature determination. Every numeric type is handled through IConvertible,
+        // so long, float, short and friends are described as well, not just int/decimal/double.
         return value switch
         {
             null => NoValueDescription,
-            int intValue when intValue < 0 => NegativeDescription,
-            decimal decimalValue when decimalValue < 0 => NegativeDescription,
-            double doubleValue when doubleValue < 0 => NegativeDescription,
-            int intValue when intValue > 0 => PositiveDescription,
-            decimal decimalValue when decimalValue > 0 => PositiveDescription,
-            double doubleValue when doubleValue > 0 => PositiveDescription,
-            int intValue when intValue == 0 => ZeroDescription,
-            decimal decimalValue when decimalValue == 0 => ZeroDescription,
-            double doubleValue when doubleValue == 0 => ZeroDescription,
+            IConvertible convertible when IsNumeric(convertible.GetTypeCode())
+                => DescribeSign(convertible.ToDouble(CultureInfo.InvariantCulture)),
             _ => UnknownDescription
         };
     }
+
+    /// <summary>
+    /// True for the numeric type codes, which sit contiguously between <see cref="TypeCode.SByte"/> and
+    /// <see cref="TypeCode.Decimal"/>. Deliberately excludes bool, char and DateTime, which are convertible but not numeric.
+    /// </summary>
+    private static bool IsNumeric(TypeCode typeCode)
+        => typeCode is >= TypeCode.SByte and <= TypeCode.Decimal;
+
+    private static string DescribeSign(double value) => value switch
+    {
+        < 0 => NegativeDescription,
+        > 0 => PositiveDescription,
+        0 => ZeroDescription,
+        _ => UnknownDescription // NaN
+    };
 
     /// <summary>
     /// Gets the style for a value from the provided cell style map.
