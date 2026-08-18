@@ -1,0 +1,53 @@
+name: Deploy samples to GitHub Pages
+
+# Publishes the WebAssembly samples head (src/QuickGrid.Samples.Wasm) as a static site.
+# Requires GitHub Pages to be enabled for the repository with Source = "GitHub Actions".
+
+on:
+  # push:
+  #   branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish WebAssembly samples
+        run: dotnet publish src/QuickGrid.Samples.Wasm/QuickGrid.Samples.Wasm.csproj -c Release -o publish
+
+      - name: Rewrite base href for project-pages URL
+        run: sed -i 's|<base href="/" />|<base href="/QuickGrid.Toolkit/" />|' publish/wwwroot/index.html
+
+      - name: Add SPA fallback and disable Jekyll
+        run: |
+          cp publish/wwwroot/index.html publish/wwwroot/404.html
+          touch publish/wwwroot/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: publish/wwwroot
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
