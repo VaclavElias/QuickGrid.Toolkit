@@ -8,7 +8,7 @@ Read [`.github/copilot-instructions.md`](.github/copilot-instructions.md) first 
 
 Quick reminders that matter most often:
 - Build: `dotnet build QuickGrid.Toolkit.slnx` · Run demo: `dotnet run --project src/QuickGrid.Samples`
-- There is **no test project** — don't look for or invent a test runner.
+- Tests: `dotnet test QuickGrid.Toolkit.slnx` — xUnit unit tests live in `tests/QuickGrid.Toolkit.Tests`, covering the pure logic (`ExpressionHelper`, `QuickSearchUtility`, `CellStyleHelper`/`CellStyleMap`, `ColumnManager` footers). Component/render behaviour is still verified through the sample pages, not tests.
 
 ## Architecture
 
