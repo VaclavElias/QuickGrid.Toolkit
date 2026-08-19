@@ -1,10 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
-using System.Globalization;
-using System.Net;
-using System.Text;
 
 namespace QuickGrid.Toolkit;
 
@@ -122,24 +118,15 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         }
     }
 
-    /// <summary>
-    /// Minimum number of characters before a <see cref="FilterCriteria"/> backed search queries the source.
-    /// Shorter terms leave the grid unfiltered.
-    /// </summary>
-    private const int MinFilterSearchLength = 3;
-
     private const string ColumnTitleSetupErrorMessage = "Non-critical: Failed to setup column titles for {Id}. Application continues to run without this feature.";
     private const string FooterSetupErrorMessage = "Non-critical: Failed to setup footer for {Id}. Application continues to run without this feature.";
 
     private bool _titlesLoaded;
     private bool _isTableIndex;
-    private bool _isInMemorySearch;
     private bool _showFilterSection;
     private bool _refreshGridAfterRender;
 
     private long _prevItemsVersion;
-    private string? _searchQuery;
-    private string? _lastQuickSearchParameter;
     private string? _lastRenderedFooter;
 
     private QuickGrid<TGridItem>? _grid;
@@ -147,26 +134,13 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     private ColumnManager<TGridItem> _defaultColumnManager = new();
 
     private List<string> _defaultVisibleColumns = [];
-    private List<TGridItem>? _evaluatedItems;
     private IJSObjectReference? _module;
 
     /// <summary>
-    /// The active search result, or <see langword="null"/> when no search is narrowing the grid.
-    /// Only <see cref="RecomputeSearchResult"/> writes it.
+    /// Owns the query, the search options and the computed result. The component keeps only the parts that need
+    /// the render loop: pushing parameters in, and raising <see cref="SearchResultChanged"/> afterwards.
     /// </summary>
-    /// <remarks>
-    /// Held as a queryable, not just a list: <c>AsQueryable()</c> allocates a new wrapper on every call and
-    /// QuickGrid re-queries whenever its <c>Items</c> reference changes, so handing it a fresh one each render
-    /// would refresh the grid continuously.
-    /// </remarks>
-    private IQueryable<TGridItem>? _searchResult;
-
-    // The inputs _searchResult was last computed from. See RefreshSearchResultAsync for why the Items reference
-    // is deliberately not one of them.
-    private bool _searchInputsSeeded;
-    private string? _computedSearchQuery;
-    private bool _computedExactMatch;
-    private bool _computedNestedSearch;
+    private readonly GridSearch<TGridItem> _search = new();
 
     // AsEnumerable() keeps the pattern match in C#: counting straight off the IQueryable would build an
     // expression tree, which cannot contain an 'is' pattern.
@@ -174,74 +148,22 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
     /// <summary>
     /// The rows the grid is showing: the search result when a search is active, otherwise <see cref="Items"/>
-    /// unchanged.
+    /// unchanged. Reading it is free and has no side effects.
     /// </summary>
-    /// <remarks>
-    /// Reading this is free and has no side effects, so markup, the footer, the selection count and the export
-    /// paths can all read it as often as they like. Everything expensive happens in
-    /// <see cref="RecomputeSearchResult"/>, which runs only when an input actually changes.
-    /// </remarks>
-    private IQueryable<TGridItem>? VisibleItems => _searchResult ?? Items;
-
-    /// <summary>
-    /// Rebuilds <see cref="_searchResult"/> from the current search query, search options and item source.
-    /// </summary>
-    private void RecomputeSearchResult()
-    {
-        var query = _searchQuery;
-
-        _computedSearchQuery = query;
-        _computedExactMatch = ExactMatch;
-        _computedNestedSearch = IsNestedSearch;
-
-        // No search: VisibleItems falls through to Items, which keeps a changed Items reference flowing to the
-        // grid immediately.
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            _searchResult = null;
-
-            return;
-        }
-
-        if (FilterCriteria is null)
-        {
-            var searchOptions = new QuickSearchOptions()
-            {
-                IncludeChildProperties = IsNestedSearch,
-                ExactMatch = ExactMatch
-            };
-
-            _searchResult = Items?.Where(item => QuickSearchAction(item, query, searchOptions)).ToList().AsQueryable();
-
-            return;
-        }
-
-        // FilterCriteria path: the source was queried in SearchTextChanged. A null result means there is nothing
-        // to narrow by yet (the term is still below MinFilterSearchLength), so leave the grid unfiltered rather
-        // than blanking it.
-        _searchResult = _evaluatedItems?.AsQueryable();
-    }
-
-    private bool SearchInputsChanged()
-        => _computedSearchQuery != _searchQuery
-            || _computedExactMatch != ExactMatch
-            || _computedNestedSearch != IsNestedSearch;
+    private IQueryable<TGridItem>? VisibleItems => _search.VisibleItems;
 
     /// <summary>
     /// Recomputes the search result and reports the rows now on show through <see cref="SearchResultChanged"/>.
     /// </summary>
     /// <remarks>
-    /// <para>Call this from lifecycle and event handlers whenever the displayed set may have changed — never from
-    /// a property getter or from markup. It is the one place that both recomputes and notifies, so the two can
-    /// never drift apart.</para>
-    /// <para>A change to the <see cref="Items"/> <em>reference</em> deliberately does not trigger a recompute.
-    /// Callers signal changed data with <see cref="ItemsVersion"/> or <see cref="RefreshDataAsync"/>, and a page
-    /// whose <c>Items</c> expression allocates a new queryable on every render would otherwise re-run the search
-    /// and raise <see cref="SearchResultChanged"/> on every render, which the handler can turn into a render loop.</para>
+    /// Call this from lifecycle and event handlers whenever the displayed set may have changed — never from a
+    /// property getter or from markup. It is the one place that both recomputes and notifies, so the two can
+    /// never drift apart. See <see cref="GridSearch{TGridItem}"/> for why a changed <see cref="Items"/> reference
+    /// deliberately does not trigger a recompute.
     /// </remarks>
     private async Task RefreshSearchResultAsync()
     {
-        RecomputeSearchResult();
+        _search.Recompute();
 
         await SearchResultChanged.InvokeAsync(VisibleItems?.ToList() ?? []);
     }
@@ -285,12 +207,11 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     {
         SyncColumnManager();
 
-        _isInMemorySearch = FilterCriteria is null;
-
         EnsurePaginationState();
         SetTableIndex();
-        UpdateSearchQuery();
-        SeedSearchInputs();
+
+        _search.SyncInputs(Items, FilterCriteria, ExactMatch, IsNestedSearch);
+        _search.ApplyQuickSearchParameter(QuickSearch);
 
         if (Items is not null && QueryableItems is not null && Events is not null)
         {
@@ -306,7 +227,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
             await RefreshSearchResultAsync();
         }
-        else if (SearchInputsChanged())
+        else if (_search.InputsChanged())
         {
             await RefreshSearchResultAsync();
         }
@@ -327,36 +248,6 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
         _pagination ??= new PaginationState();
         _pagination.ItemsPerPage = ItemsPerPage;
-    }
-
-    /// <summary>
-    /// Applies the <see cref="QuickSearch"/> parameter, including when the caller clears it.
-    /// </summary>
-    /// <remarks>
-    /// Only an actual change to the parameter is applied. Text typed into the built-in search box lives in
-    /// <c>_searchQuery</c> alone, so comparing against the last parameter value keeps a parent re-render from
-    /// wiping it, while still letting the parent reset the search by setting <see cref="QuickSearch"/> to null or empty.
-    /// </remarks>
-    private void UpdateSearchQuery()
-    {
-        if (_lastQuickSearchParameter == QuickSearch) return;
-
-        _lastQuickSearchParameter = QuickSearch;
-        _searchQuery = QuickSearch;
-    }
-
-    /// <summary>
-    /// Takes the initial value of the search options as the baseline, so that setting them in markup is not read
-    /// as a change on the first parameter set and does not raise <see cref="SearchResultChanged"/> before anything
-    /// has been searched. An initial <see cref="QuickSearch"/> is a real search and is deliberately not seeded.
-    /// </summary>
-    private void SeedSearchInputs()
-    {
-        if (_searchInputsSeeded) return;
-
-        _searchInputsSeeded = true;
-        _computedExactMatch = ExactMatch;
-        _computedNestedSearch = IsNestedSearch;
     }
 
     public async Task RefreshColumnTitlesAsync()
@@ -386,7 +277,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     {
         if (Id is null || !HasFooter()) return;
 
-        var footer = GenerateTableFooterWithTotals();
+        var footer = GridFooterBuilder<TGridItem>.Build(UsedColumnManager, TotalFooter, GetFooterItems());
 
         if (footer == _lastRenderedFooter) return;
 
@@ -410,7 +301,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     }
 
     private bool HasFooter()
-        => UsedColumnManager.FooterColumns.Count > 0 || TotalFooter.IsTotalFooter;
+        => GridFooterBuilder<TGridItem>.HasFooter(UsedColumnManager, TotalFooter);
 
     private void SetDefaultColumns()
     {
@@ -432,113 +323,12 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
             .Select(s => s.FullTitle!)
             .ToList();
 
-    private string GenerateTableFooterWithTotals()
-    {
-        // Materialise once: every total walks the same rows, so re-reading them per column would repeat the
-        // enumeration of the whole result.
-        var footerItems = GetFooterItems();
-
-        var html = UsedColumnManager.FooterColumns.Count > 0
-            ? GenerateManualFooterCells(footerItems)
-            : GenerateAutomaticFooterCells(footerItems);
-
-        return $"<tr class=\"table-warning fw-bold\">{html}</tr>";
-    }
-
-    private string GenerateManualFooterCells(IReadOnlyList<TGridItem> footerItems)
-    {
-        StringBuilder html = new();
-
-        foreach (var column in UsedColumnManager.Columns.Where(w => w.Visible && w.Class != "d-none"))
-        {
-            var footerColumn = UsedColumnManager.FooterColumns.FirstOrDefault(w => w.Id == column.Id);
-
-            if (footerColumn is null)
-            {
-                html.Append("<td></td>");
-            }
-            else if (footerColumn.Content != null)
-            {
-                html.Append(footerColumn.Content);
-            }
-            else
-            {
-                html.Append(footerColumn.StringContent?.Invoke(footerItems));
-            }
-        }
-
-        return html.ToString();
-    }
-
-    private string GenerateAutomaticFooterCells(IReadOnlyList<TGridItem> footerItems)
-    {
-        StringBuilder html = new();
-
-        var visibleColumns = UsedColumnManager.Columns
-            .Where(w => w.Visible && w.Class != "d-none")
-            .ToList();
-
-        var labelColumn = GetTotalFooterLabelColumn(visibleColumns);
-
-        foreach (var column in visibleColumns)
-        {
-            if (column == labelColumn)
-            {
-                html.Append(BuildFooterCell(TotalFooter.TotalFooterLabel, column.Class));
-            }
-            else if (ShouldCalculateTotal(column))
-            {
-                html.Append(BuildTotalFooterCell(column, footerItems));
-            }
-            else
-            {
-                html.Append("<td></td>");
-            }
-        }
-
-        return html.ToString();
-    }
-
-    private DynamicColumn<TGridItem>? GetTotalFooterLabelColumn(List<DynamicColumn<TGridItem>> visibleColumns)
-        => TotalFooter.TotalFooterLabelColumnId is int labelColumnId
-            ? visibleColumns.FirstOrDefault(w => w.Id == labelColumnId)
-            : visibleColumns.FirstOrDefault(w => !w.IsNumeric);
-
-    private static bool ShouldCalculateTotal(DynamicColumn<TGridItem> column)
-        => column.Property is not null && column.CalculateTotal switch
-        {
-            true => true,
-            false => false,
-            _ => column.IsNumeric
-        };
-
-    private string BuildTotalFooterCell(DynamicColumn<TGridItem> column, IReadOnlyList<TGridItem> footerItems)
-    {
-        // Compiled once per column and reused: compiling here would run on every render of every total.
-        var compiledProperty = column.GetCompiledProperty()!;
-        var total = footerItems.Sum(item => Convert.ToDecimal(compiledProperty(item)));
-        var format = column.Format ?? TotalFooter.DefaultFormat;
-        var cssClass = TotalFooter.RemoveClass is { Length: > 0 } removeClass
-            ? column.Class?.Replace(removeClass, "")
-            : column.Class;
-
-        return BuildFooterCell(total.ToString(format, CultureInfo.InvariantCulture), cssClass);
-    }
-
     /// <summary>
     /// The rows the footer aggregates over: the search/filter result when one is active, otherwise all items.
+    /// Materialised once, because every total walks the same rows.
     /// </summary>
     private IReadOnlyList<TGridItem> GetFooterItems()
         => VisibleItems?.ToList() ?? [];
-
-    private static string BuildFooterCell(string? value, string? cssClass)
-    {
-        var classAttribute = string.IsNullOrWhiteSpace(cssClass)
-            ? string.Empty
-            : $" class=\"{WebUtility.HtmlEncode(cssClass)}\"";
-
-        return $"<td{classAttribute}>{WebUtility.HtmlEncode(value)}</td>";
-    }
 
     private async Task SearchTextChanged(string? text)
     {
@@ -551,37 +341,23 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
             return;
         }
 
-        _searchQuery = text;
-
-        if (text.Length < MinFilterSearchLength)
-        {
-            // Too short to query the source, so drop any earlier result and show the unfiltered items
-            // instead of leaving a stale, or empty, grid behind.
-            _evaluatedItems = null;
-
-            await RefreshSearchResultAsync();
-
-            return;
-        }
-
-        FilterCriteria.SearchTerm = _searchQuery;
-
+        // B6: IsLoading is set without a StateHasChanged around the await, so the spinner never actually appears.
         IsLoading = true;
 
-        _evaluatedItems = await Items.Where(FilterCriteria.CreateExpression()).ToListAsync();
+        await _search.RunFilterCriteriaSearchAsync(text);
 
         IsLoading = false;
 
-        await RefreshSearchResultAsync();
+        await SearchResultChanged.InvokeAsync(VisibleItems?.ToList() ?? []);
     }
 
     private async Task OnInMemorySearchChanged()
     {
         await RefreshSearchResultAsync();
 
-        if (string.IsNullOrEmpty(_searchQuery))
+        if (string.IsNullOrEmpty(_search.Query))
         {
-            await QuickSearchChanged.InvokeAsync(_searchQuery);
+            await QuickSearchChanged.InvokeAsync(_search.Query);
         }
     }
 
@@ -593,16 +369,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     /// <param name="shouldInvokeCallback">When true, notifies the caller through <see cref="QuickSearchChanged"/>.</param>
     public void ClearSearch(bool shouldInvokeCallback = false)
     {
-        _searchQuery = null;
-        _evaluatedItems = null;
-
-        if (FilterCriteria is not null)
-        {
-            FilterCriteria.SearchTerm = string.Empty;
-        }
-
-        // Clearing always resolves to "no search", so this is a null assignment rather than a re-filter.
-        RecomputeSearchResult();
+        _search.Clear();
 
         // This overload is public and synchronous, so the notifications are dispatched rather than awaited,
         // as QuickSearchChanged already was.
@@ -610,7 +377,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
         if (shouldInvokeCallback)
         {
-            QuickSearchChanged.InvokeAsync(_searchQuery);
+            QuickSearchChanged.InvokeAsync(_search.Query);
         }
     }
 
