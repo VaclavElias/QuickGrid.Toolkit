@@ -33,20 +33,25 @@ public class ColumnManager<TGridItem>
     }
 
     /// <summary>
-    /// Adds a collection of columns to the column manager, ensuring each column receives a correct sequential ID.
+    /// Adds a copy of each of the given columns to this manager, giving every copy a correct sequential ID.
+    /// The typical source is another manager's <see cref="Columns"/> — a shared set of columns reused across grids.
     /// </summary>
     /// <remarks>
-    /// <para>This method iterates through the provided columns and adds each one individually using the <see cref="Add(DynamicColumn{TGridItem}?)"/> method.
-    /// This ensures that each column gets properly initialized with the correct ID, title, and property name.</para>
-    /// <para><strong>Important:</strong> Do not use <c>Columns.AddRange</c> directly, as it bypasses the ID assignment logic and other initialization performed by the <see cref="Add(DynamicColumn{TGridItem}?)"/> method.</para>
+    /// <para>Each column is <see cref="DynamicColumn{TGridItem}.Clone">cloned</see> before it is added, so the
+    /// source keeps its own <c>Id</c> and <c>Visible</c> state. Without that, adding the same column instance to a
+    /// second manager would renumber it in the first, and hiding a column in one grid would hide it in every grid
+    /// built from the same source — a shared column set is only safe to reuse because of this copy.</para>
+    /// <para><strong>Important:</strong> Do not use <c>Columns.AddRange</c> directly. It adds the original
+    /// instances and bypasses the ID, title and property-name initialization performed by
+    /// <see cref="Add(DynamicColumn{TGridItem}?)"/>.</para>
     /// </remarks>
-    /// <param name="columns">The collection of <see cref="DynamicColumn{TGridItem}"/> objects to add. Null columns in the collection are ignored.</param>
+    /// <param name="columns">The columns to copy in. Null entries are ignored.</param>
     /// <seealso cref="Add(DynamicColumn{TGridItem}?)"/>
     public void AddRange(IEnumerable<DynamicColumn<TGridItem>> columns)
     {
         foreach (var column in columns)
         {
-            Add(column);
+            Add(column?.Clone());
         }
     }
 
@@ -291,28 +296,17 @@ public class ColumnManager<TGridItem>
         => Add(new() { ColumnType = typeof(EmptyColumn<TGridItem>), Title = title, Align = align, Class = "index-column" });
 
     /// <summary>
-    /// Creates a shallow copy of the current list of <see cref="DynamicColumn{TGridItem}"/> objects,
-    /// cloning only basic properties such as Title, FullTitle, Property, ColumnType, Format, and Visibility.
+    /// Returns a copy of <see cref="Columns"/> in which every column is an independent
+    /// <see cref="DynamicColumn{TGridItem}.Clone">clone</see>, so the copies can be filtered, re-titled or toggled
+    /// without touching the columns this manager renders. Useful for building a detached selection list from the
+    /// grid's own column set.
     /// </summary>
     /// <remarks>
-    /// This method performs a shallow copy, meaning that only the values of the properties are copied.
-    /// Any modifications to the properties of the cloned objects will not affect the original objects in the list.
+    /// Each clone carries the full state of its original — including <c>Class</c>, <c>Align</c>, <c>SortBy</c>,
+    /// <c>PropertyName</c> and the tick/toggle column subtypes — and is shallow in the sense described on
+    /// <see cref="DynamicColumn{TGridItem}.Clone"/>.
     /// </remarks>
-    /// <returns>A new list containing cloned instances of <see cref="DynamicColumn{TGridItem}"/>
-    /// where each column retains the basic property values of the corresponding original column.</returns>
-    public List<DynamicColumn<TGridItem>> SimpleClone()
-    {
-        return Columns.ConvertAll(s => new DynamicColumn<TGridItem>
-        {
-            Id = s.Id,
-            Title = s.Title,
-            FullTitle = s.FullTitle,
-            Property = s.Property,
-            ColumnType = s.ColumnType,
-            Format = s.Format,
-            Visible = s.Visible
-        });
-    }
+    public List<DynamicColumn<TGridItem>> SimpleClone() => Columns.ConvertAll(s => s.Clone());
 
     /// <summary>
     /// Adds a footer cell holding a fixed, pre-computed value. The value is rendered once and does not
