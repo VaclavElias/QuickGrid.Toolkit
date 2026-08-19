@@ -22,8 +22,21 @@ public class AppQuickGrid<TGridItem> : QuickGridWrapper<TGridItem> where TGridIt
         ItemsPerPage = 10;
     }
 
-    protected override void OnInitialized()
+    /// <summary>
+    /// Deliberately <c>async</c>, even though nothing here needs to be.
+    /// </summary>
+    /// <remarks>
+    /// Real subclasses await on init — both production consumers of this toolkit load authorization state and
+    /// saved column layouts here. That changes the render sequence: when <c>OnInitializedAsync</c> returns an
+    /// incomplete task, Blazor renders the component <em>before</em> <c>OnParametersSetAsync</c> has ever run, so
+    /// anything the wrapper caches from its parameters is still unset on that first render. Keeping this async
+    /// means the samples exercise that path, which a synchronous <c>OnInitialized</c> silently skips.
+    /// </remarks>
+    protected override async Task OnInitializedAsync()
     {
+        // Stands in for the real work: an auth check, or loading saved views from storage.
+        await Task.Yield();
+
         // Only fill in what the page has not supplied, so a page can still handle an event itself.
         Events ??= new QuickGridWrapperEvents<TGridItem>();
 
