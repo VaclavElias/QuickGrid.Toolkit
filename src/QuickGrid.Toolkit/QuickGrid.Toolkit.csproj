@@ -26,6 +26,10 @@
         <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="QuickGrid.Toolkit.Tests" />
+    </ItemGroup>
+
 
     <ItemGroup>
         <SupportedPlatform Include="browser" />

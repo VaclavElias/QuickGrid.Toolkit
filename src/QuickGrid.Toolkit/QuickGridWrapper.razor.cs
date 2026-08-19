@@ -96,9 +96,31 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     [Parameter] public IQuickGridIconProvider? Icons { get; set; }
 
     // Resolve icon provider lazily with a safe default so the component doesn't throw if it's not registered in DI
+    private IQuickGridIconProvider? _registeredIconProvider;
+    private IQuickGridIconProvider? _iconProviderSource;
     private IQuickGridIconProvider? _iconProvider;
-    protected IQuickGridIconProvider IconProvider =>
-        Icons ?? (_iconProvider ??= ServiceProvider.GetService<IQuickGridIconProvider>() ?? new DefaultQuickGridIconProvider());
+
+    /// <summary>
+    /// The icon set in use, guarded so that an icon the provider does not handle falls back to the default markup
+    /// instead of failing the render. See <see cref="ResilientQuickGridIconProvider"/>.
+    /// </summary>
+    protected IQuickGridIconProvider IconProvider
+    {
+        get
+        {
+            var source = Icons
+                ?? (_registeredIconProvider ??= ServiceProvider.GetService<IQuickGridIconProvider>() ?? new DefaultQuickGridIconProvider());
+
+            // Icons is a parameter and can change between renders, so the guarded instance is cached against its source.
+            if (!ReferenceEquals(source, _iconProviderSource))
+            {
+                _iconProviderSource = source;
+                _iconProvider = ResilientQuickGridIconProvider.Wrap(source, Logger);
+            }
+
+            return _iconProvider!;
+        }
+    }
 
     /// <summary>
     /// Minimum number of characters before a <see cref="FilterCriteria"/> backed search queries the source.
