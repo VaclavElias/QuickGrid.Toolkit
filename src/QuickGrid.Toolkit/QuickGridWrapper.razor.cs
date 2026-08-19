@@ -139,7 +139,6 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
     private long _prevItemsVersion;
     private string? _searchQuery;
-    private string? _lastSearchQuery;
     private string? _lastQuickSearchParameter;
     private string? _lastRenderedFooter;
 
@@ -147,71 +146,104 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     private PaginationState? _pagination;
     private ColumnManager<TGridItem> _defaultColumnManager = new();
 
-    private List<TGridItem>? _cachedFilteredItems;
-    private IQueryable<TGridItem>? _cachedFilteredQueryable;
     private List<string> _defaultVisibleColumns = [];
     private List<TGridItem>? _evaluatedItems;
-    private List<TGridItem>? _evaluatedSource;
-    private IQueryable<TGridItem>? _evaluatedQueryable;
     private IJSObjectReference? _module;
+
+    /// <summary>
+    /// The active search result, or <see langword="null"/> when no search is narrowing the grid.
+    /// Only <see cref="RecomputeSearchResult"/> writes it.
+    /// </summary>
+    /// <remarks>
+    /// Held as a queryable, not just a list: <c>AsQueryable()</c> allocates a new wrapper on every call and
+    /// QuickGrid re-queries whenever its <c>Items</c> reference changes, so handing it a fresh one each render
+    /// would refresh the grid continuously.
+    /// </remarks>
+    private IQueryable<TGridItem>? _searchResult;
+
+    // The inputs _searchResult was last computed from. See RefreshSearchResultAsync for why the Items reference
+    // is deliberately not one of them.
+    private bool _searchInputsSeeded;
+    private string? _computedSearchQuery;
+    private bool _computedExactMatch;
+    private bool _computedNestedSearch;
 
     // AsEnumerable() keeps the pattern match in C#: counting straight off the IQueryable would build an
     // expression tree, which cannot contain an 'is' pattern.
-    private int _selectedItemsCount => _filteredItems?.AsEnumerable().Count(item => item is ISelectionDto { IsSelected: true }) ?? 0;
+    private int _selectedItemsCount => VisibleItems?.AsEnumerable().Count(item => item is ISelectionDto { IsSelected: true }) ?? 0;
 
-    private IQueryable<TGridItem>? _filteredItems
+    /// <summary>
+    /// The rows the grid is showing: the search result when a search is active, otherwise <see cref="Items"/>
+    /// unchanged.
+    /// </summary>
+    /// <remarks>
+    /// Reading this is free and has no side effects, so markup, the footer, the selection count and the export
+    /// paths can all read it as often as they like. Everything expensive happens in
+    /// <see cref="RecomputeSearchResult"/>, which runs only when an input actually changes.
+    /// </remarks>
+    private IQueryable<TGridItem>? VisibleItems => _searchResult ?? Items;
+
+    /// <summary>
+    /// Rebuilds <see cref="_searchResult"/> from the current search query, search options and item source.
+    /// </summary>
+    private void RecomputeSearchResult()
     {
-        get
+        var query = _searchQuery;
+
+        _computedSearchQuery = query;
+        _computedExactMatch = ExactMatch;
+        _computedNestedSearch = IsNestedSearch;
+
+        // No search: VisibleItems falls through to Items, which keeps a changed Items reference flowing to the
+        // grid immediately.
+        if (string.IsNullOrWhiteSpace(query))
         {
-            IQueryable<TGridItem>? result;
+            _searchResult = null;
 
-            if (string.IsNullOrWhiteSpace(_searchQuery))
-            {
-                result = Items;
-
-            }
-            else if (FilterCriteria is null)
-            {
-                var searchOptions = new QuickSearchOptions()
-                {
-                    IncludeChildProperties = IsNestedSearch,
-                    ExactMatch = ExactMatch
-                };
-
-                if (_searchQuery != _lastSearchQuery)
-                {
-                    _cachedFilteredItems = Items?.Where(item => QuickSearchAction(item, _searchQuery, searchOptions)).ToList();
-
-                    // Cache the queryable too, not just the list. AsQueryable() allocates a new wrapper every
-                    // call, and QuickGrid re-queries whenever its Items reference changes, so returning a fresh
-                    // one from this getter would make the grid refresh on every single render.
-                    _cachedFilteredQueryable = _cachedFilteredItems?.AsQueryable();
-                }
-
-                result = _cachedFilteredQueryable;
-            }
-            else
-            {
-                // No server-side result yet (e.g. the search term is still below MinFilterSearchLength),
-                // so fall back to the unfiltered items rather than blanking the grid.
-                if (!ReferenceEquals(_evaluatedItems, _evaluatedSource))
-                {
-                    _evaluatedSource = _evaluatedItems;
-                    _evaluatedQueryable = _evaluatedItems?.AsQueryable();
-                }
-
-                result = _evaluatedQueryable ?? Items;
-            }
-
-            if (_searchQuery != _lastSearchQuery)
-            {
-                _ = SearchResultChanged.InvokeAsync(result?.ToList() ?? []);
-
-                _lastSearchQuery = _searchQuery;
-            }
-
-            return result;
+            return;
         }
+
+        if (FilterCriteria is null)
+        {
+            var searchOptions = new QuickSearchOptions()
+            {
+                IncludeChildProperties = IsNestedSearch,
+                ExactMatch = ExactMatch
+            };
+
+            _searchResult = Items?.Where(item => QuickSearchAction(item, query, searchOptions)).ToList().AsQueryable();
+
+            return;
+        }
+
+        // FilterCriteria path: the source was queried in SearchTextChanged. A null result means there is nothing
+        // to narrow by yet (the term is still below MinFilterSearchLength), so leave the grid unfiltered rather
+        // than blanking it.
+        _searchResult = _evaluatedItems?.AsQueryable();
+    }
+
+    private bool SearchInputsChanged()
+        => _computedSearchQuery != _searchQuery
+            || _computedExactMatch != ExactMatch
+            || _computedNestedSearch != IsNestedSearch;
+
+    /// <summary>
+    /// Recomputes the search result and reports the rows now on show through <see cref="SearchResultChanged"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>Call this from lifecycle and event handlers whenever the displayed set may have changed — never from
+    /// a property getter or from markup. It is the one place that both recomputes and notifies, so the two can
+    /// never drift apart.</para>
+    /// <para>A change to the <see cref="Items"/> <em>reference</em> deliberately does not trigger a recompute.
+    /// Callers signal changed data with <see cref="ItemsVersion"/> or <see cref="RefreshDataAsync"/>, and a page
+    /// whose <c>Items</c> expression allocates a new queryable on every render would otherwise re-run the search
+    /// and raise <see cref="SearchResultChanged"/> on every render, which the handler can turn into a render loop.</para>
+    /// </remarks>
+    private async Task RefreshSearchResultAsync()
+    {
+        RecomputeSearchResult();
+
+        await SearchResultChanged.InvokeAsync(VisibleItems?.ToList() ?? []);
     }
 
     /// <summary>
@@ -258,6 +290,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         EnsurePaginationState();
         SetTableIndex();
         UpdateSearchQuery();
+        SeedSearchInputs();
 
         if (Items is not null && QueryableItems is not null && Events is not null)
         {
@@ -268,11 +301,14 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         {
             _prevItemsVersion = ItemsVersion;
 
-            // Invalidate caches and force re-evaluation for current search
-            _lastSearchQuery = null;
+            // The items changed underneath a search that has not itself changed, so recompute unconditionally.
             _refreshGridAfterRender = true;
 
-            //await AddOrUpdateFooterAsync();
+            await RefreshSearchResultAsync();
+        }
+        else if (SearchInputsChanged())
+        {
+            await RefreshSearchResultAsync();
         }
 
         if (_defaultVisibleColumns.Count == 0)
@@ -307,6 +343,20 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
         _lastQuickSearchParameter = QuickSearch;
         _searchQuery = QuickSearch;
+    }
+
+    /// <summary>
+    /// Takes the initial value of the search options as the baseline, so that setting them in markup is not read
+    /// as a change on the first parameter set and does not raise <see cref="SearchResultChanged"/> before anything
+    /// has been searched. An initial <see cref="QuickSearch"/> is a real search and is deliberately not seeded.
+    /// </summary>
+    private void SeedSearchInputs()
+    {
+        if (_searchInputsSeeded) return;
+
+        _searchInputsSeeded = true;
+        _computedExactMatch = ExactMatch;
+        _computedNestedSearch = IsNestedSearch;
     }
 
     public async Task RefreshColumnTitlesAsync()
@@ -384,8 +434,8 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
     private string GenerateTableFooterWithTotals()
     {
-        // Materialise once: the footer items come from the side-effecting _filteredItems and are walked
-        // again by every total, so re-reading them per column would repeat the whole search.
+        // Materialise once: every total walks the same rows, so re-reading them per column would repeat the
+        // enumeration of the whole result.
         var footerItems = GetFooterItems();
 
         var html = UsedColumnManager.FooterColumns.Count > 0
@@ -479,7 +529,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     /// The rows the footer aggregates over: the search/filter result when one is active, otherwise all items.
     /// </summary>
     private IReadOnlyList<TGridItem> GetFooterItems()
-        => (_filteredItems ?? Items)?.ToList() ?? [];
+        => VisibleItems?.ToList() ?? [];
 
     private static string BuildFooterCell(string? value, string? cssClass)
     {
@@ -509,6 +559,8 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
             // instead of leaving a stale, or empty, grid behind.
             _evaluatedItems = null;
 
+            await RefreshSearchResultAsync();
+
             return;
         }
 
@@ -519,11 +571,13 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         _evaluatedItems = await Items.Where(FilterCriteria.CreateExpression()).ToListAsync();
 
         IsLoading = false;
+
+        await RefreshSearchResultAsync();
     }
 
     private async Task OnInMemorySearchChanged()
     {
-        //await AddOrUpdateFooterAsync();
+        await RefreshSearchResultAsync();
 
         if (string.IsNullOrEmpty(_searchQuery))
         {
@@ -547,6 +601,13 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
             FilterCriteria.SearchTerm = string.Empty;
         }
 
+        // Clearing always resolves to "no search", so this is a null assignment rather than a re-filter.
+        RecomputeSearchResult();
+
+        // This overload is public and synchronous, so the notifications are dispatched rather than awaited,
+        // as QuickSearchChanged already was.
+        _ = SearchResultChanged.InvokeAsync(VisibleItems?.ToList() ?? []);
+
         if (shouldInvokeCallback)
         {
             QuickSearchChanged.InvokeAsync(_searchQuery);
@@ -556,13 +617,13 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     public bool QuickSearchAction(TGridItem item, string query, QuickSearchOptions searchOptions)
         => QuickSearchUtility.QuickSearch(item, query, options: searchOptions);
 
-    public Task ExportAsync() => Events?.OnExport.InvokeAsync(_filteredItems) ?? Task.CompletedTask;
+    public Task ExportAsync() => Events?.OnExport.InvokeAsync(VisibleItems) ?? Task.CompletedTask;
 
     public async Task ExportSelectedColumnsAsync()
     {
         if (Events is null) return;
 
-        if (_filteredItems is null)
+        if (VisibleItems is null)
         {
             await Events.WarningRequested.InvokeAsync("No items to export.");
 
@@ -584,7 +645,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
         // ToList() first: projecting straight off the IQueryable would push the reflection-based builder
         // into the query tree, which an EF-backed source cannot translate.
-        var exportItems = _filteredItems.ToList()
+        var exportItems = VisibleItems.ToList()
             .Select(item => ExpandoObjectBuilder<TGridItem>.Create(item, visibleColumns))
             .Where(obj => obj != null);
 
@@ -600,9 +661,9 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     /// </remarks>
     public async Task RefreshDataAsync()
     {
-        // Drop the cached search result: an in-place change to Items leaves it stale, and the cache key is the
-        // search text, which has not changed.
-        _lastSearchQuery = null;
+        // Rebuild the search result: an in-place change to Items leaves it stale, and none of the inputs it is
+        // computed from have changed, so nothing else would trigger it.
+        await RefreshSearchResultAsync();
 
         // The footer lives in the DOM outside Blazor's render tree, so forget the cached markup here:
         // a rebuilt grid must get the footer pushed again even when the totals themselves are unchanged.
@@ -727,15 +788,22 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     }
 
 
-    public async Task DisableExactMatch()
-    {
-        ExactMatch = false;
-        await ExactMatchChanged.InvokeAsync(ExactMatch);
-    }
+    public async Task DisableExactMatch() => await SetExactMatchAsync(false);
 
-    public async Task EnableExactMatch()
+    public async Task EnableExactMatch() => await SetExactMatchAsync(true);
+
+    /// <summary>
+    /// Applies the exact-match setting and re-runs any active search with it, so the toggle takes effect on the
+    /// rows already on screen rather than only on the next keystroke.
+    /// </summary>
+    private async Task SetExactMatchAsync(bool exactMatch)
     {
-        ExactMatch = true;
+        ExactMatch = exactMatch;
+
+        // Refresh before notifying: if the caller binds ExactMatch, the round-trip finds the result already
+        // current and does no further work.
+        await RefreshSearchResultAsync();
+
         await ExactMatchChanged.InvokeAsync(ExactMatch);
     }
 

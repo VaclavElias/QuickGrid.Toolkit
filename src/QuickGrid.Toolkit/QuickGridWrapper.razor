@@ -6,7 +6,7 @@
         <div class="row">
             <div class="col-md-4">
                 <div>Items: @(Items?.Count().ToString() ?? "null")</div>
-                <div>Displayed: @(_filteredItems?.Count().ToString() ?? "null")</div>
+                <div>Displayed: @(VisibleItems?.Count().ToString() ?? "null")</div>
                 <div>ItemsVersion: @ItemsVersion</div>
                 <div>Selected: @_selectedItemsCount</div>
             </div>
@@ -106,7 +106,7 @@
                         <input @bind="_searchQuery" @bind:event="oninput" @bind:after="OnInMemorySearchChanged" placeholder="quick search.." type="search" class="d-inline-block py-0 mb-1 ms-1 form-control form-control-sm border-0 quick-search" style="width: 200px" />
                         if (!string.IsNullOrEmpty(_searchQuery))
                         {
-                            <span class="small text-muted ms-2">(@_filteredItems?.Count()) Results</span>
+                            <span class="small text-muted ms-2">(@VisibleItems?.Count()) Results</span>
                         }
                         if (ExactMatch)
                         {
@@ -142,7 +142,7 @@
 {
     @FilterSection
 }
-<QuickGrid @ref="_grid" Items="@_filteredItems" Class="@GetTableClass()" Theme="@Theme" Pagination="@_pagination" id="@Id" ItemKey="ItemKey" RowClass="RowClass">
+<QuickGrid @ref="_grid" Items="@VisibleItems" Class="@GetTableClass()" Theme="@Theme" Pagination="@_pagination" id="@Id" ItemKey="ItemKey" RowClass="RowClass">
     @QuickGridColumns.Columns(UsedColumnManager)
 </QuickGrid>
 @if (IsPaginator && _pagination != null)
