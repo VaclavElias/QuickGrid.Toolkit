@@ -150,7 +150,13 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     /// The rows the grid is showing: the search result when a search is active, otherwise <see cref="Items"/>
     /// unchanged. Reading it is free and has no side effects.
     /// </summary>
-    private IQueryable<TGridItem>? VisibleItems => _search.VisibleItems;
+    /// <remarks>
+    /// The fallback reads the <see cref="Items"/> <em>parameter</em> directly, never a copy held elsewhere.
+    /// Blazor renders a component whose <c>OnInitializedAsync</c> is still running before
+    /// <c>OnParametersSetAsync</c> has ever run, so anything cached there is still null on that first render —
+    /// which showed an empty grid until the next interaction for any subclass that awaits on init.
+    /// </remarks>
+    private IQueryable<TGridItem>? VisibleItems => _search.Result ?? Items;
 
     /// <summary>
     /// Recomputes the search result and reports the rows now on show through <see cref="SearchResultChanged"/>.
@@ -163,7 +169,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     /// </remarks>
     private async Task RefreshSearchResultAsync()
     {
-        _search.Recompute();
+        _search.Recompute(Items);
 
         await SearchResultChanged.InvokeAsync(VisibleItems?.ToList() ?? []);
     }
@@ -210,7 +216,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         EnsurePaginationState();
         SetTableIndex();
 
-        _search.SyncInputs(Items, FilterCriteria, ExactMatch, IsNestedSearch);
+        _search.SyncInputs(FilterCriteria, ExactMatch, IsNestedSearch);
         _search.ApplyQuickSearchParameter(QuickSearch);
 
         if (Items is not null && QueryableItems is not null && Events is not null)
@@ -344,7 +350,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         // B6: IsLoading is set without a StateHasChanged around the await, so the spinner never actually appears.
         IsLoading = true;
 
-        await _search.RunFilterCriteriaSearchAsync(text);
+        await _search.RunFilterCriteriaSearchAsync(text, Items);
 
         IsLoading = false;
 

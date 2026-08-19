@@ -15,24 +15,33 @@ public class GridSearchTests
         new() { Name = "Bob", City = "Prague" },
     ];
 
+    private static IQueryable<Person> Source() => _people.AsQueryable();
+
+    /// <summary>Mirrors how <c>QuickGridWrapper</c> composes the rows it displays.</summary>
+    private static IQueryable<Person>? VisibleItems(GridSearch<Person> search, IQueryable<Person>? items)
+        => search.Result ?? items;
+
     private static GridSearch<Person> BuildSearch(bool exactMatch = false, bool nested = true)
     {
         var search = new GridSearch<Person>();
 
-        search.SyncInputs(_people.AsQueryable(), filterCriteria: null, exactMatch, nested);
+        search.SyncInputs(filterCriteria: null, exactMatch, nested);
 
         return search;
     }
 
+    // Regression: GridSearch used to hold the item source, so a grid rendered before OnParametersSetAsync had run
+    // — which is what Blazor does whenever OnInitializedAsync is still in flight — showed an empty table until the
+    // user interacted with it. Result must stay null with no query, so the component's own Items parameter governs.
     [Fact]
-    public void VisibleItems_FallsThroughToItems_WhenNoSearchIsActive()
+    public void Result_IsNull_WhenNoSearchIsActive_SoTheCallerShowsItsOwnRows()
     {
         var search = BuildSearch();
 
-        search.Recompute();
+        search.Recompute(Source());
 
         Assert.Null(search.Result);
-        Assert.Equal(3, search.VisibleItems?.Count());
+        Assert.Equal(3, VisibleItems(search, Source())?.Count());
     }
 
     [Fact]
@@ -41,10 +50,10 @@ public class GridSearchTests
         var search = BuildSearch();
         search.Query = "Prague";
 
-        search.Recompute();
+        search.Recompute(Source());
 
         Assert.Equal(2, search.Result?.Count());
-        Assert.Equal(2, search.VisibleItems?.Count());
+        Assert.Equal(2, VisibleItems(search, Source())?.Count());
     }
 
     [Fact]
@@ -52,11 +61,11 @@ public class GridSearchTests
     {
         var partial = BuildSearch();
         partial.Query = "Ann";
-        partial.Recompute();
+        partial.Recompute(Source());
 
         var exact = BuildSearch(exactMatch: true);
         exact.Query = "Ann";
-        exact.Recompute();
+        exact.Recompute(Source());
 
         Assert.Equal(2, partial.Result?.Count());   // Anna and Ann
         Assert.Equal(1, exact.Result?.Count());     // Ann only
@@ -68,12 +77,9 @@ public class GridSearchTests
     {
         var search = BuildSearch();
         search.Query = "Prague";
-        search.Recompute();
+        search.Recompute(Source());
 
-        var first = search.Result;
-
-        Assert.Same(first, search.VisibleItems);
-        Assert.Same(first, search.VisibleItems);
+        Assert.Same(search.Result, search.Result);
     }
 
     [Fact]
@@ -81,34 +87,34 @@ public class GridSearchTests
     {
         var search = BuildSearch();
         search.Query = "Prague";
-        search.Recompute();
+        search.Recompute(Source());
 
         search.Query = "  ";
-        search.Recompute();
+        search.Recompute(Source());
 
         Assert.Null(search.Result);
-        Assert.Equal(3, search.VisibleItems?.Count());
+        Assert.Equal(3, VisibleItems(search, Source())?.Count());
     }
 
     [Fact]
     public void InputsChanged_TracksQueryAndBothSearchOptions()
     {
         var search = BuildSearch();
-        search.Recompute();
+        search.Recompute(Source());
 
         Assert.False(search.InputsChanged());
 
         search.Query = "Bob";
         Assert.True(search.InputsChanged());
 
-        search.Recompute();
+        search.Recompute(Source());
         Assert.False(search.InputsChanged());
 
-        search.SyncInputs(_people.AsQueryable(), filterCriteria: null, exactMatch: true, isNestedSearch: true);
+        search.SyncInputs(filterCriteria: null, exactMatch: true, isNestedSearch: true);
         Assert.True(search.InputsChanged());
 
-        search.Recompute();
-        search.SyncInputs(_people.AsQueryable(), filterCriteria: null, exactMatch: true, isNestedSearch: false);
+        search.Recompute(Source());
+        search.SyncInputs(filterCriteria: null, exactMatch: true, isNestedSearch: false);
         Assert.True(search.InputsChanged());
     }
 
@@ -119,9 +125,9 @@ public class GridSearchTests
     {
         var search = BuildSearch();
         search.Query = "Prague";
-        search.Recompute();
+        search.Recompute(Source());
 
-        search.SyncInputs(_people.AsQueryable(), filterCriteria: null, exactMatch: false, isNestedSearch: true);
+        search.SyncInputs(filterCriteria: null, exactMatch: false, isNestedSearch: true);
 
         Assert.False(search.InputsChanged());
     }
@@ -132,7 +138,7 @@ public class GridSearchTests
     {
         var search = new GridSearch<Person>();
 
-        search.SyncInputs(_people.AsQueryable(), filterCriteria: null, exactMatch: true, isNestedSearch: false);
+        search.SyncInputs(filterCriteria: null, exactMatch: true, isNestedSearch: false);
 
         Assert.False(search.InputsChanged());
     }
@@ -166,13 +172,13 @@ public class GridSearchTests
     {
         var search = BuildSearch();
         search.Query = "Prague";
-        search.Recompute();
+        search.Recompute(Source());
 
         search.Clear();
 
         Assert.Null(search.Query);
         Assert.Null(search.Result);
-        Assert.Equal(3, search.VisibleItems?.Count());
+        Assert.Equal(3, VisibleItems(search, Source())?.Count());
         Assert.False(search.InputsChanged());
     }
 
@@ -181,13 +187,13 @@ public class GridSearchTests
     {
         var criteria = new FilterCriteria<Person>(term => p => p.Name.Contains(term));
         var search = new GridSearch<Person>();
-        search.SyncInputs(_people.AsQueryable(), criteria, exactMatch: false, isNestedSearch: true);
+        search.SyncInputs(criteria, exactMatch: false, isNestedSearch: true);
 
-        var queried = await search.RunFilterCriteriaSearchAsync("ab");
+        var queried = await search.RunFilterCriteriaSearchAsync("ab", Source());
 
         Assert.False(queried);
         Assert.Null(search.Result);
-        Assert.Equal(3, search.VisibleItems?.Count());
+        Assert.Equal(3, VisibleItems(search, Source())?.Count());
         Assert.Equal("ab", search.Query);
     }
 
@@ -200,8 +206,9 @@ public class GridSearchTests
     {
         var criteria = new FilterCriteria<Person>(term => p => p.Name.Contains(term));
         var search = new GridSearch<Person>();
-        search.SyncInputs(_people.AsQueryable(), criteria, exactMatch: false, isNestedSearch: true);
+        search.SyncInputs(criteria, exactMatch: false, isNestedSearch: true);
 
-        Assert.ThrowsAny<InvalidOperationException>(() => search.RunFilterCriteriaSearchAsync("Ann").GetAwaiter().GetResult());
+        Assert.ThrowsAny<InvalidOperationException>(
+            () => search.RunFilterCriteriaSearchAsync("Ann", Source()).GetAwaiter().GetResult());
     }
 }
