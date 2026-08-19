@@ -11,7 +11,9 @@
         <li><strong>Cell styling</strong> — <code>AddStyledNumber</code> wraps the value in
             <code>&lt;span content="..."&gt;</code>. Out of the box the content is <code>positive</code>,
             <code>negative</code> or <code>zero</code>; pass a <code>CellStyleMap</code> to choose your own names
-            for specific values. Your CSS then targets <code>td span[content=negative]</code>.</li>
+            for specific values. Your CSS then targets <code>td span[content=negative]</code>. Set
+            <code>ColumnManager.ValueStyles</code> to choose which of the three are marked up at all — a disabled
+            one emits no span, so there is nothing for CSS to undo.</li>
         <li><strong>Row styling</strong> — <code>RowClass</code> returns a class per row, for banding, flagging
             or muting entire records.</li>
     </ul>
@@ -20,6 +22,19 @@
         reused across grids instead of repeating the strings.
     </p>
 </ExampleInfo>
+
+<div class="d-flex align-items-center gap-3 mb-2">
+    <span class="small text-muted">Mark up:</span>
+    @foreach (var style in _toggleableStyles)
+    {
+        <div class="form-check mb-0">
+            <input class="form-check-input" type="checkbox" id="@($"value-style-{style}")"
+                   checked="@_columnManager.ValueStyles.HasFlag(style)"
+                   @onchange="e => ToggleValueStyle(style, (bool)e.Value!)" />
+            <label class="form-check-label small" for="@($"value-style-{style}")">@style</label>
+        </div>
+    }
+</div>
 
 <QuickGridWrapper Items="@_items.AsQueryable()"
                   ColumnManager="_columnManager"
@@ -38,6 +53,9 @@
 
     /// <summary>Shared definition: title, long title and cell class in one place.</summary>
     private static readonly ColumnInfo BudgetColumn = new("Budget", "Approved budget", "text-end");
+
+    private static readonly GridValueStyles[] _toggleableStyles =
+        [GridValueStyles.Negative, GridValueStyles.Positive, GridValueStyles.Zero];
 
     protected override void OnInitialized()
     {
@@ -66,6 +84,15 @@
         // A CellStyleMap replaces that with your own content names, keyed by value.
         _columnManager.AddSimple(p => p.Status, "Status", cellStyle: statusStyles, align: Align.Center);
     }
+
+    /// <summary>
+    /// Turns one nature on or off for the whole grid. A real page would set <c>ValueStyles</c> once alongside the
+    /// column definitions; it is a live toggle here to show that the setting is read as each cell renders.
+    /// </summary>
+    private void ToggleValueStyle(GridValueStyles style, bool enabled)
+        => _columnManager.ValueStyles = enabled
+            ? _columnManager.ValueStyles | style
+            : _columnManager.ValueStyles & ~style;
 
     /// <summary>Runs for every row; the returned class lands on the <c>tr</c>.</summary>
     private string? GetRowClass(ProjectDto project)

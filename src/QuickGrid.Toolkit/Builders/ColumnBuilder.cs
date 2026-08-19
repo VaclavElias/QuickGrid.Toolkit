@@ -12,6 +12,16 @@ public class ColumnBuilder<TGridItem>
     private const string DefaultActionTitle = "Action";
 
     /// <summary>
+    /// Which value natures a styled number column marks up. Defaults to <see cref="GridValueStyles.All"/>.
+    /// </summary>
+    /// <remarks>
+    /// Read while the cell renders, not while the column is built, so it applies to columns that were added before
+    /// it was set. Set it through <see cref="ColumnManager{TGridItem}.ValueStyles"/> rather than here — a manager
+    /// owns exactly one builder, and that is the level a caller configures.
+    /// </remarks>
+    public GridValueStyles ValueStyles { get; set; } = GridValueStyles.All;
+
+    /// <summary>
     /// Builds a base column with common properties.
     /// </summary>
     public static DynamicColumn<TGridItem> BuildColumn<TValue>(
@@ -156,7 +166,14 @@ public class ColumnBuilder<TGridItem>
             if (value.HasValue)
             {
                 string formattedValue = value.Value.ToString(format, CultureInfo.InvariantCulture);
-                string content = $"<span content=\"{CellStyleHelper.DetermineNumericValueNature(value.Value, cellStyle)}\">{formattedValue}</span>";
+                string style = CellStyleHelper.DetermineNumericValueNature(value.Value, cellStyle);
+
+                // A nature the grid has turned off emits no span at all, so the value is plain text and nothing
+                // downstream has to unstyle it. ValueStyles is read here, as the cell renders, so changing it
+                // after the columns were added still takes effect.
+                string content = CellStyleHelper.IsStyleEnabled(style, ValueStyles)
+                    ? $"<span content=\"{style}\">{formattedValue}</span>"
+                    : formattedValue;
 
                 if (onClick is null)
                 {
@@ -173,7 +190,7 @@ public class ColumnBuilder<TGridItem>
             else
             {
                 var nullStyle = CellStyleHelper.GetValueStyle(default(TValue), cellStyle);
-                if (!string.IsNullOrEmpty(nullStyle))
+                if (!string.IsNullOrEmpty(nullStyle) && CellStyleHelper.IsStyleEnabled(nullStyle, ValueStyles))
                 {
                     builder.AddMarkupContent(0, $"<span content=\"{nullStyle}\"></span>");
                 }

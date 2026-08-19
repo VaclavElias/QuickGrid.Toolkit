@@ -9,6 +9,28 @@ public class ColumnManager<TGridItem>
     private readonly ColumnBuilder<TGridItem> _columnBuilder = new();
 
     public bool IsIndexColumn { get; set; } = true;
+
+    /// <summary>
+    /// Which value natures the styled number columns in this manager mark up with
+    /// <c>&lt;span content="positive|negative|zero"&gt;</c>. Defaults to <see cref="GridValueStyles.All"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Clearing a flag stops the marker being emitted, so the value renders as plain text — nothing has to unstyle
+    /// it in CSS. Set it at any point: it is read as each cell renders, so it applies to columns added before it.
+    /// </para>
+    /// <para>
+    /// This is a property of the column set, not of a grid: two grids sharing one manager necessarily share it. To
+    /// give them different styling, build the columns a second time into a second manager and set this on it.
+    /// <see cref="AddRange"/> is <em>not</em> a shortcut for that — a cloned column shares the render delegate of
+    /// the column it was copied from, so it keeps the styling of the manager that built it.
+    /// </para>
+    /// </remarks>
+    public GridValueStyles ValueStyles
+    {
+        get => _columnBuilder.ValueStyles;
+        set => _columnBuilder.ValueStyles = value;
+    }
     public List<DynamicColumn<TGridItem>> Columns { get; } = [];
     public List<FooterColumn<IEnumerable<TGridItem>>> FooterColumns { get; } = [];
 

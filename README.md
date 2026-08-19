@@ -61,6 +61,7 @@ Eleven example pages, from the low-level building blocks to a full application-g
 | Feature | Example |
 | --- | --- |
 | ✅ Conditional cell styling (`CellStyleMap`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
+| ✅ Per-grid opt-out of the built-in positive/negative/zero markers (`ColumnManager.ValueStyles`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
 | ✅ Custom column styling (CSS class per column) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
 | ✅ Custom row styling (row classes, CSS `:has()`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
 | ✅ Utility CSS classes: `table-index`, `table-fit`, `table-thead-sticky`, `table-no-empty-lines` | - |

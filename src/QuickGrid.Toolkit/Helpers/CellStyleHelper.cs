@@ -63,6 +63,24 @@ public static class CellStyleHelper
     };
 
     /// <summary>
+    /// Whether a style description should be rendered, given the natures a grid has enabled.
+    /// </summary>
+    /// <remarks>
+    /// Only the three built-in descriptions are governed. Anything else — a name from a
+    /// <see cref="CellStyleMap{TValue}"/>, or <c>unknown</c>/<c>no-value</c> — is the caller's own vocabulary and is
+    /// always rendered.
+    /// </remarks>
+    /// <param name="style">The style description, typically from <see cref="DetermineNumericValueNature"/>.</param>
+    /// <param name="enabledStyles">The natures the grid marks up.</param>
+    public static bool IsStyleEnabled(string? style, GridValueStyles enabledStyles) => style switch
+    {
+        NegativeDescription => enabledStyles.HasFlag(GridValueStyles.Negative),
+        PositiveDescription => enabledStyles.HasFlag(GridValueStyles.Positive),
+        ZeroDescription => enabledStyles.HasFlag(GridValueStyles.Zero),
+        _ => true
+    };
+
+    /// <summary>
     /// Gets the style for a value from the provided cell style map.
     /// </summary>
     /// <typeparam name="TValue">The type of the value.</typeparam>
