@@ -6,7 +6,12 @@ namespace QuickGrid.Toolkit;
 
 public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposable
 {
+    [Inject] protected IJSRuntime JS { get; set; } = default!;
+    [Inject] protected IServiceProvider ServiceProvider { get; set; } = default!;
+    [Inject] protected ILogger<QuickGridWrapper<TGridItem>> Logger { get; set; } = default!;
+
     [Parameter] public string? Id { get; set; }
+
     /// <summary>
     /// CSS classes for the rendered table. <c>table-index</c> is not included here: it is appended by
     /// <see cref="GetTableClass"/> when an index column is actually visible.
@@ -64,6 +69,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     [Parameter] public EventCallback<bool> ExactMatchChanged { get; set; }
     [Parameter] public EventCallback<List<TGridItem>> SearchResultChanged { get; set; }
     [Parameter] public QuickGridWrapperEvents<TGridItem>? Events { get; set; }
+
     /// <summary>
     /// The number of items to display per page when pagination is enabled. The default value is 20.
     /// </summary>
@@ -73,23 +79,20 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     [Parameter] public RenderFragment? FilterSection { get; set; }
     [Parameter] public RenderFragment? DropdownItems { get; set; }
 
-    [Inject] protected IJSRuntime JS { get; set; } = default!;
-    [Inject] protected IServiceProvider ServiceProvider { get; set; } = default!;
-    [Inject] protected ILogger<QuickGridWrapper<TGridItem>> Logger { get; set; } = default!;
-
     /// <summary>
     /// Named column layouts offered in the column-layout menu. Supply them from markup, or assign them from a
     /// subclass once they have been loaded from storage.
     /// </summary>
     [Parameter] public List<ColumnConfig> ColumnConfigurations { get; set; } = [];
-    public ColumnManager<TGridItem> UsedColumnManager { get; set; } = new();
-    public ColumnConfig? SelectedConfiguration { get; set; }
 
     /// <summary>
     /// Icon set for this grid's toolbar. Overrides any <see cref="IQuickGridIconProvider"/> registered in DI,
     /// which is normally where the application sets its icons once for every grid.
     /// </summary>
     [Parameter] public IQuickGridIconProvider? Icons { get; set; }
+
+    public ColumnManager<TGridItem> UsedColumnManager { get; set; } = new();
+    public ColumnConfig? SelectedConfiguration { get; set; }
 
     // Resolve icon provider lazily with a safe default so the component doesn't throw if it's not registered in DI
     private IQuickGridIconProvider? _registeredIconProvider;
