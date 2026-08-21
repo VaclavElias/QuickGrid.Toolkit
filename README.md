@@ -36,6 +36,7 @@ Eleven example pages, from the low-level building blocks to a full application-g
 | One column setup reused across grids - each grid shows a different subset | [QuickGridWrapper](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper) |
 | Show/hide column selection UI (`ColumnSelector`) | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
 | Predefined, strongly-typed helpers via extension methods (e.g. `AddCountry()`) | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
+| Every `Add*` returns the column it created, so it can be configured or totalled inline | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
 | Sorting for added columns | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
 | Per-column visibility, alignment, format and CSS class | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
 | Saved column views / layouts (durable persistence is the host's job, via `Events`) | [Saved Views & Icons](https://vaclavelias.github.io/QuickGrid.Toolkit/saved-views) |

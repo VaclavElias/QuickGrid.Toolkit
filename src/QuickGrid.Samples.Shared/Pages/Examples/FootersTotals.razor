@@ -87,16 +87,13 @@ else
 
     private void BuildManualFooterColumns()
     {
+        // Every Add* hands back the column it created, so the ones a footer cell refers to are captured here
+        // rather than looked up by title afterwards. Footer cells are matched to their column by Id.
         _manualColumnManager.AddIndexColumn();
-        _manualColumnManager.AddSimple(p => p.Region, fullTitle: "Region");
+        var regionColumn = _manualColumnManager.AddSimple(p => p.Region, fullTitle: "Region");
         _manualColumnManager.AddSimple(p => p.Product, fullTitle: "Product");
-        _manualColumnManager.AddNumber(p => p.TotalAmount, "Amount", format: "N2", @class: "text-end");
-        _manualColumnManager.AddNumber(p => p.TotalAmount / _totalAmount, "Share", format: "P2", @class: "text-end");
-
-        // Footer cells are matched to their column by Id, which Add* assigns in declaration order.
-        var regionColumn = _manualColumnManager.Columns.First(c => c.Title == "Region");
-        var amountColumn = _manualColumnManager.Columns.First(c => c.Title == "Amount");
-        var shareColumn = _manualColumnManager.Columns.First(c => c.Title == "Share");
+        var amountColumn = _manualColumnManager.AddNumber(p => p.TotalAmount, "Amount", format: "N2", @class: "text-end");
+        var shareColumn = _manualColumnManager.AddNumber(p => p.TotalAmount / _totalAmount, "Share", format: "P2", @class: "text-end");
 
         // A fixed label.
         _manualColumnManager.AddFooterColumn(regionColumn.Id, "All regions");
