@@ -26,78 +26,78 @@ Eleven example pages, from the low-level building blocks to a full application-g
 
 ## Features
 
-**Legend:** ✅ available · ⏳ planned. The *Example* column links to the live demo page showing the feature.
+**Legend:** ⏳ planned. The *Example* column links to the live demo page showing the feature.
 
 ### Column management
 
 | Feature | Example |
 | --- | --- |
-| ✅ Add columns dynamically at runtime with `ColumnManager<T>` | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
-| ✅ One column setup reused across grids - each grid shows a different subset | [QuickGridWrapper](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper) |
-| ✅ Show/hide column selection UI (`ColumnSelector`) | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
-| ✅ Predefined, strongly-typed helpers via extension methods (e.g. `AddCountry()`) | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
-| ✅ Sorting for added columns | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
-| ✅ Per-column visibility, alignment, format and CSS class | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
-| ✅ Saved column views / layouts (durable persistence is the host's job, via `Events`) | [Saved Views & Icons](https://vaclavelias.github.io/QuickGrid.Toolkit/saved-views) |
+| Add columns dynamically at runtime with `ColumnManager<T>` | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
+| One column setup reused across grids - each grid shows a different subset | [QuickGridWrapper](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper) |
+| Show/hide column selection UI (`ColumnSelector`) | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
+| Predefined, strongly-typed helpers via extension methods (e.g. `AddCountry()`) | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
+| Sorting for added columns | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| Per-column visibility, alignment, format and CSS class | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
+| Saved column views / layouts (durable persistence is the host's job, via `Events`) | [Saved Views & Icons](https://vaclavelias.github.io/QuickGrid.Toolkit/saved-views) |
 
 ### Built-in column types
 
 | Column type | Example |
 | --- | --- |
-| ✅ Index column (`AddIndexColumn`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
-| ✅ Value column (`AddSimple`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
-| ✅ Number column, `int` / `double` / `decimal` (`AddNumber`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
-| ✅ Styled number with conditional cell styling (`AddStyledNumber`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
-| ✅ Date column (`AddSimpleDate`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
-| ✅ Tick / boolean column (`AddTickColumn`, with true/false styling) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
-| ✅ Toggle column (`AddToggleColumn`, with change callback) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
-| ✅ Image column (`AddImageColumn`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
-| ✅ Template column (`AddTemplateColumn`, custom `RenderFragment`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
-| ✅ Markup column (`AddMarkup`, raw HTML) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
-| ✅ Clickable / action columns with callbacks (`AddAction`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| Index column (`AddIndexColumn`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| Value column (`AddSimple`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| Number column, `int` / `double` / `decimal` (`AddNumber`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| Styled number with conditional cell styling (`AddStyledNumber`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
+| Date column (`AddSimpleDate`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| Tick / boolean column (`AddTickColumn`, with true/false styling) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| Toggle column (`AddToggleColumn`, with change callback) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| Image column (`AddImageColumn`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| Template column (`AddTemplateColumn`, custom `RenderFragment`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| Markup column (`AddMarkup`, raw HTML) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
+| Clickable / action columns with callbacks (`AddAction`) | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
 
 ### Styling
 
 | Feature | Example |
 | --- | --- |
-| ✅ Conditional cell styling (`CellStyleMap`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
-| ✅ Value markers by sign — `AddStyledNumber` marks each value `negative` / `positive` / `zero`; [your CSS supplies the colours](#styling-values-by-their-nature) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
-| ✅ Choose which markers a grid emits (`ColumnManager.ValueStyles`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
-| ✅ Custom column styling (CSS class per column) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
-| ✅ Custom row styling (row classes, CSS `:has()`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
-| ✅ Utility CSS classes: `table-index`, `table-fit`, `table-thead-sticky`, `table-no-empty-lines` | - |
+| Conditional cell styling (`CellStyleMap`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
+| Value markers by sign - `AddStyledNumber` marks each value `negative` / `positive` / `zero`; [your CSS supplies the colours](#styling-values-by-their-nature) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
+| Choose which markers a grid emits (`ColumnManager.ValueStyles`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
+| Custom column styling (CSS class per column) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
+| Custom row styling (row classes, CSS `:has()`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
+| Utility CSS classes: `table-index`, `table-fit`, `table-thead-sticky`, `table-no-empty-lines` | - |
 
 ### `QuickGridWrapper` (all-in-one grid)
 
 | Feature | Example |
 | --- | --- |
-| ✅ Quick search across all columns | [QuickGridWrapper](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper) |
-| ✅ Nested / child-property search | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
-| ✅ Exact-match toggle | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
-| ✅ Preset / external search value (`QuickSearch`) | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
-| ✅ Custom filter panel (`FilterSection`) | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
-| ✅ EF-backed server filtering (`FilterCriteria`) | ⏳ example planned |
-| ✅ Pagination, loading indicator, data refresh (`ItemsVersion`) | [Loading, Paging & Refresh](https://vaclavelias.github.io/QuickGrid.Toolkit/loading-paging) |
-| ✅ Row selection (`ISelectionDto`) with bulk actions | [Row Selection](https://vaclavelias.github.io/QuickGrid.Toolkit/row-selection) |
-| ✅ Toolbar with settings menu | [QuickGridWrapper](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper) |
-| ✅ Pluggable icons (`IQuickGridIconProvider`, Bootstrap Icons by default) | [Saved Views & Icons](https://vaclavelias.github.io/QuickGrid.Toolkit/saved-views) |
-| ✅ App-wide defaults by subclassing the wrapper | [Your Own Grid Component](https://vaclavelias.github.io/QuickGrid.Toolkit/app-quickgrid) |
+| Quick search across all columns | [QuickGridWrapper](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper) |
+| Nested / child-property search | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
+| Exact-match toggle | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
+| Preset / external search value (`QuickSearch`) | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
+| Custom filter panel (`FilterSection`) | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
+| EF-backed server filtering (`FilterCriteria`) | ⏳ example planned |
+| Pagination, loading indicator, data refresh (`ItemsVersion`) | [Loading, Paging & Refresh](https://vaclavelias.github.io/QuickGrid.Toolkit/loading-paging) |
+| Row selection (`ISelectionDto`) with bulk actions | [Row Selection](https://vaclavelias.github.io/QuickGrid.Toolkit/row-selection) |
+| Toolbar with settings menu | [QuickGridWrapper](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper) |
+| Pluggable icons (`IQuickGridIconProvider`, Bootstrap Icons by default) | [Saved Views & Icons](https://vaclavelias.github.io/QuickGrid.Toolkit/saved-views) |
+| App-wide defaults by subclassing the wrapper | [Your Own Grid Component](https://vaclavelias.github.io/QuickGrid.Toolkit/app-quickgrid) |
 
 ### Footers
 
 | Feature | Example |
 | --- | --- |
-| ✅ Automatic total footer - sums numeric columns (`TotalFooter`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
-| ✅ Per-column total control (`CalculateTotal`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
-| ✅ Manual footer cells (`AddFooterColumn`, `AddFooterColumnWithSum`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
-| ✅ Column header tooltips from full titles (needs the wrapper `Id`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
+| Automatic total footer - sums numeric columns (`TotalFooter`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
+| Per-column total control (`CalculateTotal`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
+| Manual footer cells (`AddFooterColumn`, `AddFooterColumnWithSum`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
+| Column header tooltips from full titles (needs the wrapper `Id`) | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
 
 ### Export
 
 | Feature | Example |
 | --- | --- |
-| ✅ Export to CSV (the wrapper raises `Events`; writing the file is up to the host) | [Export](https://vaclavelias.github.io/QuickGrid.Toolkit/export) |
-| ✅ Export selected columns only | [Export](https://vaclavelias.github.io/QuickGrid.Toolkit/export) |
+| Export to CSV (the wrapper raises `Events`; writing the file is up to the host) | [Export](https://vaclavelias.github.io/QuickGrid.Toolkit/export) |
+| Export selected columns only | [Export](https://vaclavelias.github.io/QuickGrid.Toolkit/export) |
 | ⏳ Export to JSON | - |
 
 ## Requirements
@@ -208,7 +208,7 @@ Both hosts render the same example pages from the shared `QuickGrid.Samples.Shar
 
 ## Styling values by their nature
 
-`AddStyledNumber` wraps its value in `<span content="...">`, where the content describes the value's nature: `negative`, `positive` or `zero`. The toolkit ships **no colours** for these — styling them is opt-in, so a grid shows only the colours the application actually asked for. Add the natures you want to your own stylesheet:
+`AddStyledNumber` wraps its value in `<span content="...">`, where the content describes the value's nature: `negative`, `positive` or `zero`. The toolkit ships **no colours** for these - styling them is opt-in, so a grid shows only the colours the application actually asked for. Add the natures you want to your own stylesheet:
 
 ```css
 td span[content="negative"] {
@@ -224,7 +224,7 @@ td span[content="zero"] {
 }
 ```
 
-Leave a rule out and that nature renders as ordinary text. A common choice is colouring negatives and greying zeros as noise while leaving positives plain. Scope the selectors — `.my-report td span[content="negative"]` — to vary the palette per grid.
+Leave a rule out and that nature renders as ordinary text. A common choice is colouring negatives and greying zeros as noise while leaving positives plain. Scope the selectors - `.my-report td span[content="negative"]` - to vary the palette per grid.
 
 To stop a grid emitting the markers at all, set `ColumnManager.ValueStyles`. A nature that is switched off produces no `<span>`, so there is nothing for CSS to undo:
 
