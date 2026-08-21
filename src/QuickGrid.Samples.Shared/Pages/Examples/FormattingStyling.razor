@@ -9,9 +9,11 @@
         <li><strong>Format strings</strong> — every value helper takes a <code>format</code> applied with the
             invariant culture, so <code>N0</code>, <code>P1</code> or <code>dd MMM yyyy</code> all work.</li>
         <li><strong>Cell styling</strong> — <code>AddStyledNumber</code> wraps the value in
-            <code>&lt;span content="..."&gt;</code>. Out of the box the content is <code>positive</code>,
-            <code>negative</code> or <code>zero</code>; pass a <code>CellStyleMap</code> to choose your own names
-            for specific values. Your CSS then targets <code>td span[content=negative]</code>. Set
+            <code>&lt;span content="..."&gt;</code>, where the content names the value's nature:
+            <code>positive</code>, <code>negative</code> or <code>zero</code>. The toolkit ships no colours for
+            those — your stylesheet does, by targeting <code>td span[content=negative]</code>; the palette on this
+            page comes from the sample's own <code>app.css</code>, and a nature you leave unstyled just renders as
+            text. Pass a <code>CellStyleMap</code> to use your own names instead. Set
             <code>ColumnManager.ValueStyles</code> to choose which of the three are marked up at all — a disabled
             one emits no span, so there is nothing for CSS to undo.</li>
         <li><strong>Row styling</strong> — <code>RowClass</code> returns a class per row, for banding, flagging

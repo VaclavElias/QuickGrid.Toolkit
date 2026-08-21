@@ -59,10 +59,23 @@ h1:focus {
     text-align: start;
 }
 
-td span[content="zero"] {
-    color: orangered;
-    font-weight: bold;
+/* ---- Value markers ------------------------------------------------------------------------
+   AddStyledNumber emits <span content="negative|positive|zero"> around its value, and the toolkit
+   ships no colours for them on purpose. This is the whole opt-in: an application defines the
+   natures it wants coloured, and any it leaves out renders as ordinary text. Copy this block as a
+   starting point. To stop a grid emitting the markers at all, set ColumnManager.ValueStyles. */
+td span[content="negative"] {
+    color: #b02a37;
 }
+
+td span[content="positive"] {
+    color: #146c43;
+}
+
+td span[content="zero"] {
+    color: #6c757d;
+}
+
 /* ---- Example-specific styling -------------------------------------------------------------
    Shows how an application layers its own look on top of what the toolkit emits. */
 

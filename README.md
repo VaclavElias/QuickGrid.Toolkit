@@ -61,7 +61,8 @@ Eleven example pages, from the low-level building blocks to a full application-g
 | Feature | Example |
 | --- | --- |
 | ✅ Conditional cell styling (`CellStyleMap`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
-| ✅ Per-grid opt-out of the built-in positive/negative/zero markers (`ColumnManager.ValueStyles`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
+| ✅ Value markers by sign — `AddStyledNumber` marks each value `negative` / `positive` / `zero`; [your CSS supplies the colours](#styling-values-by-their-nature) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
+| ✅ Choose which markers a grid emits (`ColumnManager.ValueStyles`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
 | ✅ Custom column styling (CSS class per column) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
 | ✅ Custom row styling (row classes, CSS `:has()`) | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) |
 | ✅ Utility CSS classes: `table-index`, `table-fit`, `table-thead-sticky`, `table-no-empty-lines` | - |
@@ -108,6 +109,7 @@ Eleven example pages, from the low-level building blocks to a full application-g
   - or provide your own implementation of `IQuickGridIconProvider`
 - Toolkit CSS (Static Web Asset):
   - `<link rel="stylesheet" href="@Assets["_content/QuickGrid.Toolkit/app.css"]" />`
+  - it covers layout, the toolbar and utility classes only; colouring values by their nature is opt-in, see [Styling values by their nature](#styling-values-by-their-nature)
 
 ## Getting started
 
@@ -203,6 +205,34 @@ Both hosts render the same example pages from the shared `QuickGrid.Samples.Shar
 - `table-index`: adds a compact index column when used with `AddIndexColumn()`.
 - `table-fit`: reduces padding for dense layouts.
 - `table-thead-sticky`: keeps the header row sticky.
+
+## Styling values by their nature
+
+`AddStyledNumber` wraps its value in `<span content="...">`, where the content describes the value's nature: `negative`, `positive` or `zero`. The toolkit ships **no colours** for these — styling them is opt-in, so a grid shows only the colours the application actually asked for. Add the natures you want to your own stylesheet:
+
+```css
+td span[content="negative"] {
+    color: #b02a37;
+}
+
+td span[content="positive"] {
+    color: #146c43;
+}
+
+td span[content="zero"] {
+    color: #6c757d;
+}
+```
+
+Leave a rule out and that nature renders as ordinary text. A common choice is colouring negatives and greying zeros as noise while leaving positives plain. Scope the selectors — `.my-report td span[content="negative"]` — to vary the palette per grid.
+
+To stop a grid emitting the markers at all, set `ColumnManager.ValueStyles`. A nature that is switched off produces no `<span>`, so there is nothing for CSS to undo:
+
+```csharp
+_columnManager.ValueStyles = GridValueStyles.Negative | GridValueStyles.Zero;
+```
+
+A `CellStyleMap` supplies your own content names instead of these three, and those are never suppressed.
 
 ## Known issues
 

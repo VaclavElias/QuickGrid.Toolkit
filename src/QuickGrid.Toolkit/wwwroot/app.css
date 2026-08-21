@@ -53,20 +53,11 @@
     cursor: pointer;
 }
 
-/* AddStyledNumber wraps its value in <span content="..."> describing the value's nature.
-   These are defaults so the feature is visible out of the box; override them with your own
-   palette, or target them more specifically (e.g. .my-table td span[content=negative]). */
-td span[content="negative"] {
-    color: #b02a37;
-}
-
-td span[content="positive"] {
-    color: #146c43;
-}
-
-td span[content="zero"] {
-    color: #6c757d;
-}
+/* AddStyledNumber marks each value's nature with <span content="negative|positive|zero">, but the
+   toolkit deliberately ships no colours for them: an application styles the natures it cares about
+   and leaves the rest looking like ordinary text. Copy a starting palette from app.css in
+   QuickGrid.Samples.Shared, or see "Styling values by their nature" in the README. A grid that
+   should not emit the markers at all sets ColumnManager.ValueStyles instead. */
 
 input:not(:placeholder-shown).quick-search {
     background-color: #f6e6ff;
