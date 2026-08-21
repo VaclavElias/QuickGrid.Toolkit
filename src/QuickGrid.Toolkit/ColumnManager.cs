@@ -4,6 +4,21 @@ using System.Net;
 
 namespace QuickGrid.Toolkit;
 
+/// <summary>
+/// Builds and holds the column set for a grid: the <c>Add*</c> methods are the API a page uses to describe its
+/// columns, and <see cref="Columns"/> is what the renderer reads back.
+/// </summary>
+/// <remarks>
+/// Every <c>Add*</c> method returns the <see cref="DynamicColumn{TGridItem}"/> it created, so a column that needs
+/// further configuration — or that a footer needs to refer to — can be captured at the point it is declared
+/// instead of being looked up afterwards by title:
+/// <code>
+/// var amount = columns.AddStyledNumber&lt;decimal&gt;(p => p.Amount, "Amount", format: "N0");
+///
+/// columns.AddFooterColumnWithSum(amount);
+/// </code>
+/// The return value is safe to ignore; a call used as a plain statement behaves exactly as it did before.
+/// </remarks>
 public class ColumnManager<TGridItem>
 {
     private readonly ColumnBuilder<TGridItem> _columnBuilder = new();
@@ -39,9 +54,15 @@ public class ColumnManager<TGridItem>
     /// </summary>
     public IEnumerable<DynamicColumn<TGridItem>> Get() => Columns.Where(w => w.Visible);
 
-    public void Add(DynamicColumn<TGridItem>? column = default)
+    /// <summary>
+    /// Adds a pre-built column, filling in its title and property name if they were left blank and giving it its
+    /// sequential <see cref="DynamicColumn{TGridItem}.Id"/>.
+    /// </summary>
+    /// <param name="column">The column to add. <see langword="null"/> is ignored.</param>
+    /// <returns>The column that was added, or <see langword="null"/> if <paramref name="column"/> was null.</returns>
+    public DynamicColumn<TGridItem>? Add(DynamicColumn<TGridItem>? column = default)
     {
-        if (column == null) return;
+        if (column == null) return null;
 
         if (string.IsNullOrWhiteSpace(column.Title))
             column.Title = ExpressionHelper.GetPropertyName<TGridItem, object>(column.Property) ?? "Title n/a";
@@ -52,6 +73,8 @@ public class ColumnManager<TGridItem>
         Columns.Add(column);
 
         column.Id = Columns.Count;
+
+        return column;
     }
 
     /// <summary>
@@ -77,7 +100,7 @@ public class ColumnManager<TGridItem>
         }
     }
 
-    public void Add<TValue>(
+    public DynamicColumn<TGridItem> Add<TValue>(
         Expression<Func<TGridItem, TValue?>> expression,
         ColumnInfo columnInfo,
         string? format = null,
@@ -87,7 +110,7 @@ public class ColumnManager<TGridItem>
         bool visible = true,
         string? propertyName = null)
     {
-        Add(expression, columnInfo.Title, columnInfo.FullTitle, format, columnInfo.Class, align, cellStyle, sortBy, visible, propertyName ?? columnInfo.PropertyName);
+        return Add(expression, columnInfo.Title, columnInfo.FullTitle, format, columnInfo.Class, align, cellStyle, sortBy, visible, propertyName ?? columnInfo.PropertyName);
     }
 
     /// <summary>
@@ -96,7 +119,7 @@ public class ColumnManager<TGridItem>
     /// <param name="expression">An expression to determine the property of the grid item to display.</param>
     /// <param name="title">The title of the column. If null or whitespace, the property name is used.</param>
     /// <param name="format">The format string for IFormattable values.</param>
-    public void Add<TValue>(
+    public DynamicColumn<TGridItem> Add<TValue>(
         Expression<Func<TGridItem, TValue?>> expression,
         string? title = null,
         string? fullTitle = null,
@@ -112,9 +135,11 @@ public class ColumnManager<TGridItem>
         var column = _columnBuilder.BuildSimpleColumn(
             expression, title, fullTitle, format, @class, align, cellStyle, sortBy, visible, propertyName, addToContent);
         Add(column);
+
+        return column;
     }
 
-    public void AddSimple<TValue>(
+    public DynamicColumn<TGridItem> AddSimple<TValue>(
         Expression<Func<TGridItem, TValue?>> expression,
         ColumnInfo columnInfo,
         string? format = null,
@@ -124,7 +149,7 @@ public class ColumnManager<TGridItem>
         bool visible = true,
         string? propertyName = null)
     {
-        Add(expression, columnInfo, format, align, cellStyle, sortBy, visible, propertyName);
+        return Add(expression, columnInfo, format, align, cellStyle, sortBy, visible, propertyName);
     }
 
     /// <summary>
@@ -133,7 +158,7 @@ public class ColumnManager<TGridItem>
     /// <param name="expression">An expression to determine the property of the grid item to display.</param>
     /// <param name="title">The title of the column. If null or whitespace, the property name is used.</param>
     /// <param name="format">The format string for IFormattable values.</param>
-    public void AddSimple<TValue>(
+    public DynamicColumn<TGridItem> AddSimple<TValue>(
         Expression<Func<TGridItem, TValue?>> expression,
         string? title = null,
         string? fullTitle = null,
@@ -146,11 +171,11 @@ public class ColumnManager<TGridItem>
         string? propertyName = null,
         bool? addToContent = null)
     {
-        Add(expression, title, fullTitle, format, @class, align, cellStyle, sortBy, visible, propertyName, addToContent);
+        return Add(expression, title, fullTitle, format, @class, align, cellStyle, sortBy, visible, propertyName, addToContent);
     }
 
     // ToDo: Rename to AddDate()
-    public void AddSimpleDate<TValue>(
+    public DynamicColumn<TGridItem> AddSimpleDate<TValue>(
         Expression<Func<TGridItem, TValue?>> expression,
         string? title = null,
         string? fullTitle = null,
@@ -161,20 +186,22 @@ public class ColumnManager<TGridItem>
         bool visible = true)
             => AddSimple(expression, title, fullTitle, format, @class, align, cellStyle, visible: visible);
 
-    public void AddAction(Expression<Func<TGridItem, object?>> expression, ColumnInfo columnInfo, Align align = Align.Left, GridSort<TGridItem>? sortBy = null,
+    public DynamicColumn<TGridItem> AddAction(Expression<Func<TGridItem, object?>> expression, ColumnInfo columnInfo, Align align = Align.Left, GridSort<TGridItem>? sortBy = null,
         bool visible = true, Func<TGridItem, Task>? onClick = null)
     {
-        AddAction(expression, columnInfo.Title, columnInfo.FullTitle, align, columnInfo.Class, sortBy, visible, onClick, columnInfo.PropertyName);
+        return AddAction(expression, columnInfo.Title, columnInfo.FullTitle, align, columnInfo.Class, sortBy, visible, onClick, columnInfo.PropertyName);
     }
 
-    public void AddAction(Expression<Func<TGridItem, object?>> expression, string? title = null, string? fullTitle = null, Align align = Align.Left, string? @class = null, GridSort<TGridItem>? sortBy = null,
+    public DynamicColumn<TGridItem> AddAction(Expression<Func<TGridItem, object?>> expression, string? title = null, string? fullTitle = null, Align align = Align.Left, string? @class = null, GridSort<TGridItem>? sortBy = null,
         bool visible = true, Func<TGridItem, Task>? onClick = null, string? propertyName = null)
     {
         var column = _columnBuilder.BuildActionColumn(expression, title, fullTitle, align, @class, sortBy, visible, onClick, propertyName);
         Add(column);
+
+        return column;
     }
 
-    public void AddAction(
+    public DynamicColumn<TGridItem> AddAction(
         string staticContent,
         string? title = null,
         Align align = Align.Left,
@@ -184,6 +211,8 @@ public class ColumnManager<TGridItem>
     {
         var column = _columnBuilder.BuildStaticActionColumn(staticContent, title, align, @class, onClick, enabled);
         Add(column);
+
+        return column;
     }
 
     // Note: these overloads are deliberately NOT merged into one generic AddNumber<TValue>. A generic parameter
@@ -196,10 +225,12 @@ public class ColumnManager<TGridItem>
     /// </summary>
     /// <param name="format">Format string applied with the invariant culture.</param>
     /// <param name="propertyName">Property name used when exporting selected columns.</param>
-    public void AddNumber(Expression<Func<TGridItem, decimal?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null)
+    public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, decimal?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null)
     {
         var column = _columnBuilder.BuildNumberColumn(expression, title, fullTitle, format, @class, align, visible, propertyName);
         Add(column);
+
+        return column;
     }
 
     /// <summary>
@@ -207,10 +238,12 @@ public class ColumnManager<TGridItem>
     /// </summary>
     /// <param name="format">Format string applied with the invariant culture.</param>
     /// <param name="propertyName">Property name used when exporting selected columns.</param>
-    public void AddNumber(Expression<Func<TGridItem, double?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null)
+    public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, double?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null)
     {
         var column = _columnBuilder.BuildNumberColumn(expression, title, fullTitle, format, @class, align, visible, propertyName);
         Add(column);
+
+        return column;
     }
 
     /// <summary>
@@ -218,13 +251,15 @@ public class ColumnManager<TGridItem>
     /// </summary>
     /// <param name="format">Format string applied with the invariant culture.</param>
     /// <param name="propertyName">Property name used when exporting selected columns.</param>
-    public void AddNumber(Expression<Func<TGridItem, int?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null)
+    public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, int?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null)
     {
         var column = _columnBuilder.BuildNumberColumn(expression, title, fullTitle, format, @class, align, visible, propertyName);
         Add(column);
+
+        return column;
     }
 
-    public void AddStyledNumber<TValue>(
+    public DynamicColumn<TGridItem> AddStyledNumber<TValue>(
         Expression<Func<TGridItem, TValue?>> expression,
         ColumnInfo columnInfo,
         string format = "N0",
@@ -235,7 +270,7 @@ public class ColumnManager<TGridItem>
         bool? calculateTotal = null) where TValue : struct, IFormattable
         => AddStyledNumber(expression, columnInfo.Title, columnInfo.FullTitle, format, columnInfo.Class, align, visible, cellStyle, onClick, columnInfo.PropertyName, calculateTotal);
 
-    public void AddStyledNumber<TValue>(
+    public DynamicColumn<TGridItem> AddStyledNumber<TValue>(
         Expression<Func<TGridItem, TValue?>> expression,
         string? title = null,
         string? fullTitle = null,
@@ -251,9 +286,11 @@ public class ColumnManager<TGridItem>
         var column = _columnBuilder.BuildStyledNumberColumn(
             expression, title, fullTitle, format, @class, align, visible, cellStyle, onClick, propertyName, calculateTotal);
         Add(column);
+
+        return column;
     }
 
-    public void AddTickColumn(
+    public DynamicColumn<TGridItem> AddTickColumn(
         Expression<Func<TGridItem, object?>> expression,
         string? title = null,
         string? fullTitle = null,
@@ -281,9 +318,11 @@ public class ColumnManager<TGridItem>
         };
 
         Add(column);
+
+        return column;
     }
 
-    public void AddToggleColumn(
+    public DynamicColumn<TGridItem> AddToggleColumn(
         Expression<Func<TGridItem, object?>> expression,
         string? title = null,
         string? fullTitle = null,
@@ -291,8 +330,7 @@ public class ColumnManager<TGridItem>
         Align align = Align.Center,
         Func<TGridItem, Task>? onChange = null)
     {
-
-        Add(new()
+        DynamicColumn<TGridItem> column = new()
         {
             Property = expression,
             Title = title,
@@ -301,21 +339,39 @@ public class ColumnManager<TGridItem>
             Align = align,
             Class = @class,
             OnActionAsync = onChange
-        });
+        };
+
+        Add(column);
+
+        return column;
     }
 
-    public void AddImageColumn(Expression<Func<TGridItem, object?>> expression, string? title = null, Align align = Align.Center, string? @class = null)
+    public DynamicColumn<TGridItem> AddImageColumn(Expression<Func<TGridItem, object?>> expression, string? title = null, Align align = Align.Center, string? @class = null)
     {
-        Add(new() { Property = expression, ColumnType = typeof(ImageColumn<TGridItem>), Title = title, Align = align, Class = @class });
+        DynamicColumn<TGridItem> column = new() { Property = expression, ColumnType = typeof(ImageColumn<TGridItem>), Title = title, Align = align, Class = @class };
+
+        Add(column);
+
+        return column;
     }
 
-    public void AddTemplateColumn(RenderFragment<TGridItem> childContent, string? title = null, string? fullTitle = null, Align align = Align.Center, GridSort<TGridItem>? sortBy = null, string? cssClass = null)
+    public DynamicColumn<TGridItem> AddTemplateColumn(RenderFragment<TGridItem> childContent, string? title = null, string? fullTitle = null, Align align = Align.Center, GridSort<TGridItem>? sortBy = null, string? cssClass = null)
     {
-        Add(new() { ChildContent = childContent, ColumnType = typeof(TemplateColumn<TGridItem>), Title = title, Align = align, FullTitle = fullTitle, SortBy = sortBy, Class = cssClass });
+        DynamicColumn<TGridItem> column = new() { ChildContent = childContent, ColumnType = typeof(TemplateColumn<TGridItem>), Title = title, Align = align, FullTitle = fullTitle, SortBy = sortBy, Class = cssClass };
+
+        Add(column);
+
+        return column;
     }
 
-    public void AddIndexColumn(string title = "#", Align align = Align.Center)
-        => Add(new() { ColumnType = typeof(EmptyColumn<TGridItem>), Title = title, Align = align, Class = "index-column" });
+    public DynamicColumn<TGridItem> AddIndexColumn(string title = "#", Align align = Align.Center)
+    {
+        DynamicColumn<TGridItem> column = new() { ColumnType = typeof(EmptyColumn<TGridItem>), Title = title, Align = align, Class = "index-column" };
+
+        Add(column);
+
+        return column;
+    }
 
     /// <summary>
     /// Returns a copy of <see cref="Columns"/> in which every column is an independent
@@ -439,7 +495,7 @@ public class ColumnManager<TGridItem>
     /// </summary>
     /// <param name="expression">An expression returning HTML markup to render in the cell.</param>
     /// <param name="onClick">Optional async click handler; when provided, the cell content is wrapped in a clickable div.</param>
-    public void AddMarkup<TValue>(
+    public DynamicColumn<TGridItem> AddMarkup<TValue>(
         Expression<Func<TGridItem, TValue?>> expression,
         string? title = null,
         string? fullTitle = null,
@@ -453,6 +509,8 @@ public class ColumnManager<TGridItem>
         var column = _columnBuilder.BuildMarkupColumn(
             expression, title, fullTitle, @class, align, sortBy, visible, onClick, propertyName);
         Add(column);
+
+        return column;
     }
 
     private static string BuildDisplayValue(object? value, string? format)
