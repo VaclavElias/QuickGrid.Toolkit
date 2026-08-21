@@ -160,4 +160,66 @@ public class QuickSearchUtilityTests
     [Fact]
     public void DuplicateTerms_AreDeduplicated_NotDoubleRequired()
         => Assert.True(QuickSearchUtility.QuickSearch(CreatePerson(), "alice alice"));
+
+    // --- Prepared terms -------------------------------------------------------------------------
+    // PrepareTerms/Matches exist so a grid search parses the query once instead of once per row.
+    // These pin that the split path is the same one QuickSearch takes, so the fast path cannot drift.
+
+    [Fact]
+    public void PrepareTerms_SplitsOnSpaces_AndDeduplicatesCaseInsensitively()
+    {
+        var terms = QuickSearchUtility.PrepareTerms("  alice   ALICE johnson ", new QuickSearchOptions());
+
+        Assert.Equal(["alice", "johnson"], terms);
+    }
+
+    [Fact]
+    public void PrepareTerms_WithExactMatch_KeepsTheWholeQueryAsOneTerm()
+    {
+        var terms = QuickSearchUtility.PrepareTerms(" Alice Johnson ", new QuickSearchOptions { ExactMatch = true });
+
+        Assert.Equal(["Alice Johnson"], terms);
+    }
+
+    [Theory]
+    [InlineData("alice", true)]
+    [InlineData("alice johnson", true)]
+    [InlineData("alice zebra", false)]
+    [InlineData("zebra", false)]
+    public void Matches_OnPreparedTerms_AgreesWithQuickSearch(string query, bool expected)
+    {
+        var options = new QuickSearchOptions();
+        var person = CreatePerson();
+
+        var viaQuickSearch = QuickSearchUtility.QuickSearch(person, query, options);
+        var viaPreparedTerms = QuickSearchUtility.Matches(person, QuickSearchUtility.PrepareTerms(query, options), options);
+
+        Assert.Equal(expected, viaQuickSearch);
+        Assert.Equal(viaQuickSearch, viaPreparedTerms);
+    }
+
+    [Fact]
+    public void Matches_OnPreparedTerms_HonoursTheOrOperator()
+    {
+        var options = new QuickSearchOptions { MultiTermOperator = SearchOperator.Or };
+        var terms = QuickSearchUtility.PrepareTerms("zebra alice", options);
+
+        Assert.True(QuickSearchUtility.Matches(CreatePerson(), terms, options));
+        Assert.False(QuickSearchUtility.Matches(CreatePerson(), QuickSearchUtility.PrepareTerms("zebra lion", options), options));
+    }
+
+    [Fact]
+    public void Matches_WithNoTerms_MatchesNothing()
+        => Assert.False(QuickSearchUtility.Matches(CreatePerson(), [], new QuickSearchOptions()));
+
+    [Fact]
+    public void Matches_ReusesOneTermArray_AcrossItems()
+    {
+        // The point of the split: one parse feeds every row.
+        var options = new QuickSearchOptions();
+        var terms = QuickSearchUtility.PrepareTerms("alice", options);
+        var people = new[] { CreatePerson(), CreatePerson(), CreatePerson() };
+
+        Assert.All(people, person => Assert.True(QuickSearchUtility.Matches(person, terms, options)));
+    }
 }

@@ -65,13 +65,48 @@ public static class QuickSearchUtility
 
         options ??= new QuickSearchOptions();
 
-        var terms = GetSearchTerms(query, options);
+        return Matches(item, PrepareTerms(query, options), options);
+    }
 
-        if (terms.Length == 0) return false;
+    /// <summary>
+    /// Splits <paramref name="query"/> into the terms a search matches against.
+    /// </summary>
+    /// <remarks>
+    /// Call this once per search, never once per row. The result depends only on the query and the options, so
+    /// parsing it inside a per-item predicate repeats the same split, dedupe and allocation for every row in the
+    /// grid. Pair it with <see cref="Matches{T}"/>; <see cref="QuickSearch{T}(T, string, QuickSearchOptions)"/>
+    /// does both at once and is the right choice only when matching a single item.
+    /// </remarks>
+    internal static string[] PrepareTerms(string query, QuickSearchOptions options)
+    {
+        if (options.ExactMatch)
+        {
+            return [query.Trim()];
+        }
 
-        return options.MultiTermOperator == SearchOperator.And
-            ? terms.All(term => MatchesObject(item, term, typeof(T), 0, options))
-            : terms.Any(term => MatchesObject(item, term, typeof(T), 0, options));
+        return query
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    /// <summary>
+    /// Matches one item against terms already produced by <see cref="PrepareTerms"/>.
+    /// </summary>
+    internal static bool Matches<T>(T item, string[] terms, QuickSearchOptions options)
+    {
+        if (item is null || terms.Length == 0) return false;
+
+        var requireAll = options.MultiTermOperator == SearchOperator.And;
+
+        // A plain loop rather than All/Any: those allocate a closure over the item on every row.
+        foreach (var term in terms)
+        {
+            // With And the first term that fails settles it; with Or, the first that matches does.
+            if (MatchesObject(item, term, typeof(T), 0, options) != requireAll) return !requireAll;
+        }
+
+        return requireAll;
     }
 
     private static bool MatchesObject(object item, string term, Type type, int depth, QuickSearchOptions options)
@@ -99,19 +134,6 @@ public static class QuickSearchUtility
         }
 
         return false;
-    }
-
-    private static string[] GetSearchTerms(string query, QuickSearchOptions options)
-    {
-        if (options.ExactMatch)
-        {
-            return [query.Trim()];
-        }
-
-        return query
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
     }
 
     private static PropertyInfo[] GetSearchableProperties(Type type, int depth, QuickSearchOptions options)

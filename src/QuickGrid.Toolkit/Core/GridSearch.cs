@@ -133,7 +133,11 @@ internal sealed class GridSearch<TGridItem>
                 ExactMatch = _exactMatch
             };
 
-            Result = items?.Where(item => QuickSearchUtility.QuickSearch(item, query, options: options)).ToList().AsQueryable();
+            // Terms are parsed once for the whole run rather than inside the predicate: they depend only on the
+            // query and the options, so splitting them per row repeated the same work for every item in the grid.
+            var terms = QuickSearchUtility.PrepareTerms(query, options);
+
+            Result = items?.Where(item => QuickSearchUtility.Matches(item, terms, options)).ToList().AsQueryable();
 
             return;
         }
