@@ -505,21 +505,44 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
         SetTableIndex();
 
-        await RefreshColumnTitlesAsync();
+        // Deferred, not pushed here: the JS helper walks the header cells that exist right now, and this runs
+        // inside the event handler, before Blazor has rendered the new column set. Pushing a title per visible
+        // column at a table that is still one <th> short drops the last one, and the cell rendered a moment later
+        // never gets it — so re-showing a column used to leave the final header with no tooltip at all. Clearing
+        // the latch hands the push to OnAfterRenderAsync, which runs once the header matches the columns.
+        _titlesLoaded = false;
+
         await AddOrUpdateFooterAsync();
     }
 
     /// <summary>
-    /// Runs after the user toggles column visibility in the <see cref="ColumnSelector{TGridItem}"/>.
+    /// Rebuilds everything derived from the column set. Call it after changing which columns a grid shows —
+    /// flipping <see cref="DynamicColumn{TGridItem}.Visible"/>, renaming a title, or adding a column to
+    /// <c>ColumnManager.Columns</c> — from outside the wrapper.
     /// </summary>
     /// <remarks>
-    /// Refreshing the data alone is not enough: the JS helper maps tooltips onto header cells by index,
-    /// so hiding or showing a column leaves every title shifted until they are pushed again.
+    /// <para>
+    /// The columns themselves need no help: the grid re-reads <c>ColumnManager.Get()</c> on every render, so a
+    /// column appears or disappears as soon as the page re-renders. What does not follow is the header tooltips,
+    /// which are pushed to the DOM once and then latched — leaving each one describing its neighbour until they
+    /// are pushed again. This also raises <see cref="ColumnSelectionChanged"/>, so a page that persists the
+    /// layout hears about a change it made itself the same way it hears about one made in the toolbar.
+    /// </para>
+    /// <para>
+    /// It is exactly what the built-in <see cref="ColumnSelector{TGridItem}"/> runs, so a hand-rolled control and
+    /// the toolbar one cannot drift apart.
+    /// </para>
     /// </remarks>
-    private async Task OnColumnVisibilityChangedAsync()
+    public async Task RefreshColumnsAsync()
     {
+        // Ordered: RefreshDataAsync is what discards the cached footer markup, so rebuilding the footer before it
+        // would be dropped as unchanged and the stale row would stay in the DOM.
         await RefreshDataAsync();
         await OnColumnSelectionChangedAsync();
+
+        // The title push is deferred to the next OnAfterRenderAsync, so make sure one happens: a caller that
+        // changed a column outside a UI event (a preference load, a timer) has no render of its own to ride on.
+        StateHasChanged();
     }
 
     private async Task SelectView(ColumnConfig config)

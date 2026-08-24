@@ -32,7 +32,7 @@
     }
     else
     {
-        <ColumnSelector @bind-Visible="IsColumnItemsSelection" ColumnManager="UsedColumnManager" SelectionChanged="OnColumnVisibilityChangedAsync" />
+        <ColumnSelector @bind-Visible="IsColumnItemsSelection" ColumnManager="UsedColumnManager" SelectionChanged="RefreshColumnsAsync" />
         <div class="d-flex justify-content-between">
             <div class="d-flex align-items-baseline">
                 @if (IsToolbar)
