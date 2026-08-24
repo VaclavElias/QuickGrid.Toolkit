@@ -225,9 +225,9 @@ public class ColumnManager<TGridItem>
     /// </summary>
     /// <param name="format">Format string applied with the invariant culture.</param>
     /// <param name="propertyName">Property name used when exporting selected columns.</param>
-    public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, decimal?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null)
+    public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, decimal?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null, bool? calculateTotal = null)
     {
-        var column = _columnBuilder.BuildNumberColumn(expression, title, fullTitle, format, @class, align, visible, propertyName);
+        var column = _columnBuilder.BuildNumberColumn(expression, title, fullTitle, format, @class, align, visible, propertyName, calculateTotal);
         Add(column);
 
         return column;
@@ -238,9 +238,9 @@ public class ColumnManager<TGridItem>
     /// </summary>
     /// <param name="format">Format string applied with the invariant culture.</param>
     /// <param name="propertyName">Property name used when exporting selected columns.</param>
-    public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, double?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null)
+    public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, double?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null, bool? calculateTotal = null)
     {
-        var column = _columnBuilder.BuildNumberColumn(expression, title, fullTitle, format, @class, align, visible, propertyName);
+        var column = _columnBuilder.BuildNumberColumn(expression, title, fullTitle, format, @class, align, visible, propertyName, calculateTotal);
         Add(column);
 
         return column;
@@ -251,9 +251,9 @@ public class ColumnManager<TGridItem>
     /// </summary>
     /// <param name="format">Format string applied with the invariant culture.</param>
     /// <param name="propertyName">Property name used when exporting selected columns.</param>
-    public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, int?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null)
+    public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, int?>> expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null, bool? calculateTotal = null)
     {
-        var column = _columnBuilder.BuildNumberColumn(expression, title, fullTitle, format, @class, align, visible, propertyName);
+        var column = _columnBuilder.BuildNumberColumn(expression, title, fullTitle, format, @class, align, visible, propertyName, calculateTotal);
         Add(column);
 
         return column;
