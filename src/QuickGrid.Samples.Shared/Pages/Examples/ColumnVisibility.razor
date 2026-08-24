@@ -1,0 +1,91 @@
+@page "/column-visibility"
+
+<ExampleInfo Route="column-visibility"
+             Lead="Show and hide columns from your own controls, outside the wrapper's toolbar.">
+    <p>
+        Every column is just data, so a page can flip <code>DynamicColumn.Visible</code> whenever it likes — from a
+        checkbox, a dropdown, a user preference loaded at startup. Since each <code>Add*</code> hands back the column
+        it created, the ones a control drives are captured where they are declared:
+    </p>
+    <ul>
+        <li>The rendered columns follow on their own: the grid re-reads <code>ColumnManager.Get()</code> on every
+            render, so a column appears or disappears as soon as the page re-renders.</li>
+        <li>The header tooltips do not: they are pushed to the DOM once and then latched, so after a change each
+            one describes its neighbour. Call <code>RefreshColumnsAsync()</code> on the wrapper and they are
+            rebuilt against the new column set.</li>
+        <li>It also raises <code>ColumnSelectionChanged</code>, so a page that persists the layout hears about a
+            change it made itself the same way it hears about one made in the toolbar. It is the same method the
+            built-in column selector runs, so the two cannot drift apart.</li>
+    </ul>
+    <p>
+        Untick <em>Call RefreshColumnsAsync</em> below to see what the call is for, then hover a header: the tooltips
+        stay where they were and describe the wrong columns. The totals do recover on their own, because the wrapper
+        rebuilds the footer on every render — convenient, but not something to rely on.
+    </p>
+</ExampleInfo>
+
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <span class="small text-muted me-2">Columns:</span>
+        @foreach (var column in _toggleableColumns)
+        {
+            <div class="form-check form-check-inline">
+                <input type="checkbox" class="form-check-input" id="@column.ColumnId"
+                       checked="@column.Visible"
+                       @onchange="args => ToggleColumnAsync(column, (bool)args.Value!)" />
+                <label class="form-check-label" for="@column.ColumnId">@column.FullTitle</label>
+            </div>
+        }
+    </div>
+</div>
+
+<QuickGridWrapper @ref="_grid"
+                  Items="@_items.AsQueryable()"
+                  Id="id-column-visibility-example"
+                  TotalFooter="_totalFooter"
+                  ColumnManager="_columnManager" />
+
+<div class="form-check mt-3">
+    <input type="checkbox" class="form-check-input" id="refresh-after-toggle" @bind="_refreshAfterToggle" />
+    <label class="form-check-label small" for="refresh-after-toggle">
+        Call <code>RefreshColumnsAsync</code> after a toggle — unticking it is the bug, not a feature
+    </label>
+</div>
+
+<ExampleNav Route="column-visibility" />
+
+@code {
+    private QuickGridWrapper<SalesDto>? _grid;
+    private List<SalesDto> _items = [];
+    private ColumnManager<SalesDto> _columnManager = new();
+    private TotalFooter _totalFooter = new() { IsTotalFooter = true };
+    private List<DynamicColumn<SalesDto>> _toggleableColumns = [];
+
+    private bool _refreshAfterToggle = true;
+
+    protected override void OnInitialized()
+    {
+        _items = SalesService.GetSales();
+
+        _columnManager.AddIndexColumn();
+        _columnManager.AddSimple(p => p.Region, fullTitle: "Region");
+
+        // Captured from their Add* calls, so the checkboxes drive the columns themselves rather than the result of
+        // a lookup by title.
+        var product = _columnManager.AddSimple(p => p.Product, fullTitle: "Product");
+        var amount = _columnManager.AddStyledNumber<decimal>(p => p.TotalAmount, "Amount", fullTitle: "Total Amount", format: "N2", @class: "text-end");
+        var units = _columnManager.AddNumber(p => p.Units, "Units", fullTitle: "Units Sold", @class: "text-end");
+
+        _toggleableColumns = [product, amount, units];
+    }
+
+    private async Task ToggleColumnAsync(DynamicColumn<SalesDto> column, bool visible)
+    {
+        column.Visible = visible;
+
+        if (!_refreshAfterToggle || _grid is null) return;
+
+        // One call rebuilds the header tooltips against the columns now on show, and raises ColumnSelectionChanged.
+        await _grid.RefreshColumnsAsync();
+    }
+}

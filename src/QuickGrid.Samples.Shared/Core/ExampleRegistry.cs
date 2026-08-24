@@ -44,6 +44,10 @@ public static class ExampleRegistry
             "Automatic totals for numeric columns, or hand-built footer cells for full control.",
             "FootersTotals.razor"),
 
+        new("column-visibility", "Column Visibility",
+            "Show and hide columns from your own checkboxes, and refresh what the wrapper derives from them.",
+            "ColumnVisibility.razor"),
+
         new("export", "Export",
             "Wire the export events to produce a CSV of what the user is currently looking at.",
             "Export.razor"),

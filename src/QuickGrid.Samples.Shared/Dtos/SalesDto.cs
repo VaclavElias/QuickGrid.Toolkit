@@ -9,4 +9,6 @@ public sealed class SalesDto
     public string Product { get; set; } = string.Empty;
 
     public decimal TotalAmount { get; set; }
+
+    public int Units { get; set; }
 }

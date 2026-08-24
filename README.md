@@ -35,6 +35,7 @@ Eleven example pages, from the low-level building blocks to a full application-g
 | Add columns dynamically at runtime with `ColumnManager<T>` | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
 | One column setup reused across grids - each grid shows a different subset | [QuickGridWrapper](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper) |
 | Show/hide column selection UI (`ColumnSelector`) | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
+| Drive column visibility from your own UI, then `RefreshColumnsAsync()` to realign the headers | [Column Visibility](https://vaclavelias.github.io/QuickGrid.Toolkit/column-visibility) |
 | Predefined, strongly-typed helpers via extension methods (e.g. `AddCountry()`) | [QuickGrid + ColumnManager](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid) |
 | Every `Add*` returns the column it created, so it can be configured or totalled inline | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) |
 | Sorting for added columns | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) |
