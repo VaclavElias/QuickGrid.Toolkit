@@ -16,15 +16,17 @@
     several grids that each expose a different set of visible columns.
 </p>
 
-<h2>Examples</h2>
+<h2 class="d-flex align-items-center gap-2">
+    Examples <span class="badge rounded-pill text-bg-secondary fs-6">@ExampleRegistry.Count</span>
+</h2>
 
-<p>They run from the simplest to the most involved, and each one links to the next.</p>
+<p>All @ExampleRegistry.Count of them, running from the simplest to the most involved, each linking to the next.</p>
 
 <div class="list-group mb-4">
-    @foreach (var example in ExampleRegistry.Examples)
+    @foreach (var (index, example) in ExampleRegistry.Examples.Index())
     {
         <a class="list-group-item list-group-item-action" href="@example.Route">
-            <strong>@example.Title</strong>
+            <strong>@(index + 1). @example.Title</strong>
             <div class="small text-muted">@example.Summary</div>
         </a>
     }

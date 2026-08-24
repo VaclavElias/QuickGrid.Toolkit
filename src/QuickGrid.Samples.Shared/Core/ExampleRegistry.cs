@@ -61,8 +61,21 @@ public static class ExampleRegistry
             "AppQuickGridExample.razor"),
     ];
 
+    /// <summary>How many examples the site ships. Shown in the nav and on the home page.</summary>
+    public static int Count => Examples.Count;
+
     public static Example? Find(string route)
         => Examples.FirstOrDefault(e => string.Equals(e.Route, route, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Where an example sits in the progression, counting from 1, or 0 when the route is not registered.
+    /// </summary>
+    public static int Position(string route)
+    {
+        var index = IndexOf(route);
+
+        return index >= 0 ? index + 1 : 0;
+    }
 
     public static Example? Previous(string route)
     {

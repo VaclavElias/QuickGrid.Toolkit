@@ -14,7 +14,11 @@
             </NavLink>
         </div>
 
-        @* Driven by ExampleRegistry, so a new example needs no change here. *@
+        @* Driven by ExampleRegistry, so a new example needs no change here — the count included. *@
+        <div class="nav-section">
+            Examples <span class="nav-count">@ExampleRegistry.Count</span>
+        </div>
+
         @foreach (var example in ExampleRegistry.Examples)
         {
             <div class="nav-item px-3">

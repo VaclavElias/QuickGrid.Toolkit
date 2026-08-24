@@ -110,3 +110,25 @@
         overflow-y: auto;
     }
 }
+
+/* Section heading above the example links, carrying the count so the size of the set is visible at a glance. */
+.nav-section {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #9aa0a6;
+}
+
+.nav-count {
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    background-color: rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 0.7rem;
+    letter-spacing: 0;
+}
