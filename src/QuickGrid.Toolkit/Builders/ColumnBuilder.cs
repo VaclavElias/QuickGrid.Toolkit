@@ -111,7 +111,8 @@ public class ColumnBuilder<TGridItem>
         string? @class = null,
         Align align = Align.Right,
         bool visible = true,
-        string? propertyName = null) where TValue : struct, IFormattable
+        string? propertyName = null,
+        bool? calculateTotal = null) where TValue : struct, IFormattable
     {
         DynamicColumn<TGridItem> column = BuildColumn(expression, title, fullTitle, @class, align, visible: visible);
 
@@ -134,6 +135,7 @@ public class ColumnBuilder<TGridItem>
 
         column.IsNumeric = true;
         column.PropertyName = propertyName;
+        column.CalculateTotal = calculateTotal;
 
         return column;
     }
