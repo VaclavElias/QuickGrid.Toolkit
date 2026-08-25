@@ -39,7 +39,7 @@ public class QuickSearchOptions
     /// Maximum depth to search in nested properties. 0 = current level only, 1 = first-level children, etc.
     /// Default is 1.
     /// </summary>
-    public int MaxSearchDepth { get; set; } = 1;
+    public int MaxSearchDepth { get; set; } = 2;
 }
 
 public enum SearchOperator
