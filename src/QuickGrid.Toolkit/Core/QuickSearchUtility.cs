@@ -53,7 +53,11 @@ public static class QuickSearchUtility
     /// </summary>
     /// <typeparam name="T">The type of the object being searched.</typeparam>
     /// <param name="item">The object to search.</param>
-    /// <param name="query">The search query string.</param>
+    /// <param name="query">
+    /// The search query string. Unless <see cref="QuickSearchOptions.EnableExclusionTerms"/> is off, a term
+    /// prefixed with <c>-</c> rejects the items it matches: <c>london -manager</c> keeps London rows that say
+    /// nothing about a manager.
+    /// </param>
     /// <param name="options">
     /// Options that control matching behavior, nested traversal, root-level property inclusion and exclusion,
     /// and how multi-term queries are combined.
@@ -77,36 +81,77 @@ public static class QuickSearchUtility
     /// grid. Pair it with <see cref="Matches{T}"/>; <see cref="QuickSearch{T}(T, string, QuickSearchOptions)"/>
     /// does both at once and is the right choice only when matching a single item.
     /// </remarks>
-    internal static string[] PrepareTerms(string query, QuickSearchOptions options)
+    internal static SearchTerm[] PrepareTerms(string query, QuickSearchOptions options)
     {
         if (options.ExactMatch)
         {
-            return [query.Trim()];
+            return [CreateTerm(query.Trim(), options)];
         }
 
         return query
             .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(token => CreateTerm(token, options))
             .ToArray();
+    }
+
+    /// <summary>
+    /// Reads the <c>-</c> exclusion prefix off a single token. Deduplication happens on the raw token, so
+    /// <c>alice -alice</c> stays two terms — a contradiction that matches nothing, which is what it asked for.
+    /// </summary>
+    private static SearchTerm CreateTerm(string token, QuickSearchOptions options)
+    {
+        // A lone "-" is text, not a prefix with nothing behind it.
+        if (!options.EnableExclusionTerms || token.Length < 2 || token[0] != '-')
+        {
+            return new SearchTerm(token, IsExcluded: false);
+        }
+
+        return new SearchTerm(token[1..], IsExcluded: true);
     }
 
     /// <summary>
     /// Matches one item against terms already produced by <see cref="PrepareTerms"/>.
     /// </summary>
-    internal static bool Matches<T>(T item, string[] terms, QuickSearchOptions options)
+    internal static bool Matches<T>(T item, SearchTerm[] terms, QuickSearchOptions options)
     {
         if (item is null || terms.Length == 0) return false;
 
         var requireAll = options.MultiTermOperator == SearchOperator.And;
+        var hasIncluded = false;
+        var anyIncludedMatched = false;
 
         // A plain loop rather than All/Any: those allocate a closure over the item on every row.
         foreach (var term in terms)
         {
-            // With And the first term that fails settles it; with Or, the first that matches does.
-            if (MatchesObject(item, term, typeof(T), 0, options) != requireAll) return !requireAll;
+            var matched = MatchesObject(item, term.Text, typeof(T), 0, options);
+
+            // An exclusion vetoes the item outright, in either operator mode: "-manager" is never one of the
+            // alternatives an Or query is offering, it is a condition on whatever the alternatives find.
+            if (term.IsExcluded)
+            {
+                if (matched) return false;
+
+                continue;
+            }
+
+            hasIncluded = true;
+
+            // With And a failed term settles it — an exclusion could only have removed the item too. With Or a
+            // match cannot return early, because a later exclusion still gets to veto.
+            if (requireAll)
+            {
+                if (!matched) return false;
+            }
+            else if (matched)
+            {
+                anyIncludedMatched = true;
+            }
         }
 
-        return requireAll;
+        // Nothing but exclusions ("-salaried") keeps every item they did not veto; And is true because every
+        // included term matched to get here.
+        return !hasIncluded || requireAll || anyIncludedMatched;
     }
 
     private static bool MatchesObject(object item, string term, Type type, int depth, QuickSearchOptions options)

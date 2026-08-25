@@ -17,7 +17,7 @@ Eleven example pages, from the low-level building blocks to a full application-g
 | [Column Types](https://vaclavelias.github.io/QuickGrid.Toolkit/column-types) | Every column helper side by side: text, dates, numbers, ticks, toggles, markup, images, templates and actions | [ColumnTypes.razor](src/QuickGrid.Samples.Shared/Pages/Examples/ColumnTypes.razor) |
 | [Formatting & Styling](https://vaclavelias.github.io/QuickGrid.Toolkit/formatting-styling) | Format strings, conditional cell styling with `CellStyleMap`, row classes, shared `ColumnInfo` definitions | [FormattingStyling.razor](src/QuickGrid.Samples.Shared/Pages/Examples/FormattingStyling.razor) |
 | [Loading, Paging & Refresh](https://vaclavelias.github.io/QuickGrid.Toolkit/loading-paging) | `IsLoading`, pagination, and keeping the grid in step with data that changes underneath it (`ItemsVersion`) | [LoadingPaging.razor](src/QuickGrid.Samples.Shared/Pages/Examples/LoadingPaging.razor) |
-| [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) | Quick search across every column, exact match, nested properties, and your own filter panel | [SearchFiltering.razor](src/QuickGrid.Samples.Shared/Pages/Examples/SearchFiltering.razor) |
+| [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) | Quick search across every column, `-word` exclusions, exact match, nested properties, and your own filter panel | [SearchFiltering.razor](src/QuickGrid.Samples.Shared/Pages/Examples/SearchFiltering.razor) |
 | [Row Selection](https://vaclavelias.github.io/QuickGrid.Toolkit/row-selection) | Selecting rows with `ISelectionDto` and acting on the selection from the toolbar | [RowSelection.razor](src/QuickGrid.Samples.Shared/Pages/Examples/RowSelection.razor) |
 | [Footers & Totals](https://vaclavelias.github.io/QuickGrid.Toolkit/footers-totals) | Automatic totals for numeric columns, or hand-built footer cells for full control | [FootersTotals.razor](src/QuickGrid.Samples.Shared/Pages/Examples/FootersTotals.razor) |
 | [Column Visibility](https://vaclavelias.github.io/QuickGrid.Toolkit/column-visibility) | Showing and hiding columns from your own controls, and refreshing what the wrapper derives from them | [ColumnVisibility.razor](src/QuickGrid.Samples.Shared/Pages/Examples/ColumnVisibility.razor) |
@@ -77,6 +77,7 @@ Eleven example pages, from the low-level building blocks to a full application-g
 | Quick search across all columns | [QuickGridWrapper](https://vaclavelias.github.io/QuickGrid.Toolkit/users-grid-wrapper) |
 | Nested / child-property search | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
 | Exact-match toggle | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
+| Exclude a term with `-word` | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
 | Preset / external search value (`QuickSearch`) | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
 | Custom filter panel (`FilterSection`) | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
 | EF-backed server filtering (`FilterCriteria`) | ⏳ example planned |

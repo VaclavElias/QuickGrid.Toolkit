@@ -161,6 +161,77 @@ public class QuickSearchUtilityTests
     public void DuplicateTerms_AreDeduplicated_NotDoubleRequired()
         => Assert.True(QuickSearchUtility.QuickSearch(CreatePerson(), "alice alice"));
 
+    // --- Exclusion terms ------------------------------------------------------------------------
+    // "-term" rejects the rows it matches, the convention search boxes elsewhere already use.
+
+    [Fact]
+    public void ExcludedTerm_RejectsItemThatContainsIt()
+        => Assert.False(QuickSearchUtility.QuickSearch(CreatePerson(), "-london"));
+
+    [Fact]
+    public void ExcludedTermAlone_KeepsItemThatDoesNotContainIt()
+        => Assert.True(QuickSearchUtility.QuickSearch(CreatePerson(), "-zebra"));
+
+    [Theory]
+    [InlineData("alice -zebra", true)]
+    [InlineData("alice -london", false)]
+    [InlineData("zebra -london", false)]
+    public void ExcludedTerm_NarrowsAnIncludedTerm(string query, bool expected)
+        => Assert.Equal(expected, QuickSearchUtility.QuickSearch(CreatePerson(), query));
+
+    [Theory]
+    [InlineData("zebra manager -paris", true)]
+    [InlineData("zebra manager -london", false)]
+    [InlineData("zebra lion -paris", false)]
+    public void ExcludedTerm_VetoesEvenInOrMode(string query, bool expected)
+    {
+        // An exclusion is a condition on the whole item, not one of the alternatives Or is offering.
+        var options = new QuickSearchOptions { MultiTermOperator = SearchOperator.Or };
+
+        Assert.Equal(expected, QuickSearchUtility.QuickSearch(CreatePerson(), query, options));
+    }
+
+    [Fact]
+    public void ExcludedTerm_ContradictingAnIncludedTerm_MatchesNothing()
+        => Assert.False(QuickSearchUtility.QuickSearch(CreatePerson(), "alice -alice"));
+
+    [Theory]
+    [InlineData("-london", false)]
+    [InlineData("-paris", true)]
+    public void ExcludedTerm_AppliesUnderExactMatch(string query, bool expected)
+    {
+        var options = new QuickSearchOptions { ExactMatch = true };
+
+        Assert.Equal(expected, QuickSearchUtility.QuickSearch(CreatePerson(), query, options));
+    }
+
+    [Fact]
+    public void HyphenInsideATerm_IsOrdinaryText()
+    {
+        var options = new QuickSearchOptions { MaxSearchDepth = 2 };
+
+        Assert.True(QuickSearchUtility.QuickSearch(CreatePerson(), "UK-LDN", options));
+    }
+
+    [Fact]
+    public void LoneHyphen_IsOrdinaryText()
+    {
+        var options = new QuickSearchOptions { MaxSearchDepth = 2 };
+
+        Assert.True(QuickSearchUtility.QuickSearch(CreatePerson(), "-", options));
+    }
+
+    [Fact]
+    public void DisabledExclusions_MatchThePrefixLiterally()
+    {
+        // The opt-out for data where a leading hyphen is meaningful, such as negative numbers.
+        var enabled = new QuickSearchOptions { MaxSearchDepth = 2 };
+        var disabled = new QuickSearchOptions { MaxSearchDepth = 2, EnableExclusionTerms = false };
+
+        Assert.False(QuickSearchUtility.QuickSearch(CreatePerson(), "-LDN", enabled));
+        Assert.True(QuickSearchUtility.QuickSearch(CreatePerson(), "-LDN", disabled));
+    }
+
     // --- Prepared terms -------------------------------------------------------------------------
     // PrepareTerms/Matches exist so a grid search parses the query once instead of once per row.
     // These pin that the split path is the same one QuickSearch takes, so the fast path cannot drift.
@@ -170,7 +241,7 @@ public class QuickSearchUtilityTests
     {
         var terms = QuickSearchUtility.PrepareTerms("  alice   ALICE johnson ", new QuickSearchOptions());
 
-        Assert.Equal(["alice", "johnson"], terms);
+        Assert.Equal(new SearchTerm[] { new("alice", false), new("johnson", false) }, terms);
     }
 
     [Fact]
@@ -178,7 +249,7 @@ public class QuickSearchUtilityTests
     {
         var terms = QuickSearchUtility.PrepareTerms(" Alice Johnson ", new QuickSearchOptions { ExactMatch = true });
 
-        Assert.Equal(["Alice Johnson"], terms);
+        Assert.Equal(new SearchTerm[] { new("Alice Johnson", false) }, terms);
     }
 
     [Theory]

@@ -5,8 +5,9 @@
     <p>
         The wrapper's search box walks each row with reflection and matches any readable property, including
         nested ones such as <code>Owner.Team</code>. Multiple words are ANDed, so <code>ana data</code> keeps only
-        rows matching both. The settings menu offers <strong>Enable Exact Match</strong>, which switches from
-        "contains" to a whole-value comparison.
+        rows matching both. A word prefixed with <code>-</code> excludes instead: <code>-analytics</code> drops
+        every row mentioning it, and <code>data -analytics</code> combines the two. The settings menu offers
+        <strong>Enable Exact Match</strong>, which switches from "contains" to a whole-value comparison.
     </p>
     <ul>
         <li><code>IsNestedSearch</code> turns nested traversal on or off — off means only top-level properties match.</li>

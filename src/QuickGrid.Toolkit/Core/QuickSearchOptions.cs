@@ -36,6 +36,18 @@ public class QuickSearchOptions
     public SearchOperator MultiTermOperator { get; set; } = SearchOperator.And;
 
     /// <summary>
+    /// Gets or sets a value indicating whether a term prefixed with <c>-</c> excludes the rows it matches, so
+    /// <c>london -manager</c> keeps London rows that say nothing about a manager. Default is true.
+    /// </summary>
+    /// <remarks>
+    /// An exclusion always vetoes the item, whatever <see cref="MultiTermOperator"/> is, and a query made only of
+    /// exclusions keeps everything they do not veto. A lone <c>-</c>, and a <c>-</c> anywhere but at the start of
+    /// a term, are ordinary text. Turn this off when a leading hyphen is meaningful data — searching a column of
+    /// negative numbers for <c>-500</c>, say — and the prefix is then matched literally.
+    /// </remarks>
+    public bool EnableExclusionTerms { get; set; } = true;
+
+    /// <summary>
     /// Maximum depth to search in nested properties. 0 = current level only, 1 = first-level children, etc.
     /// Default is 1.
     /// </summary>
