@@ -78,6 +78,7 @@ Twelve example pages, from the low-level building blocks to a full application-g
 | Nested / child-property search | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
 | Exact-match toggle | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
 | Exclude a term with `-word` | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
+| Per-grid search options (`SearchOptions`: depth, case sensitivity, AND/OR, included/excluded columns) | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
 | Preset / external search value (`QuickSearch`) | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
 | Custom filter panel (`FilterSection`) | [Search & Filtering](https://vaclavelias.github.io/QuickGrid.Toolkit/search-filtering) |
 | EF-backed server filtering (`FilterCriteria`) | ⏳ example planned |

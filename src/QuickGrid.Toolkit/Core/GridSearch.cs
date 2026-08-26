@@ -38,17 +38,18 @@ internal sealed class GridSearch<TGridItem>
     private bool _inputsSeeded;
     private string? _lastQuickSearchParameter;
     private string? _computedQuery;
-    private bool _computedExactMatch;
-    private bool _computedNestedSearch;
+    private QuickSearchOptions _computedOptions = new();
 
     private FilterCriteria<TGridItem>? _filterCriteria;
-    private bool _exactMatch;
-    private bool _nestedSearch = true;
+    private QuickSearchOptions _options = new();
 
     /// <summary>
     /// The active search text. Bound directly by the in-memory search box, so it is settable.
     /// </summary>
     public string? Query { get; set; }
+
+    /// <summary>The options in effect for the next search. Exposed for diagnostics.</summary>
+    public QuickSearchOptions Options => _options;
 
     /// <summary>The rows the last <see cref="FilterCriteria{TGridItem}"/> query returned. Exposed for diagnostics.</summary>
     public List<TGridItem>? EvaluatedItems { get; private set; }
@@ -68,19 +69,20 @@ internal sealed class GridSearch<TGridItem>
     /// Takes the current parameter values from the component. Call before <see cref="InputsChanged"/> or
     /// <see cref="Recompute"/> so both see the same state.
     /// </summary>
-    public void SyncInputs(FilterCriteria<TGridItem>? filterCriteria, bool exactMatch, bool isNestedSearch)
+    public void SyncInputs(FilterCriteria<TGridItem>? filterCriteria, QuickSearchOptions options)
     {
         _filterCriteria = filterCriteria;
-        _exactMatch = exactMatch;
-        _nestedSearch = isNestedSearch;
+
+        // The component hands over a copy it has already resolved, so holding the object is safe — but hold the
+        // object, never values read out of it. What a collaborator caches from a parameter goes stale (C2).
+        _options = options;
 
         // Take the initial search options as the baseline, so setting them in markup is not read as a change on
         // the first parameter set. An initial query is a real search and is deliberately not seeded here.
         if (!_inputsSeeded)
         {
             _inputsSeeded = true;
-            _computedExactMatch = exactMatch;
-            _computedNestedSearch = isNestedSearch;
+            _computedOptions = options;
         }
     }
 
@@ -103,8 +105,7 @@ internal sealed class GridSearch<TGridItem>
     /// <summary>Whether anything the result is computed from has changed since the last <see cref="Recompute"/>.</summary>
     public bool InputsChanged()
         => _computedQuery != Query
-            || _computedExactMatch != _exactMatch
-            || _computedNestedSearch != _nestedSearch;
+            || !QuickSearchOptions.ValuesEqual(_computedOptions, _options);
 
     /// <summary>Rebuilds <see cref="Result"/> from the current query and options.</summary>
     /// <param name="items">The rows to search. Ignored when no search is active.</param>
@@ -113,8 +114,7 @@ internal sealed class GridSearch<TGridItem>
         var query = Query;
 
         _computedQuery = query;
-        _computedExactMatch = _exactMatch;
-        _computedNestedSearch = _nestedSearch;
+        _computedOptions = _options;
 
         // No search: a null result tells the caller to show its own rows, so a source that changed between
         // renders reaches the grid immediately instead of through a snapshot taken here.
@@ -127,17 +127,11 @@ internal sealed class GridSearch<TGridItem>
 
         if (_filterCriteria is null)
         {
-            var options = new QuickSearchOptions()
-            {
-                IncludeChildProperties = _nestedSearch,
-                ExactMatch = _exactMatch
-            };
-
             // Terms are parsed once for the whole run rather than inside the predicate: they depend only on the
             // query and the options, so splitting them per row repeated the same work for every item in the grid.
-            var terms = QuickSearchUtility.PrepareTerms(query, options);
+            var terms = QuickSearchUtility.PrepareTerms(query, _options);
 
-            Result = items?.Where(item => QuickSearchUtility.Matches(item, terms, options)).ToList().AsQueryable();
+            Result = items?.Where(item => QuickSearchUtility.Matches(item, terms, _options)).ToList().AsQueryable();
 
             return;
         }

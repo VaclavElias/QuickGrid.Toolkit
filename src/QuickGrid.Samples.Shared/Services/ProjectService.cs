@@ -38,6 +38,7 @@ public static class ProjectService
             {
                 Name = owner,
                 Team = team,
+                Office = new OfficeDto { City = OfficeFor(team) },
                 AvatarUrl = BuildAvatar(owner)
             },
             StartedOn = BaseDate.AddDays(startOffsetDays),
@@ -50,6 +51,19 @@ public static class ProjectService
             IsFlagged = isFlagged,
             Status = status
         };
+
+    /// <summary>
+    /// One level deeper than the team, so the search example has something only a raised `MaxSearchDepth` finds.
+    /// Cities are picked not to collide with any other searchable value in the set.
+    /// </summary>
+    private static string OfficeFor(string team) => team switch
+    {
+        "Platform" => "Bristol",
+        "Design" => "Leeds",
+        "Data" => "Cardiff",
+        "Growth" => "Glasgow",
+        _ => "Belfast"
+    };
 
     /// <summary>
     /// Builds an inline SVG avatar so the image column has something to render without a network call.

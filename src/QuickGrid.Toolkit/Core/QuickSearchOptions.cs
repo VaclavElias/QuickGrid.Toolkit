@@ -49,10 +49,65 @@ public class QuickSearchOptions
 
     /// <summary>
     /// Maximum depth to search in nested properties. 0 = current level only, 1 = first-level children, etc.
-    /// Default is 2, so <c>Owner.Address.City</c> is reachable. Each level costs a reflection walk of every
+    /// Default is 1, set to 2 so <c>Owner.Address.City</c> is reachable. Each level costs a reflection walk of every
     /// property on every row, per term, so raise it deliberately.
     /// </summary>
-    public int MaxSearchDepth { get; set; } = 2;
+    public int MaxSearchDepth { get; set; } = 1;
+
+    /// <summary>
+    /// An independent copy. The two list properties are copied as well, so a caller can go on mutating theirs
+    /// without changing the copy underneath whoever is holding it.
+    /// </summary>
+    internal QuickSearchOptions Clone() => new()
+    {
+        IncludeChildProperties = IncludeChildProperties,
+        ExactMatch = ExactMatch,
+        CaseSensitive = CaseSensitive,
+        ColumnNames = ColumnNames is null ? null : [.. ColumnNames],
+        ExcludedColumns = ExcludedColumns is null ? null : [.. ExcludedColumns],
+        MultiTermOperator = MultiTermOperator,
+        EnableExclusionTerms = EnableExclusionTerms,
+        MaxSearchDepth = MaxSearchDepth
+    };
+
+    /// <summary>
+    /// Whether two option sets would narrow a grid the same way, compared by value.
+    /// </summary>
+    /// <remarks>
+    /// Reference equality is not usable here. A grid whose markup reads
+    /// <c>SearchOptions="new() { MaxSearchDepth = 3 }"</c> allocates a fresh instance on every render, and taking
+    /// that for a change would re-run the search — and re-raise the search-result event — on every render. The
+    /// lists are compared by content for the mirror-image reason: a caller who mutates one in place keeps the
+    /// same reference, and a reference check would never notice.
+    /// </remarks>
+    internal static bool ValuesEqual(QuickSearchOptions? left, QuickSearchOptions? right)
+    {
+        if (ReferenceEquals(left, right)) return true;
+
+        if (left is null || right is null) return false;
+
+        return left.IncludeChildProperties == right.IncludeChildProperties
+            && left.ExactMatch == right.ExactMatch
+            && left.CaseSensitive == right.CaseSensitive
+            && left.MultiTermOperator == right.MultiTermOperator
+            && left.EnableExclusionTerms == right.EnableExclusionTerms
+            && left.MaxSearchDepth == right.MaxSearchDepth
+            && SameContent(left.ColumnNames, right.ColumnNames)
+            && SameContent(left.ExcludedColumns, right.ExcludedColumns);
+    }
+
+    private static bool SameContent(List<string>? left, List<string>? right)
+    {
+        if (ReferenceEquals(left, right)) return true;
+
+        // Null and empty both mean "no filter" to the search, so moving between them is not a change.
+        if (left is null || right is null)
+        {
+            return left is null or { Count: 0 } && right is null or { Count: 0 };
+        }
+
+        return left.SequenceEqual(right, StringComparer.Ordinal);
+    }
 }
 
 public enum SearchOperator

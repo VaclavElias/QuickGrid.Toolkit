@@ -58,7 +58,6 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     [Parameter] public bool IsDebug { get; set; }
 
     [Parameter] public bool IsToolbar { get; set; } = true;
-    [Parameter] public bool IsNestedSearch { get; set; } = true;
     [Parameter] public TotalFooter TotalFooter { get; set; } = new();
     [Parameter] public bool ExactMatch { get; set; }
     [Parameter] public bool IsExportEnabled { get; set; }
@@ -69,6 +68,33 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     [Parameter] public EventCallback<bool> ExactMatchChanged { get; set; }
     [Parameter] public EventCallback<List<TGridItem>> SearchResultChanged { get; set; }
     [Parameter] public QuickGridWrapperEvents<TGridItem>? Events { get; set; }
+
+    /// <summary>
+    /// Search behaviour beyond the two bindable parameters: how deep nested properties are walked, case
+    /// sensitivity, how multiple terms combine, whether <c>-word</c> excludes, and which properties are searched.
+    /// Unset leaves every value at its <see cref="QuickSearchOptions"/> default.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Read live, so changing a value re-runs an active search rather than waiting for the next keystroke. The
+    /// wrapper works from its own copy and never writes to the instance passed in, so one instance may safely be
+    /// shared by several grids.
+    /// </para>
+    /// <para>
+    /// <see cref="QuickSearchOptions.ExactMatch"/> is the one member this does not control. The settings menu
+    /// assigns exact match on the component itself, and a value the component owns cannot also be owned by an
+    /// options object, so <see cref="ExactMatch"/> always wins — set it there.
+    /// </para>
+    /// </remarks>
+    [Parameter] public QuickSearchOptions? SearchOptions { get; set; }
+
+    /// <summary>
+    /// Whether nested properties are searched. <see langword="null"/>, the default, leaves the decision to
+    /// <see cref="QuickSearchOptions.IncludeChildProperties"/> — which is <see langword="true"/>, so the default
+    /// behaviour is unchanged.
+    /// </summary>
+    [Obsolete("Use SearchOptions.IncludeChildProperties instead. Removed in v2.")]
+    [Parameter] public bool? IsNestedSearch { get; set; }
 
     /// <summary>
     /// The number of items to display per page when pagination is enabled. The default value is 20.
@@ -147,7 +173,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
     // AsEnumerable() keeps the pattern match in C#: counting straight off the IQueryable would build an
     // expression tree, which cannot contain an 'is' pattern.
-    private int _selectedItemsCount => VisibleItems?.AsEnumerable().Count(item => item is ISelectionDto { IsSelected: true }) ?? 0;
+    private int SelectedItemsCount => VisibleItems?.AsEnumerable().Count(item => item is ISelectionDto { IsSelected: true }) ?? 0;
 
     /// <summary>
     /// The rows the grid is showing: the search result when a search is active, otherwise <see cref="Items"/>
@@ -212,6 +238,36 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         await AddOrUpdateFooterAsync();
     }
 
+    /// <summary>
+    /// The options a search actually runs with: <see cref="SearchOptions"/> with the flat parameters layered on
+    /// top.
+    /// </summary>
+    /// <remarks>
+    /// Always a copy, never the caller's instance. <see cref="QuickSearchOptions"/> is a mutable class and nothing
+    /// stops a page handing the same one to several grids — the hazard already recorded for <c>TotalFooter</c> —
+    /// so writing resolved values into it would let one grid's parameters reach another.
+    /// </remarks>
+    private QuickSearchOptions ResolveSearchOptions()
+    {
+        var options = SearchOptions?.Clone() ?? new QuickSearchOptions();
+
+        // The one setting the wrapper assigns itself, from the settings menu, so the parameter has to win:
+        // reading it from the options object would put the menu's choice back the next time the parent renders.
+        options.ExactMatch = ExactMatch;
+
+        // Null is what makes this resolvable at all. A plain bool defaulting to true cannot tell a caller who
+        // wants nesting from one who never set the parameter, so the latter would silently overrule
+        // IncludeChildProperties = false.
+#pragma warning disable CS0618 // Obsolete, but honoured until it is removed in v2.
+        if (IsNestedSearch is bool nested)
+        {
+            options.IncludeChildProperties = nested;
+        }
+#pragma warning restore CS0618
+
+        return options;
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         SyncColumnManager();
@@ -219,7 +275,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         EnsurePaginationState();
         SetTableIndex();
 
-        _search.SyncInputs(FilterCriteria, ExactMatch, IsNestedSearch);
+        _search.SyncInputs(FilterCriteria, ResolveSearchOptions());
         _search.ApplyQuickSearchParameter(QuickSearch);
 
         if (Items is not null && QueryableItems is not null && Events is not null)

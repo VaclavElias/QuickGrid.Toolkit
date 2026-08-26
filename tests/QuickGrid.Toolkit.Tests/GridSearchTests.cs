@@ -21,11 +21,14 @@ public class GridSearchTests
     private static IQueryable<Person>? VisibleItems(GridSearch<Person> search, IQueryable<Person>? items)
         => search.Result ?? items;
 
+    private static QuickSearchOptions Options(bool exactMatch = false, bool nested = true)
+        => new() { ExactMatch = exactMatch, IncludeChildProperties = nested };
+
     private static GridSearch<Person> BuildSearch(bool exactMatch = false, bool nested = true)
     {
         var search = new GridSearch<Person>();
 
-        search.SyncInputs(filterCriteria: null, exactMatch, nested);
+        search.SyncInputs(filterCriteria: null, Options(exactMatch, nested));
 
         return search;
     }
@@ -110,11 +113,11 @@ public class GridSearchTests
         search.Recompute(Source());
         Assert.False(search.InputsChanged());
 
-        search.SyncInputs(filterCriteria: null, exactMatch: true, isNestedSearch: true);
+        search.SyncInputs(filterCriteria: null, Options(exactMatch: true, nested: true));
         Assert.True(search.InputsChanged());
 
         search.Recompute(Source());
-        search.SyncInputs(filterCriteria: null, exactMatch: true, isNestedSearch: false);
+        search.SyncInputs(filterCriteria: null, Options(exactMatch: true, nested: false));
         Assert.True(search.InputsChanged());
     }
 
@@ -127,7 +130,7 @@ public class GridSearchTests
         search.Query = "Prague";
         search.Recompute(Source());
 
-        search.SyncInputs(filterCriteria: null, exactMatch: false, isNestedSearch: true);
+        search.SyncInputs(filterCriteria: null, Options(exactMatch: false, nested: true));
 
         Assert.False(search.InputsChanged());
     }
@@ -138,7 +141,7 @@ public class GridSearchTests
     {
         var search = new GridSearch<Person>();
 
-        search.SyncInputs(filterCriteria: null, exactMatch: true, isNestedSearch: false);
+        search.SyncInputs(filterCriteria: null, Options(exactMatch: true, nested: false));
 
         Assert.False(search.InputsChanged());
     }
@@ -187,7 +190,7 @@ public class GridSearchTests
     {
         var criteria = new FilterCriteria<Person>(term => p => p.Name.Contains(term));
         var search = new GridSearch<Person>();
-        search.SyncInputs(criteria, exactMatch: false, isNestedSearch: true);
+        search.SyncInputs(criteria, Options(exactMatch: false, nested: true));
 
         var queried = await search.RunFilterCriteriaSearchAsync("ab", Source());
 
@@ -206,9 +209,63 @@ public class GridSearchTests
     {
         var criteria = new FilterCriteria<Person>(term => p => p.Name.Contains(term));
         var search = new GridSearch<Person>();
-        search.SyncInputs(criteria, exactMatch: false, isNestedSearch: true);
+        search.SyncInputs(criteria, Options(exactMatch: false, nested: true));
 
         Assert.ThrowsAny<InvalidOperationException>(
             () => search.RunFilterCriteriaSearchAsync("Ann", Source()).GetAwaiter().GetResult());
     }
+    // --- Options as a live parameter ------------------------------------------------------------
+    // The wrapper resolves SearchOptions into a copy on every parameter set, so GridSearch sees a different
+    // instance each time and cannot compare by reference.
+
+    [Fact]
+    public void InputsChanged_IsFalse_WhenTheOptionsAreANewInstanceWithTheSameValues()
+    {
+        // Markup reading SearchOptions="new() { ... }" allocates one of these per render. Calling that a change
+        // would re-run the search and re-raise SearchResultChanged every render.
+        var search = BuildSearch();
+        search.Query = "Prague";
+        search.Recompute(Source());
+
+        search.SyncInputs(filterCriteria: null, Options());
+
+        Assert.False(search.InputsChanged());
+    }
+
+    [Fact]
+    public void InputsChanged_NoticesAnInPlaceEditToTheOptionsTheCallerHolds()
+    {
+        // A page binding a checkbox straight to _options.IncludeChildProperties never replaces the instance, so
+        // the copy is what carries the new value across — and it has to be compared by value to be seen.
+        var held = new QuickSearchOptions();
+        var search = new GridSearch<Person>();
+        search.SyncInputs(filterCriteria: null, held.Clone());
+        search.Query = "Prague";
+        search.Recompute(Source());
+
+        Assert.False(search.InputsChanged());
+
+        held.MaxSearchDepth = 3;
+        search.SyncInputs(filterCriteria: null, held.Clone());
+
+        Assert.True(search.InputsChanged());
+    }
+
+    [Fact]
+    public void Recompute_HonoursAnOptionThatOnlySearchOptionsCanReach()
+    {
+        // CaseSensitive has no flat parameter and never reached a grid before SearchOptions existed.
+        var search = new GridSearch<Person>();
+        search.SyncInputs(filterCriteria: null, new QuickSearchOptions { CaseSensitive = true });
+        search.Query = "anna";
+        search.Recompute(Source());
+
+        Assert.Empty(search.Result!);
+
+        search.SyncInputs(filterCriteria: null, new QuickSearchOptions());
+        search.Recompute(Source());
+
+        Assert.Single(search.Result!);
+    }
+
 }

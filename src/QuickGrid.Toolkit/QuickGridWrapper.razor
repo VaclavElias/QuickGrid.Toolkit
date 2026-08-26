@@ -8,12 +8,12 @@
                 <div>Items: @(Items?.Count().ToString() ?? "null")</div>
                 <div>Displayed: @(VisibleItems?.Count().ToString() ?? "null")</div>
                 <div>ItemsVersion: @ItemsVersion</div>
-                <div>Selected: @_selectedItemsCount</div>
+                <div>Selected: @SelectedItemsCount</div>
             </div>
             <div class="col-md-4">
                 <div>Search mode: @(FilterCriteria is null ? "in-memory" : "FilterCriteria")</div>
                 <div>Query: @(string.IsNullOrEmpty(_search.Query) ? "(none)" : _search.Query)</div>
-                <div>ExactMatch: @ExactMatch / Nested: @IsNestedSearch</div>
+                <div>ExactMatch: @ExactMatch / Nested: @_search.Options.IncludeChildProperties / Depth: @_search.Options.MaxSearchDepth</div>
                 <div>Evaluated: @(_search.EvaluatedItems?.Count.ToString() ?? "null")</div>
             </div>
             <div class="col-md-4">
@@ -120,13 +120,13 @@
 
                     }
                 }
-                @if (IsSelection && _selectedItemsCount > 0)
+                @if (IsSelection && SelectedItemsCount > 0)
                 {
                     <div class="">
                         <button @onclick="UnselectAllItems" class="btn btn-light btn-xs ms-4" type="button">Unselect All</button>
                         <div class="dropdown d-inline-block ms-2">
                             <button class="btn btn-success dropdown-toggle btn-xs" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                @_selectedItemsCount SELECTED
+                                @SelectedItemsCount SELECTED
                             </button>
                             <ul class="dropdown-menu">
                                 @SelectedItemsActionDropDown
