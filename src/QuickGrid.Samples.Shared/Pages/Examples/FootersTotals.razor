@@ -8,7 +8,7 @@
         (<code>quickGridToolkit.js</code>). Totals follow the active quick search, so filtering the grid
         recalculates them.
     </p>
-    <p><strong>Automatic</strong> — set a <code>TotalFooter</code> with <code>IsTotalFooter = true</code>:</p>
+    <p><strong>Automatic</strong> - set a <code>TotalFooter</code> with <code>IsTotalFooter = true</code>:</p>
     <ul>
         <li>Every numeric column (<code>AddNumber</code>, <code>AddStyledNumber</code>) is summed; the first
             non-numeric column carries the label.</li>
@@ -17,7 +17,7 @@
         <li>Each column's own <code>format</code> is reused for its total, falling back to
             <code>DefaultFormat</code>.</li>
     </ul>
-    <p><strong>Manual</strong> — add footer cells to the <code>ColumnManager</code> instead:</p>
+    <p><strong>Manual</strong> - add footer cells to the <code>ColumnManager</code> instead:</p>
     <ul>
         <li><code>AddFooterColumnWithSum(column)</code> sums one column and reuses its CSS class.</li>
         <li><code>AddFooterColumn(id, items =&gt; ...)</code> takes any aggregate over the displayed rows: an

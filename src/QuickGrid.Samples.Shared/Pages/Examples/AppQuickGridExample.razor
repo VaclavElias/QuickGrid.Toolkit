@@ -10,12 +10,12 @@
         <code>QuickGridWrapper&lt;T&gt;</code> once and pages are left with just their data and columns.
     </p>
     <ul>
-        <li><strong>Constructor</strong> — assign parameters such as <code>Class</code>, <code>Theme</code>,
+        <li><strong>Constructor</strong> - assign parameters such as <code>Class</code>, <code>Theme</code>,
             <code>ItemsPerPage</code> or <code>IsExportEnabled</code>. They behave as defaults, so a page can
             still override any of them.</li>
-        <li><strong><code>OnInitialized</code></strong> — fill in <code>Events</code> callbacks, guarding each
+        <li><strong><code>OnInitialized</code></strong> - fill in <code>Events</code> callbacks, guarding each
             with <code>HasDelegate</code> so a page can still handle one itself.</li>
-        <li><strong><code>[Inject]</code></strong> — pull in your own services (toasts, export, saved-view
+        <li><strong><code>[Inject]</code></strong> - pull in your own services (toasts, export, saved-view
             storage) that individual pages should not have to know about.</li>
     </ul>
     <p class="mb-0">

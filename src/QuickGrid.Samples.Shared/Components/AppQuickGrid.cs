@@ -26,7 +26,7 @@ public class AppQuickGrid<TGridItem> : QuickGridWrapper<TGridItem> where TGridIt
     /// Deliberately <c>async</c>, even though nothing here needs to be.
     /// </summary>
     /// <remarks>
-    /// Real subclasses await on init — both production consumers of this toolkit load authorization state and
+    /// Real subclasses await on init - both production consumers of this toolkit load authorization state and
     /// saved column layouts here. That changes the render sequence: when <c>OnInitializedAsync</c> returns an
     /// incomplete task, Blazor renders the component <em>before</em> <c>OnParametersSetAsync</c> has ever run, so
     /// anything the wrapper caches from its parameters is still unset on that first render. Keeping this async

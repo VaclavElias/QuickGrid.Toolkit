@@ -3,7 +3,7 @@
 <ExampleInfo Route="column-visibility"
              Lead="Show and hide columns from your own controls, outside the wrapper's toolbar.">
     <p>
-        Every column is just data, so a page can flip <code>DynamicColumn.Visible</code> whenever it likes — from a
+        Every column is just data, so a page can flip <code>DynamicColumn.Visible</code> whenever it likes - from a
         checkbox, a dropdown, a user preference loaded at startup. Since each <code>Add*</code> hands back the column
         it created, the ones a control drives are captured where they are declared:
     </p>
@@ -20,7 +20,7 @@
     <p>
         Untick <em>Call RefreshColumnsAsync</em> below to see what the call is for, then hover a header: the tooltips
         stay where they were and describe the wrong columns. The totals do recover on their own, because the wrapper
-        rebuilds the footer on every render — convenient, but not something to rely on.
+        rebuilds the footer on every render - convenient, but not something to rely on.
     </p>
 </ExampleInfo>
 
@@ -48,7 +48,7 @@
 <div class="form-check mt-3">
     <input type="checkbox" class="form-check-input" id="refresh-after-toggle" @bind="_refreshAfterToggle" />
     <label class="form-check-label small" for="refresh-after-toggle">
-        Call <code>RefreshColumnsAsync</code> after a toggle — unticking it is the bug, not a feature
+        Call <code>RefreshColumnsAsync</code> after a toggle - unticking it is the bug, not a feature
     </label>
 </div>
 
