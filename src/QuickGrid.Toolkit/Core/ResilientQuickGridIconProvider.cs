@@ -12,7 +12,7 @@ namespace QuickGrid.Toolkit.Core;
 /// a breaking change for every application that ships its own provider. This decorator removes that coupling: the
 /// toolkit can introduce an icon and older providers keep working, showing the default glyph for the new member.
 /// <para>
-/// Only the <see cref="Render"/> call is guarded — that is where the switch is evaluated. A provider whose returned
+/// Only the <see cref="Render"/> call is guarded - that is where the switch is evaluated. A provider whose returned
 /// fragment throws while it is being executed cannot be recovered here, because by then it may have written a
 /// partial subtree into the <see cref="RenderTreeBuilder"/>.
 /// </para>

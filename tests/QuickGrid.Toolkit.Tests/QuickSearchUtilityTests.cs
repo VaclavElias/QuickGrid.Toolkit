@@ -122,14 +122,27 @@ public class QuickSearchUtilityTests
         => Assert.False(QuickSearchUtility.QuickSearch(CreatePerson(), "london", includeChildProperties: false));
 
     [Fact]
-    public void Matches_GrandchildProperty_AtDefaultDepth()
-        => Assert.True(QuickSearchUtility.QuickSearch(CreatePerson(), "UK-LDN"));
+    public void DoesNotMatch_GrandchildProperty_AtDefaultDepth()
+        => Assert.False(QuickSearchUtility.QuickSearch(CreatePerson(), "UK-LDN"));
 
-    // The default stops somewhere; these two pin where. Raising MaxSearchDepth from 1 to 2 moved that line one
-    // level out, and with a case on only one side of it the move went unnoticed until the suite went red.
+    // Every boundary keeps a case on both sides. The default moved to 2 and back again over two days, and each
+    // time only the half on the far side of the new line failed - a boundary pinned from one side is not pinned.
+    // The second pair also says depth is a counter and not a switch: raising it to 2 still does not reach three.
     [Fact]
-    public void DoesNotMatch_GreatGrandchildProperty_AtDefaultDepth()
-        => Assert.False(QuickSearchUtility.QuickSearch(CreatePerson(), "GBR"));
+    public void Matches_GrandchildProperty_WhenDepthRaised()
+    {
+        var options = new QuickSearchOptions { MaxSearchDepth = 2 };
+
+        Assert.True(QuickSearchUtility.QuickSearch(CreatePerson(), "UK-LDN", options));
+    }
+
+    [Fact]
+    public void DoesNotMatch_GreatGrandchildProperty_AtADepthOfTwo()
+    {
+        var options = new QuickSearchOptions { MaxSearchDepth = 2 };
+
+        Assert.False(QuickSearchUtility.QuickSearch(CreatePerson(), "GBR", options));
+    }
 
     [Fact]
     public void Matches_GreatGrandchildProperty_WhenDepthRaised()

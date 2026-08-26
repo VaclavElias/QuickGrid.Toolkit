@@ -16,7 +16,7 @@ public class ColumnBuilder<TGridItem>
     /// </summary>
     /// <remarks>
     /// Read while the cell renders, not while the column is built, so it applies to columns that were added before
-    /// it was set. Set it through <see cref="ColumnManager{TGridItem}.ValueStyles"/> rather than here — a manager
+    /// it was set. Set it through <see cref="ColumnManager{TGridItem}.ValueStyles"/> rather than here - a manager
     /// owns exactly one builder, and that is the level a caller configures.
     /// </remarks>
     public GridValueStyles ValueStyles { get; set; } = GridValueStyles.All;

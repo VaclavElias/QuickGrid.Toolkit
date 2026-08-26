@@ -66,8 +66,8 @@ public static class CellStyleHelper
     /// Whether a style description should be rendered, given the natures a grid has enabled.
     /// </summary>
     /// <remarks>
-    /// Only the three built-in descriptions are governed. Anything else — a name from a
-    /// <see cref="CellStyleMap{TValue}"/>, or <c>unknown</c>/<c>no-value</c> — is the caller's own vocabulary and is
+    /// Only the three built-in descriptions are governed. Anything else - a name from a
+    /// <see cref="CellStyleMap{TValue}"/>, or <c>unknown</c>/<c>no-value</c> - is the caller's own vocabulary and is
     /// always rendered.
     /// </remarks>
     /// <param name="style">The style description, typically from <see cref="DetermineNumericValueNature"/>.</param>

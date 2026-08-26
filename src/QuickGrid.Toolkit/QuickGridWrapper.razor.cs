@@ -83,14 +83,14 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     /// <para>
     /// <see cref="QuickSearchOptions.ExactMatch"/> is the one member this does not control. The settings menu
     /// assigns exact match on the component itself, and a value the component owns cannot also be owned by an
-    /// options object, so <see cref="ExactMatch"/> always wins — set it there.
+    /// options object, so <see cref="ExactMatch"/> always wins - set it there.
     /// </para>
     /// </remarks>
     [Parameter] public QuickSearchOptions? SearchOptions { get; set; }
 
     /// <summary>
     /// Whether nested properties are searched. <see langword="null"/>, the default, leaves the decision to
-    /// <see cref="QuickSearchOptions.IncludeChildProperties"/> — which is <see langword="true"/>, so the default
+    /// <see cref="QuickSearchOptions.IncludeChildProperties"/> - which is <see langword="true"/>, so the default
     /// behaviour is unchanged.
     /// </summary>
     [Obsolete("Use SearchOptions.IncludeChildProperties instead. Removed in v2.")]
@@ -191,7 +191,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     /// Recomputes the search result and reports the rows now on show through <see cref="SearchResultChanged"/>.
     /// </summary>
     /// <remarks>
-    /// Call this from lifecycle and event handlers whenever the displayed set may have changed — never from a
+    /// Call this from lifecycle and event handlers whenever the displayed set may have changed - never from a
     /// property getter or from markup. It is the one place that both recomputes and notifies, so the two can
     /// never drift apart. See <see cref="GridSearch{TGridItem}"/> for why a changed <see cref="Items"/> reference
     /// deliberately does not trigger a recompute.
@@ -244,7 +244,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     /// </summary>
     /// <remarks>
     /// Always a copy, never the caller's instance. <see cref="QuickSearchOptions"/> is a mutable class and nothing
-    /// stops a page handing the same one to several grids — the hazard already recorded for <c>TotalFooter</c> —
+    /// stops a page handing the same one to several grids - the hazard already recorded for <c>TotalFooter</c> —
     /// so writing resolved values into it would let one grid's parameters reach another.
     /// </remarks>
     private QuickSearchOptions ResolveSearchOptions()
@@ -564,7 +564,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         // Deferred, not pushed here: the JS helper walks the header cells that exist right now, and this runs
         // inside the event handler, before Blazor has rendered the new column set. Pushing a title per visible
         // column at a table that is still one <th> short drops the last one, and the cell rendered a moment later
-        // never gets it — so re-showing a column used to leave the final header with no tooltip at all. Clearing
+        // never gets it - so re-showing a column used to leave the final header with no tooltip at all. Clearing
         // the latch hands the push to OnAfterRenderAsync, which runs once the header matches the columns.
         _titlesLoaded = false;
 
@@ -574,13 +574,13 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     /// <summary>
     /// Rebuilds everything derived from the column set. Call it after changing which columns a grid shows —
     /// flipping <see cref="DynamicColumn{TGridItem}.Visible"/>, renaming a title, or adding a column to
-    /// <c>ColumnManager.Columns</c> — from outside the wrapper.
+    /// <c>ColumnManager.Columns</c> - from outside the wrapper.
     /// </summary>
     /// <remarks>
     /// <para>
     /// The columns themselves need no help: the grid re-reads <c>ColumnManager.Get()</c> on every render, so a
     /// column appears or disappears as soon as the page re-renders. What does not follow is the header tooltips,
-    /// which are pushed to the DOM once and then latched — leaving each one describing its neighbour until they
+    /// which are pushed to the DOM once and then latched - leaving each one describing its neighbour until they
     /// are pushed again. This also raises <see cref="ColumnSelectionChanged"/>, so a page that persists the
     /// layout hears about a change it made itself the same way it hears about one made in the toolbar.
     /// </para>

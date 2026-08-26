@@ -42,15 +42,16 @@ public class QuickSearchOptions
     /// <remarks>
     /// An exclusion always vetoes the item, whatever <see cref="MultiTermOperator"/> is, and a query made only of
     /// exclusions keeps everything they do not veto. A lone <c>-</c>, and a <c>-</c> anywhere but at the start of
-    /// a term, are ordinary text. Turn this off when a leading hyphen is meaningful data — searching a column of
-    /// negative numbers for <c>-500</c>, say — and the prefix is then matched literally.
+    /// a term, are ordinary text. Turn this off when a leading hyphen is meaningful data - searching a column of
+    /// negative numbers for <c>-500</c>, say - and the prefix is then matched literally.
     /// </remarks>
     public bool EnableExclusionTerms { get; set; } = true;
 
     /// <summary>
     /// Maximum depth to search in nested properties. 0 = current level only, 1 = first-level children, etc.
-    /// Default is 1, set to 2 so <c>Owner.Address.City</c> is reachable. Each level costs a reflection walk of every
-    /// property on every row, per term, so raise it deliberately.
+    /// Default is 1, so <c>Owner.Address</c> is searched but <c>Owner.Address.City</c> is not - raise it to 2
+    /// for that. Each level costs a reflection walk of every property on every row, per term, so raise it
+    /// deliberately, and per grid through <c>QuickGridWrapper.SearchOptions</c> rather than for the whole app.
     /// </summary>
     public int MaxSearchDepth { get; set; } = 1;
 
@@ -76,7 +77,7 @@ public class QuickSearchOptions
     /// <remarks>
     /// Reference equality is not usable here. A grid whose markup reads
     /// <c>SearchOptions="new() { MaxSearchDepth = 3 }"</c> allocates a fresh instance on every render, and taking
-    /// that for a change would re-run the search — and re-raise the search-result event — on every render. The
+    /// that for a change would re-run the search - and re-raise the search-result event - on every render. The
     /// lists are compared by content for the mirror-image reason: a caller who mutates one in place keeps the
     /// same reference, and a reference check would never notice.
     /// </remarks>

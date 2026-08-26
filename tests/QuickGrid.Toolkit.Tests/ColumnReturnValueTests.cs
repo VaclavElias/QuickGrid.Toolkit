@@ -3,7 +3,7 @@ namespace QuickGrid.Toolkit.Tests;
 /// <summary>
 /// Every <c>Add*</c> hands back the column it created (D1), so a caller can configure it or refer to it from a
 /// footer without looking it up by title afterwards. These pin that the returned instance really is the one the
-/// manager rendered — a copy would look correct in the debugger and silently do nothing.
+/// manager rendered - a copy would look correct in the debugger and silently do nothing.
 /// </summary>
 public class ColumnReturnValueTests
 {
@@ -25,7 +25,7 @@ public class ColumnReturnValueTests
     {
         var columns = NewManager();
 
-        // One manager, every helper, in declaration order — so this also pins that nothing adds a hidden column.
+        // One manager, every helper, in declaration order - so this also pins that nothing adds a hidden column.
         var added = new List<DynamicColumn<Sale>>
         {
             columns.AddIndexColumn(),

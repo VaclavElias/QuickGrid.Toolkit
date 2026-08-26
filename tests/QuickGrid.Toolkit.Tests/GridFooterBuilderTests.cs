@@ -79,7 +79,7 @@ public class GridFooterBuilderTests
     {
         var columns = BuildColumns();
         columns.Columns[1].CalculateTotal = false;  // numeric, but opted out
-        columns.Columns[0].CalculateTotal = true;   // non-numeric, but opted in — and it is the label column
+        columns.Columns[0].CalculateTotal = true;   // non-numeric, but opted in - and it is the label column
 
         var footer = GridFooterBuilder<Sale>.Build(columns, new TotalFooter { IsTotalFooter = true }, _sales);
 

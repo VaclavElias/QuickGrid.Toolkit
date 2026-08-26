@@ -36,7 +36,7 @@ public class SearchOptionsTests
     [Fact]
     public void ValuesEqual_TreatsNullAndEmptyColumnListsAsTheSame()
     {
-        // Both mean "no filter" to the search, so moving between them must not read as a change — D4 will be
+        // Both mean "no filter" to the search, so moving between them must not read as a change - D4 will be
         // writing ColumnNames from the visible columns and can legitimately land on either.
         var unset = new QuickSearchOptions();
         var empty = new QuickSearchOptions { ColumnNames = [], ExcludedColumns = [] };

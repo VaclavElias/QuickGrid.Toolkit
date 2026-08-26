@@ -4,7 +4,7 @@ namespace QuickGrid.Toolkit.Core;
 
 /// <summary>
 /// Owns everything about narrowing a grid's rows: the query text, the search options, the computed result and the
-/// two ways of producing it — reflection-based quick search over an in-memory source, or a
+/// two ways of producing it - reflection-based quick search over an in-memory source, or a
 /// <see cref="FilterCriteria{TGridItem}"/> expression executed against the source.
 /// </summary>
 /// <remarks>
@@ -55,7 +55,7 @@ internal sealed class GridSearch<TGridItem>
     public List<TGridItem>? EvaluatedItems { get; private set; }
 
     /// <summary>
-    /// The active search result, or <see langword="null"/> when no search is narrowing the grid — in which case
+    /// The active search result, or <see langword="null"/> when no search is narrowing the grid - in which case
     /// the caller shows its own unfiltered rows. Only <see cref="Recompute"/> writes it.
     /// </summary>
     /// <remarks>
@@ -73,7 +73,7 @@ internal sealed class GridSearch<TGridItem>
     {
         _filterCriteria = filterCriteria;
 
-        // The component hands over a copy it has already resolved, so holding the object is safe — but hold the
+        // The component hands over a copy it has already resolved, so holding the object is safe - but hold the
         // object, never values read out of it. What a collaborator caches from a parameter goes stale (C2).
         _options = options;
 

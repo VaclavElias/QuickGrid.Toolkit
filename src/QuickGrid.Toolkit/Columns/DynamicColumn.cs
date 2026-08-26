@@ -48,14 +48,14 @@ public class DynamicColumn<TGridItem>
     /// <remarks>
     /// <para>
     /// Implemented with <see cref="object.MemberwiseClone"/>, which copies <em>every</em> field and preserves the
-    /// runtime type — a <see cref="TickPropertyColumn{TGridItem}"/> clones as a tick column, keeping the
+    /// runtime type - a <see cref="TickPropertyColumn{TGridItem}"/> clones as a tick column, keeping the
     /// <c>TrueClass</c>/<c>FalseClass</c>/<c>ShowOnlyTrue</c> settings the renderer looks for. That matters: a clone
     /// built by hand from a property list silently downgrades tick and toggle columns to plain property columns,
     /// and it goes stale every time a property is added to this class.
     /// </para>
     /// <para>
     /// The copy is shallow. <see cref="Property"/>, <see cref="SortBy"/>, <see cref="ChildContent"/> and
-    /// <see cref="OnActionAsync"/> are shared with the original, which is intended — they are behaviour, not state.
+    /// <see cref="OnActionAsync"/> are shared with the original, which is intended - they are behaviour, not state.
     /// Note that <see cref="ChildContent"/> was built with the formatting, cell styling and click handler that were
     /// passed to the <c>Add*</c> call, so changing <see cref="Format"/> or <see cref="Class"/> on a clone does not
     /// change how its cells render, exactly as it does not on the original.

@@ -10,8 +10,8 @@ namespace QuickGrid.Toolkit.Core;
 /// </summary>
 /// <remarks>
 /// Deliberately stateless: it takes the columns, the totals settings and the rows on show, and returns markup.
-/// Nothing here reaches into the component, so the whole footer pipeline — cell alignment against visible columns,
-/// label placement, total arithmetic, HTML encoding — is testable without rendering anything.
+/// Nothing here reaches into the component, so the whole footer pipeline - cell alignment against visible columns,
+/// label placement, total arithmetic, HTML encoding - is testable without rendering anything.
 /// <para>
 /// The markup is injected into the table through <c>tfoot.innerHTML</c> on the JS side, which is why every value
 /// and class is HTML-encoded here.
@@ -30,7 +30,7 @@ internal static class GridFooterBuilder<TGridItem>
     /// </summary>
     /// <param name="columns">The column set being rendered; only visible, non-hidden columns get a cell.</param>
     /// <param name="totalFooter">Label, default format and class handling for automatic totals.</param>
-    /// <param name="items">The rows the totals aggregate over — the search result when one is active.</param>
+    /// <param name="items">The rows the totals aggregate over - the search result when one is active.</param>
     public static string Build(ColumnManager<TGridItem> columns, TotalFooter totalFooter, IReadOnlyList<TGridItem> items)
     {
         var html = columns.FooterColumns.Count > 0

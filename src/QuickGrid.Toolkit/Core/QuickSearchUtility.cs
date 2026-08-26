@@ -97,7 +97,7 @@ public static class QuickSearchUtility
 
     /// <summary>
     /// Reads the <c>-</c> exclusion prefix off a single token. Deduplication happens on the raw token, so
-    /// <c>alice -alice</c> stays two terms — a contradiction that matches nothing, which is what it asked for.
+    /// <c>alice -alice</c> stays two terms - a contradiction that matches nothing, which is what it asked for.
     /// </summary>
     private static SearchTerm CreateTerm(string token, QuickSearchOptions options)
     {
@@ -137,7 +137,7 @@ public static class QuickSearchUtility
 
             hasIncluded = true;
 
-            // With And a failed term settles it — an exclusion could only have removed the item too. With Or a
+            // With And a failed term settles it - an exclusion could only have removed the item too. With Or a
             // match cannot return early, because a later exclusion still gets to veto.
             if (requireAll)
             {

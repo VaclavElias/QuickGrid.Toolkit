@@ -56,7 +56,7 @@ public class ResilientQuickGridIconProviderTests
     }
 
     // Worst case: neither the consumer provider nor the default can render the icon. Nothing is shown, but the grid
-    // still renders — this is what keeps a future QuickGridIcon member from being a breaking change.
+    // still renders - this is what keeps a future QuickGridIcon member from being a breaking change.
     [Fact]
     public void Render_RendersNothing_WhenNeitherProviderHandlesTheIcon()
     {
@@ -92,7 +92,7 @@ public class ResilientQuickGridIconProviderTests
 }
 
 // BL0006: reading render-tree frames is discouraged in application code because the types may change between
-// releases. Tests are exactly the place where that trade-off is acceptable — inspecting the frames is the cheapest
+// releases. Tests are exactly the place where that trade-off is acceptable - inspecting the frames is the cheapest
 // way to assert on a RenderFragment without pulling in a component-test framework, and a future .NET change here
 // surfaces as a compile error rather than as silent misbehaviour.
 #pragma warning disable BL0006

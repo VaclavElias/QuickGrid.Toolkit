@@ -10,7 +10,7 @@ namespace QuickGrid.Toolkit;
 /// </summary>
 /// <remarks>
 /// Every <c>Add*</c> method returns the <see cref="DynamicColumn{TGridItem}"/> it created, so a column that needs
-/// further configuration — or that a footer needs to refer to — can be captured at the point it is declared
+/// further configuration - or that a footer needs to refer to - can be captured at the point it is declared
 /// instead of being looked up afterwards by title:
 /// <code>
 /// var amount = columns.AddStyledNumber&lt;decimal&gt;(p => p.Amount, "Amount", format: "N0");
@@ -31,13 +31,13 @@ public class ColumnManager<TGridItem>
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Clearing a flag stops the marker being emitted, so the value renders as plain text — nothing has to unstyle
+    /// Clearing a flag stops the marker being emitted, so the value renders as plain text - nothing has to unstyle
     /// it in CSS. Set it at any point: it is read as each cell renders, so it applies to columns added before it.
     /// </para>
     /// <para>
     /// This is a property of the column set, not of a grid: two grids sharing one manager necessarily share it. To
     /// give them different styling, build the columns a second time into a second manager and set this on it.
-    /// <see cref="AddRange"/> is <em>not</em> a shortcut for that — a cloned column shares the render delegate of
+    /// <see cref="AddRange"/> is <em>not</em> a shortcut for that - a cloned column shares the render delegate of
     /// the column it was copied from, so it keeps the styling of the manager that built it.
     /// </para>
     /// </remarks>
@@ -79,13 +79,13 @@ public class ColumnManager<TGridItem>
 
     /// <summary>
     /// Adds a copy of each of the given columns to this manager, giving every copy a correct sequential ID.
-    /// The typical source is another manager's <see cref="Columns"/> — a shared set of columns reused across grids.
+    /// The typical source is another manager's <see cref="Columns"/> - a shared set of columns reused across grids.
     /// </summary>
     /// <remarks>
     /// <para>Each column is <see cref="DynamicColumn{TGridItem}.Clone">cloned</see> before it is added, so the
     /// source keeps its own <c>Id</c> and <c>Visible</c> state. Without that, adding the same column instance to a
     /// second manager would renumber it in the first, and hiding a column in one grid would hide it in every grid
-    /// built from the same source — a shared column set is only safe to reuse because of this copy.</para>
+    /// built from the same source - a shared column set is only safe to reuse because of this copy.</para>
     /// <para><strong>Important:</strong> Do not use <c>Columns.AddRange</c> directly. It adds the original
     /// instances and bypasses the ID, title and property-name initialization performed by
     /// <see cref="Add(DynamicColumn{TGridItem}?)"/>.</para>
@@ -380,8 +380,8 @@ public class ColumnManager<TGridItem>
     /// grid's own column set.
     /// </summary>
     /// <remarks>
-    /// Each clone carries the full state of its original — including <c>Class</c>, <c>Align</c>, <c>SortBy</c>,
-    /// <c>PropertyName</c> and the tick/toggle column subtypes — and is shallow in the sense described on
+    /// Each clone carries the full state of its original - including <c>Class</c>, <c>Align</c>, <c>SortBy</c>,
+    /// <c>PropertyName</c> and the tick/toggle column subtypes - and is shallow in the sense described on
     /// <see cref="DynamicColumn{TGridItem}.Clone"/>.
     /// </remarks>
     public List<DynamicColumn<TGridItem>> SimpleClone() => Columns.ConvertAll(s => s.Clone());

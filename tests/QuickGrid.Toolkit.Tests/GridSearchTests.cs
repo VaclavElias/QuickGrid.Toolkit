@@ -34,7 +34,7 @@ public class GridSearchTests
     }
 
     // Regression: GridSearch used to hold the item source, so a grid rendered before OnParametersSetAsync had run
-    // — which is what Blazor does whenever OnInitializedAsync is still in flight — showed an empty table until the
+    // - which is what Blazor does whenever OnInitializedAsync is still in flight - showed an empty table until the
     // user interacted with it. Result must stay null with no query, so the component's own Items parameter governs.
     [Fact]
     public void Result_IsNull_WhenNoSearchIsActive_SoTheCallerShowsItsOwnRows()
@@ -201,7 +201,7 @@ public class GridSearchTests
     }
 
     // The path above the minimum length cannot be covered here: it calls ToListAsync, which needs an
-    // IAsyncQueryProvider, and a List.AsQueryable() does not have one. That is not a test-setup problem — it is
+    // IAsyncQueryProvider, and a List.AsQueryable() does not have one. That is not a test-setup problem - it is
     // exactly the defect B6 describes, since a caller passing in-memory items alongside FilterCriteria gets the
     // same throw at runtime. Cover it once B6 lands and the EF sample (F1) exists to run it against.
     [Fact]
@@ -236,7 +236,7 @@ public class GridSearchTests
     public void InputsChanged_NoticesAnInPlaceEditToTheOptionsTheCallerHolds()
     {
         // A page binding a checkbox straight to _options.IncludeChildProperties never replaces the instance, so
-        // the copy is what carries the new value across — and it has to be compared by value to be seen.
+        // the copy is what carries the new value across - and it has to be compared by value to be seen.
         var held = new QuickSearchOptions();
         var search = new GridSearch<Person>();
         search.SyncInputs(filterCriteria: null, held.Clone());

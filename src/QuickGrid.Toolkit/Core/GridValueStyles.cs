@@ -12,7 +12,7 @@ namespace QuickGrid.Toolkit.Core;
 /// </para>
 /// <para>
 /// Set it on the <see cref="ColumnManager{TGridItem}"/> that builds the columns. Names produced by a
-/// <see cref="CellStyleMap{TValue}"/> are the application's own vocabulary and are never suppressed — unless the
+/// <see cref="CellStyleMap{TValue}"/> are the application's own vocabulary and are never suppressed - unless the
 /// map deliberately produces one of these three names, which is treated the same as the built-in nature.
 /// </para>
 /// </remarks>
