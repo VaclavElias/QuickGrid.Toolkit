@@ -8,9 +8,15 @@ public class QuickSearchUtilityTests
         Manager
     }
 
+    private sealed class Country
+    {
+        public string Iso { get; set; } = "";
+    }
+
     private sealed class Region
     {
         public string Code { get; set; } = "";
+        public Country Country { get; set; } = new();
     }
 
     private sealed class Address
@@ -37,7 +43,7 @@ public class QuickSearchUtilityTests
         Salary = 1234.56m,
         Reference = Guid.Parse("11111111-2222-3333-4444-555555555555"),
         Kind = PersonKind.Manager,
-        Address = new Address { City = "London", Region = new Region { Code = "UK-LDN" } },
+        Address = new Address { City = "London", Region = new Region { Code = "UK-LDN", Country = new Country { Iso = "GBR" } } },
         Tags = ["vip", "priority"]
     };
 
@@ -116,15 +122,21 @@ public class QuickSearchUtilityTests
         => Assert.False(QuickSearchUtility.QuickSearch(CreatePerson(), "london", includeChildProperties: false));
 
     [Fact]
-    public void DoesNotMatch_GrandchildProperty_AtDefaultDepth()
-        => Assert.False(QuickSearchUtility.QuickSearch(CreatePerson(), "UK-LDN"));
+    public void Matches_GrandchildProperty_AtDefaultDepth()
+        => Assert.True(QuickSearchUtility.QuickSearch(CreatePerson(), "UK-LDN"));
+
+    // The default stops somewhere; these two pin where. Raising MaxSearchDepth from 1 to 2 moved that line one
+    // level out, and with a case on only one side of it the move went unnoticed until the suite went red.
+    [Fact]
+    public void DoesNotMatch_GreatGrandchildProperty_AtDefaultDepth()
+        => Assert.False(QuickSearchUtility.QuickSearch(CreatePerson(), "GBR"));
 
     [Fact]
-    public void Matches_GrandchildProperty_WhenDepthRaised()
+    public void Matches_GreatGrandchildProperty_WhenDepthRaised()
     {
-        var options = new QuickSearchOptions { MaxSearchDepth = 2 };
+        var options = new QuickSearchOptions { MaxSearchDepth = 3 };
 
-        Assert.True(QuickSearchUtility.QuickSearch(CreatePerson(), "UK-LDN", options));
+        Assert.True(QuickSearchUtility.QuickSearch(CreatePerson(), "GBR", options));
     }
 
     [Fact]

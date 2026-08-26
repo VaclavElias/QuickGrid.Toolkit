@@ -49,7 +49,8 @@ public class QuickSearchOptions
 
     /// <summary>
     /// Maximum depth to search in nested properties. 0 = current level only, 1 = first-level children, etc.
-    /// Default is 1.
+    /// Default is 2, so <c>Owner.Address.City</c> is reachable. Each level costs a reflection walk of every
+    /// property on every row, per term, so raise it deliberately.
     /// </summary>
     public int MaxSearchDepth { get; set; } = 2;
 }

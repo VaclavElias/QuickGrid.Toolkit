@@ -8,7 +8,7 @@ QuickGrid.Toolkit extends the Blazor QuickGrid with reusable, dynamic column man
 
 ## Examples
 
-Eleven example pages, from the low-level building blocks to a full application-grade setup. Every page runs in the [live demo](https://vaclavelias.github.io/QuickGrid.Toolkit/); sources live under [`src/QuickGrid.Samples.Shared/Pages/Examples`](src/QuickGrid.Samples.Shared/Pages/Examples) and are registered in [`ExampleRegistry.cs`](src/QuickGrid.Samples.Shared/Core/ExampleRegistry.cs).
+Twelve example pages, from the low-level building blocks to a full application-grade setup. Every page runs in the [live demo](https://vaclavelias.github.io/QuickGrid.Toolkit/); sources live under [`src/QuickGrid.Samples.Shared/Pages/Examples`](src/QuickGrid.Samples.Shared/Pages/Examples) and are registered in [`ExampleRegistry.cs`](src/QuickGrid.Samples.Shared/Core/ExampleRegistry.cs).
 
 | Example | Shows | Source |
 | --- | --- | --- |
