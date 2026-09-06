@@ -7,4 +7,7 @@
   <Project Path="src/QuickGrid.Samples.Wasm/QuickGrid.Samples.Wasm.csproj" />
   <Project Path="src/QuickGrid.Toolkit/QuickGrid.Toolkit.csproj" />
   <Project Path="tests/QuickGrid.Toolkit.Tests/QuickGrid.Toolkit.Tests.csproj" />
+  <Properties Name="NDepend">
+    <Property Name="Project" Value="&quot;.\QuickGrid.Toolkit.ndproj&quot;" />
+  </Properties>
 </Solution>
