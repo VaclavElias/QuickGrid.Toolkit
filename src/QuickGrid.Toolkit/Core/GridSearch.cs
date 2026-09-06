@@ -16,7 +16,7 @@ namespace QuickGrid.Toolkit.Core;
 /// </para>
 /// <para>
 /// <strong>It deliberately does not hold the item source.</strong> The rows are passed to each call that needs
-/// them, and the component falls back to its own <c>Items</c> parameter whenever <see cref="Result"/> is null.
+/// them, and the component falls back to its own <c>Items</c> parameter whenever <see cref="Results"/> is null.
 /// A snapshot here would go stale: Blazor renders a component whose <c>OnInitializedAsync</c> is still running
 /// <em>before</em> <c>OnParametersSetAsync</c> has ever been called, so a grid inside a subclass that awaits
 /// anything on init would show an empty table until the next interaction.
@@ -63,7 +63,7 @@ internal sealed class GridSearch<TGridItem>
     /// QuickGrid re-queries whenever its <c>Items</c> reference changes, so handing it a fresh one each render
     /// would refresh the grid continuously.
     /// </remarks>
-    public IQueryable<TGridItem>? Result { get; private set; }
+    public IQueryable<TGridItem>? Results { get; private set; }
 
     /// <summary>
     /// Takes the current parameter values from the component. Call before <see cref="InputsChanged"/> or
@@ -107,7 +107,7 @@ internal sealed class GridSearch<TGridItem>
         => _computedQuery != Query
             || !QuickSearchOptions.ValuesEqual(_computedOptions, _options);
 
-    /// <summary>Rebuilds <see cref="Result"/> from the current query and options.</summary>
+    /// <summary>Rebuilds <see cref="Results"/> from the current query and options.</summary>
     /// <param name="items">The rows to search. Ignored when no search is active.</param>
     public void Recompute(IQueryable<TGridItem>? items)
     {
@@ -120,7 +120,7 @@ internal sealed class GridSearch<TGridItem>
         // renders reaches the grid immediately instead of through a snapshot taken here.
         if (string.IsNullOrWhiteSpace(query))
         {
-            Result = null;
+            Results = null;
 
             return;
         }
@@ -131,7 +131,7 @@ internal sealed class GridSearch<TGridItem>
             // query and the options, so splitting them per row repeated the same work for every item in the grid.
             var terms = QuickSearchUtility.PrepareTerms(query, _options);
 
-            Result = items?.Where(item => QuickSearchUtility.Matches(item, terms, _options)).ToList().AsQueryable();
+            Results = items?.Where(item => QuickSearchUtility.Matches(item, terms, _options)).ToList().AsQueryable();
 
             return;
         }
@@ -139,7 +139,7 @@ internal sealed class GridSearch<TGridItem>
         // FilterCriteria path: the source was queried in RunFilterCriteriaSearchAsync. A null result means there
         // is nothing to narrow by yet (the term is still below MinFilterSearchLength), so leave the grid
         // unfiltered rather than blanking it.
-        Result = EvaluatedItems?.AsQueryable();
+        Results = EvaluatedItems?.AsQueryable();
     }
 
     /// <summary>

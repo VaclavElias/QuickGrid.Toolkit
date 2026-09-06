@@ -13,9 +13,9 @@ public static class QuickSearchUtility
     /// Cache for type property information to improve reflection performance.
     /// This cache is safe to keep for the application lifetime as type metadata is immutable.
     /// </summary>
-    private static readonly ConcurrentDictionary<Type, PropertyInfo[]> _propertyCache = new();
+    private static readonly ConcurrentDictionary<Type, PropertyInfo[]> PropertyCache = new();
 
-    private static readonly HashSet<Type> _simpleTypes =
+    private static readonly HashSet<Type> SimpleTypes =
     [
         typeof(string),
         typeof(decimal),
@@ -183,7 +183,7 @@ public static class QuickSearchUtility
 
     private static PropertyInfo[] GetSearchableProperties(Type type, int depth, QuickSearchOptions options)
     {
-        var properties = _propertyCache.GetOrAdd(type, static t =>
+        var properties = PropertyCache.GetOrAdd(type, static t =>
             t.GetProperties(BindingFlags.Instance | BindingFlags.Public)
                 .Where(static property => property.CanRead && property.GetIndexParameters().Length == 0)
                 .ToArray());
@@ -219,7 +219,7 @@ public static class QuickSearchUtility
     {
         var type = Nullable.GetUnderlyingType(value.GetType()) ?? value.GetType();
 
-        return type.IsPrimitive || type.IsEnum || _simpleTypes.Contains(type);
+        return type.IsPrimitive || type.IsEnum || SimpleTypes.Contains(type);
     }
 
     private static bool IsNonStringEnumerable(object value)

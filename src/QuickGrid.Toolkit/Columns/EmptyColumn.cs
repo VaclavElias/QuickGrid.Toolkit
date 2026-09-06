@@ -2,11 +2,11 @@ namespace QuickGrid.Toolkit.Columns;
 
 public class EmptyColumn<TGridItem> : ColumnBase<TGridItem>
 {
-    private readonly static RenderFragment<TGridItem> _emptyChildContent = _ => __ => { };
+    private static readonly RenderFragment<TGridItem> EmptyChildContent = _ => __ => { };
 
     public override GridSort<TGridItem>? SortBy { get; set; }
 
-    [Parameter] public RenderFragment<TGridItem> ChildContent { get; set; } = _emptyChildContent;
+    [Parameter] public RenderFragment<TGridItem> ChildContent { get; set; } = EmptyChildContent;
 
     protected override void CellContent(RenderTreeBuilder builder, TGridItem item)
             => builder.AddContent(0, "");

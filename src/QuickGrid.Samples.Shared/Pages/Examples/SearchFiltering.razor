@@ -95,7 +95,7 @@
     private readonly HashSet<ProjectStatus> _statuses = [.. Enum.GetValues<ProjectStatus>()];
 
     private List<ProjectDto> _allItems = [];
-    private ColumnManager<ProjectDto> _columnManager = new();
+    private readonly ColumnManager<ProjectDto> _columnManager = new();
     private string? _search;
     private readonly QuickSearchOptions _searchOptions = new();
     private int _matchCount;

@@ -57,8 +57,8 @@
 @code {
     private QuickGridWrapper<SalesDto>? _grid;
     private List<SalesDto> _items = [];
-    private ColumnManager<SalesDto> _columnManager = new();
-    private TotalFooter _totalFooter = new() { IsTotalFooter = true };
+    private readonly ColumnManager<SalesDto> _columnManager = new();
+    private readonly TotalFooter _totalFooter = new() { IsTotalFooter = true };
     private List<DynamicColumn<SalesDto>> _toggleableColumns = [];
 
     private bool _refreshAfterToggle = true;

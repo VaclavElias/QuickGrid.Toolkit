@@ -27,7 +27,7 @@
 
 <div class="d-flex align-items-center gap-3 mb-2">
     <span class="small text-muted">Mark up:</span>
-    @foreach (var style in _toggleableStyles)
+    @foreach (var style in ToggleableStyles)
     {
         <div class="form-check mb-0">
             <input class="form-check-input" type="checkbox" id="@($"value-style-{style}")"
@@ -51,12 +51,12 @@
 
 @code {
     private List<ProjectDto> _items = [];
-    private ColumnManager<ProjectDto> _columnManager = new();
+    private readonly ColumnManager<ProjectDto> _columnManager = new();
 
     /// <summary>Shared definition: title, long title and cell class in one place.</summary>
-    private static readonly ColumnInfo BudgetColumn = new("Budget", "Approved budget", "text-end");
+    private readonly ColumnInfo _budgetColumn = new("Budget", "Approved budget", "text-end");
 
-    private static readonly GridValueStyles[] _toggleableStyles =
+    private static readonly GridValueStyles[] ToggleableStyles =
         [GridValueStyles.Negative, GridValueStyles.Positive, GridValueStyles.Zero];
 
     protected override void OnInitialized()
@@ -77,7 +77,7 @@
         _columnManager.AddSimpleDate(p => p.StartedOn, "Started", format: "dd MMM yyyy");
         _columnManager.AddSimple(p => p.CompletionRate, "Complete", format: "P0", @class: "text-end");
         // Formats are applied with the invariant culture, so avoid culture-dependent ones such as "C".
-        _columnManager.Add(p => p.Budget, BudgetColumn, format: "N0");
+        _columnManager.Add(p => p.Budget, _budgetColumn, format: "N0");
 
         // Styled numbers: positive/negative/zero is applied automatically from the value.
         _columnManager.AddStyledNumber<decimal>(p => p.Spent, "Spent", "Spent to date", format: "N0", @class: "text-end");

@@ -1,4 +1,5 @@
 @page "/export"
+@using System.Globalization
 
 <ExampleInfo Route="export"
              Lead="Turn on the export menu and produce a CSV of what the user is looking at.">
@@ -51,7 +52,7 @@
 
 @code {
     private List<ProjectDto> _items = [];
-    private ColumnManager<ProjectDto> _columnManager = new();
+    private readonly ColumnManager<ProjectDto> _columnManager = new();
     private QuickGridWrapperEvents<ProjectDto> _events = new();
 
     private string? _csv;
@@ -92,7 +93,9 @@
         {
             builder.AppendLine(string.Join(',',
                 Csv(project.Name), Csv(project.Code), Csv(project.Owner.Name),
-                project.StartedOn.ToString("yyyy-MM-dd"), project.Tasks, project.Budget));
+                project.StartedOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                project.Tasks.ToString(CultureInfo.InvariantCulture),
+                project.Budget.ToString(CultureInfo.InvariantCulture)));
         }
 
         Show("Export CSV", builder.ToString(), items.Count);
@@ -117,7 +120,7 @@
 
         foreach (var row in items)
         {
-            builder.AppendLine(string.Join(',', headers.Select(header => Csv(row[header]?.ToString()))));
+            builder.AppendLine(string.Join(',', headers.Select(header => Csv(Convert.ToString(row[header], CultureInfo.InvariantCulture)))));
         }
 
         Show("Export CSV, selected columns", builder.ToString(), items.Count);

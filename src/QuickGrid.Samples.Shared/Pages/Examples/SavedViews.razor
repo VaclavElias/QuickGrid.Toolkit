@@ -34,16 +34,16 @@
                   Id="id-saved-views"
                   ColumnManager="_columnManager"
                   ColumnConfigurations="_configurations"
-                  Icons="@(_useEmojiIcons ? _emojiIcons : null)"
+                  Icons="@(_useEmojiIcons ? EmojiIcons : null)"
                   Events="_events" />
 
 <ExampleNav Route="saved-views" />
 
 @code {
-    private static readonly SampleIconProvider _emojiIcons = new();
+    private static readonly SampleIconProvider EmojiIcons = new();
 
     private List<ProjectDto> _items = [];
-    private ColumnManager<ProjectDto> _columnManager = new();
+    private readonly ColumnManager<ProjectDto> _columnManager = new();
     private QuickGridWrapper<ProjectDto>? _wrapper;
     private QuickGridWrapperEvents<ProjectDto> _events = new();
     private List<ColumnConfig> _configurations = [];

@@ -186,7 +186,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     /// <c>OnParametersSetAsync</c> has ever run, so anything cached there is still null on that first render —
     /// which showed an empty grid until the next interaction for any subclass that awaits on init.
     /// </remarks>
-    private IQueryable<TGridItem>? VisibleItems => _search.Result ?? Items;
+    private IQueryable<TGridItem>? VisibleItems => _search.Results ?? Items;
 
     /// <summary>
     /// Recomputes the search result and reports the rows now on show through <see cref="SearchResultChanged"/>.

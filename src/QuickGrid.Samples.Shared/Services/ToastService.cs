@@ -35,5 +35,3 @@ public class ToastService
         Changed?.Invoke();
     }
 }
-
-public record Toast(string Message, string Level);

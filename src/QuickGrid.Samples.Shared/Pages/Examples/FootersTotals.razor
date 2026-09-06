@@ -59,9 +59,9 @@ else
 
 @code {
     private List<SalesDto> _items = [];
-    private ColumnManager<SalesDto> _columnManager = new();
-    private ColumnManager<SalesDto> _manualColumnManager = new();
-    private TotalFooter _totalFooter = new() { IsTotalFooter = true };
+    private readonly ColumnManager<SalesDto> _columnManager = new();
+    private readonly ColumnManager<SalesDto> _manualColumnManager = new();
+    private readonly TotalFooter _totalFooter = new() { IsTotalFooter = true };
     private decimal _totalAmount;
     private bool _isManual;
 

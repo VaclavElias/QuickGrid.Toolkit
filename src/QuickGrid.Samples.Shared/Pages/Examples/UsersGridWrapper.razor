@@ -26,7 +26,7 @@
 
 @code {
     private List<UserDto> _items = new();
-    private ColumnManager<UserDto> _columnManager = new();
+    private readonly ColumnManager<UserDto> _columnManager = new();
     private bool _isDebug;
 
     protected override void OnInitialized()

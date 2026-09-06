@@ -19,7 +19,7 @@ public class GridSearchTests
 
     /// <summary>Mirrors how <c>QuickGridWrapper</c> composes the rows it displays.</summary>
     private static IQueryable<Person>? VisibleItems(GridSearch<Person> search, IQueryable<Person>? items)
-        => search.Result ?? items;
+        => search.Results ?? items;
 
     private static QuickSearchOptions Options(bool exactMatch = false, bool nested = true)
         => new() { ExactMatch = exactMatch, IncludeChildProperties = nested };
@@ -35,7 +35,7 @@ public class GridSearchTests
 
     // Regression: GridSearch used to hold the item source, so a grid rendered before OnParametersSetAsync had run
     // - which is what Blazor does whenever OnInitializedAsync is still in flight - showed an empty table until the
-    // user interacted with it. Result must stay null with no query, so the component's own Items parameter governs.
+    // user interacted with it. Results must stay null with no query, so the component's own Items parameter governs.
     [Fact]
     public void Result_IsNull_WhenNoSearchIsActive_SoTheCallerShowsItsOwnRows()
     {
@@ -43,7 +43,7 @@ public class GridSearchTests
 
         search.Recompute(Source());
 
-        Assert.Null(search.Result);
+        Assert.Null(search.Results);
         Assert.Equal(3, VisibleItems(search, Source())?.Count());
     }
 
@@ -55,7 +55,7 @@ public class GridSearchTests
 
         search.Recompute(Source());
 
-        Assert.Equal(2, search.Result?.Count());
+        Assert.Equal(2, search.Results?.Count());
         Assert.Equal(2, VisibleItems(search, Source())?.Count());
     }
 
@@ -70,8 +70,8 @@ public class GridSearchTests
         exact.Query = "Ann";
         exact.Recompute(Source());
 
-        Assert.Equal(2, partial.Result?.Count());   // Anna and Ann
-        Assert.Equal(1, exact.Result?.Count());     // Ann only
+        Assert.Equal(2, partial.Results?.Count());   // Anna and Ann
+        Assert.Equal(1, exact.Results?.Count());     // Ann only
     }
 
     // The grid re-queries whenever its Items reference changes, so an unchanged result must keep its identity.
@@ -82,7 +82,7 @@ public class GridSearchTests
         search.Query = "Prague";
         search.Recompute(Source());
 
-        Assert.Same(search.Result, search.Result);
+        Assert.Same(search.Results, search.Results);
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public class GridSearchTests
         search.Query = "  ";
         search.Recompute(Source());
 
-        Assert.Null(search.Result);
+        Assert.Null(search.Results);
         Assert.Equal(3, VisibleItems(search, Source())?.Count());
     }
 
@@ -180,7 +180,7 @@ public class GridSearchTests
         search.Clear();
 
         Assert.Null(search.Query);
-        Assert.Null(search.Result);
+        Assert.Null(search.Results);
         Assert.Equal(3, VisibleItems(search, Source())?.Count());
         Assert.False(search.InputsChanged());
     }
@@ -195,7 +195,7 @@ public class GridSearchTests
         var queried = await search.RunFilterCriteriaSearchAsync("ab", Source());
 
         Assert.False(queried);
-        Assert.Null(search.Result);
+        Assert.Null(search.Results);
         Assert.Equal(3, VisibleItems(search, Source())?.Count());
         Assert.Equal("ab", search.Query);
     }
@@ -260,12 +260,12 @@ public class GridSearchTests
         search.Query = "anna";
         search.Recompute(Source());
 
-        Assert.Empty(search.Result!);
+        Assert.Empty(search.Results!);
 
         search.SyncInputs(filterCriteria: null, new QuickSearchOptions());
         search.Recompute(Source());
 
-        Assert.Single(search.Result!);
+        Assert.Single(search.Results!);
     }
 
 }

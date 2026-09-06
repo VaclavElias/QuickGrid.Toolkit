@@ -37,7 +37,7 @@
 </div>
 
 <QuickGridWrapper @ref="_wrapper"
-                  Items="@_queryable"
+                  Items="@_queryableItems"
                   ItemsVersion="_itemsVersion"
                   IsLoading="_isLoading"
                   IsPaginator="_isPaginator"
@@ -48,12 +48,12 @@
 
 @code {
     private List<ProjectDto> _items = [];
-    private ColumnManager<ProjectDto> _columnManager = new();
+    private readonly ColumnManager<ProjectDto> _columnManager = new();
     private QuickGridWrapper<ProjectDto>? _wrapper;
 
     // Held in a field rather than rebuilt inline, so the reference stays stable between renders.
     // That is what makes the "no signal" button below visibly do nothing.
-    private IQueryable<ProjectDto> _queryable = Enumerable.Empty<ProjectDto>().AsQueryable();
+    private IQueryable<ProjectDto> _queryableItems = Enumerable.Empty<ProjectDto>().AsQueryable();
 
     private long _itemsVersion;
     private bool _isLoading;
@@ -63,7 +63,7 @@
     protected override void OnInitialized()
     {
         _items = ProjectService.GetProjects();
-        _queryable = _items.AsQueryable();
+        _queryableItems = _items.AsQueryable();
 
         _columnManager.AddIndexColumn();
         _columnManager.AddSimple(p => p.Name, fullTitle: "Project name");
@@ -81,7 +81,7 @@
         await Task.Delay(600);
 
         _items = ProjectService.GetProjects();
-        _queryable = _items.AsQueryable();
+        _queryableItems = _items.AsQueryable();
         _added = 0;
         _isLoading = false;
 

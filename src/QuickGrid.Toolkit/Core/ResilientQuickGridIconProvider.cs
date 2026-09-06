@@ -8,7 +8,7 @@ namespace QuickGrid.Toolkit.Core;
 /// </summary>
 /// <remarks>
 /// Providers are commonly written as an exhaustive <c>switch</c> ending in <c>throw new NotImplementedException()</c>
-/// (<see cref="DefaultQuickGridIconProvider"/> included), which makes adding a member to <see cref="QuickGridIcon"/>
+/// in older implementations, which makes adding a member to <see cref="QuickGridIcon"/>
 /// a breaking change for every application that ships its own provider. This decorator removes that coupling: the
 /// toolkit can introduce an icon and older providers keep working, showing the default glyph for the new member.
 /// <para>
@@ -19,8 +19,8 @@ namespace QuickGrid.Toolkit.Core;
 /// </remarks>
 internal sealed class ResilientQuickGridIconProvider : IQuickGridIconProvider
 {
-    private static readonly DefaultQuickGridIconProvider _fallback = new();
-    private static readonly RenderFragment _nothing = _ => { };
+    private static readonly DefaultQuickGridIconProvider DefaultProvider = new();
+    private static readonly RenderFragment EmptyFragment = _ => { };
 
     private readonly IQuickGridIconProvider _inner;
     private readonly ILogger? _logger;
@@ -62,11 +62,11 @@ internal sealed class ResilientQuickGridIconProvider : IQuickGridIconProvider
         {
             // The default provider throws on an undefined enum value too, so the last resort is to render nothing
             // rather than to let the fallback fail the render it was meant to save.
-            return _fallback.Render(icon, extraCss) ?? _nothing;
+            return DefaultProvider.Render(icon, extraCss) ?? EmptyFragment;
         }
         catch
         {
-            return _nothing;
+            return EmptyFragment;
         }
     }
 }

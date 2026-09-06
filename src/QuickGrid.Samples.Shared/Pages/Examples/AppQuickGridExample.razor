@@ -45,7 +45,7 @@
 
 @code {
     private List<ProjectDto> _items = [];
-    private ColumnManager<ProjectDto> _columnManager = new();
+    private readonly ColumnManager<ProjectDto> _columnManager = new();
 
     protected override void OnInitialized()
     {
