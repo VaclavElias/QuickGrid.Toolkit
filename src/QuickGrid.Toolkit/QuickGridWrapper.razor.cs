@@ -163,7 +163,8 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     private ColumnManager<TGridItem> _defaultColumnManager = new();
 
     private List<string> _defaultVisibleColumns = [];
-    private IJSObjectReference? _module;
+    private Task<IJSObjectReference>? _moduleTask;
+    private bool _isDisposed;
 
     /// <summary>
     /// Owns the query, the search options and the computed result. The component keeps only the parts that need
@@ -360,9 +361,29 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
     private async ValueTask InvokeModuleVoidAsync(string identifier, params object?[]? args)
     {
-        _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./_content/QuickGrid.Toolkit/quickGridToolkit.js");
+        if (_isDisposed) return;
 
-        await _module.InvokeVoidAsync(identifier, args);
+        var moduleTask = _moduleTask ??= JS.InvokeAsync<IJSObjectReference>("import", "./_content/QuickGrid.Toolkit/quickGridToolkit.js").AsTask();
+        IJSObjectReference module;
+
+        try
+        {
+            module = await moduleTask;
+        }
+        catch (ObjectDisposedException) when (_isDisposed)
+        {
+            return;
+        }
+
+        if (_isDisposed) return;
+
+        try
+        {
+            await module.InvokeVoidAsync(identifier, args);
+        }
+        catch (ObjectDisposedException) when (_isDisposed)
+        {
+        }
     }
 
     private bool HasFooter()
@@ -673,13 +694,20 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
 
     public async ValueTask DisposeAsync()
     {
-        if (_module is not null)
+        _isDisposed = true;
+
+        if (_moduleTask is not null)
         {
             try
             {
-                await _module.DisposeAsync();
+                var module = await _moduleTask;
+
+                await module.DisposeAsync();
             }
             catch (JSDisconnectedException)
+            {
+            }
+            catch (ObjectDisposedException)
             {
             }
         }
