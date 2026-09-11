@@ -47,6 +47,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     [Parameter] public bool IsPaginator { get; set; }
     [Parameter] public bool IsLoading { get; set; }
     [Parameter] public bool IsSelection { get; set; }
+    [Parameter] public bool IsSelectAllItems { get; set; }
     [Parameter] public bool IsColumnSelection { get; set; } = true;
     [Parameter] public bool IsColumnItemsSelection { get; set; }
     [Parameter] public bool IsFilter { get; set; } = true;
@@ -101,6 +102,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     /// </summary>
     [Parameter] public int ItemsPerPage { get; set; } = 20;
     [Parameter] public FilterCriteria<TGridItem>? FilterCriteria { get; set; }
+    [Parameter] public RenderFragment? SelectedItemsAction { get; set; }
     [Parameter] public RenderFragment? SelectedItemsActionDropDown { get; set; }
     [Parameter] public RenderFragment? FilterSection { get; set; }
     [Parameter] public RenderFragment? DropdownItems { get; set; }
@@ -541,6 +543,19 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
             if (item is ISelectionDto selectionDto)
             {
                 selectionDto.IsSelected = false;
+            }
+        }
+    }
+
+    private void SelectAllItems()
+    {
+        if (Items is null) return;
+
+        foreach (var item in Items)
+        {
+            if (item is ISelectionDto selectionDto)
+            {
+                selectionDto.IsSelected = true;
             }
         }
     }

@@ -120,18 +120,29 @@
 
                     }
                 }
-                @if (IsSelection && SelectedItemsCount > 0)
+                @if (IsSelection)
                 {
-                    <div class="">
-                        <button @onclick="UnselectAllItems" class="btn btn-light btn-xs ms-4" type="button">Unselect All</button>
-                        <div class="dropdown d-inline-block ms-2">
-                            <button class="btn btn-success dropdown-toggle btn-xs" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                @SelectedItemsCount SELECTED
-                            </button>
-                            <ul class="dropdown-menu">
-                                @SelectedItemsActionDropDown
-                            </ul>
-                        </div>
+                    <div class="d-flex justify-content-between gap-2">
+                        @if (IsSelectAllItems)
+                        {
+                            <button @onclick="SelectAllItems" class="btn btn-light btn-xs" type="button">Select All</button>
+                        }
+                        @if (SelectedItemsCount > 0)
+                        {
+                            <button @onclick="UnselectAllItems" class="btn btn-light btn-xs" type="button">Unselect All</button>
+                            @SelectedItemsAction
+                            @if (SelectedItemsActionDropDown != null)
+                            {
+                                <div class="dropdown d-inline-block">
+                                    <button class="btn btn-success dropdown-toggle btn-xs" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        @SelectedItemsCount SELECTED
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        @SelectedItemsActionDropDown
+                                    </ul>
+                                </div>
+                            }
+                        }
                     </div>
                 }
             </div>
