@@ -106,6 +106,7 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
     [Parameter] public RenderFragment? SelectedItemsActionDropDown { get; set; }
     [Parameter] public RenderFragment? FilterSection { get; set; }
     [Parameter] public RenderFragment? DropdownItems { get; set; }
+    [Parameter] public RenderFragment? Footer { get; set; }
 
     /// <summary>
     /// Named column layouts offered in the column-layout menu. Supply them from markup, or assign them from a
