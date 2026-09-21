@@ -8,7 +8,7 @@ Read [`.github/copilot-instructions.md`](.github/copilot-instructions.md) first 
 
 Quick reminders that matter most often:
 - Build: `dotnet build QuickGrid.Toolkit.slnx` · Run demo: `dotnet run --project src/QuickGrid.Samples` (Blazor Server head) or `dotnet run --project src/QuickGrid.Samples.Wasm` (WebAssembly head, deployed to GitHub Pages). Example pages/services live in the shared RCL `src/QuickGrid.Samples.Shared`; the heads are thin hosts.
-- Tests: `dotnet test QuickGrid.Toolkit.slnx` — xUnit unit tests live in `tests/QuickGrid.Toolkit.Tests`, covering the pure logic (`ExpressionHelper`, `QuickSearchUtility`, `CellStyleHelper`/`CellStyleMap`, `ColumnManager` footers). Component/render behaviour is still verified through the sample pages, not tests.
+- Tests: `dotnet test QuickGrid.Toolkit.slnx` — xunit.v3 unit tests live in `tests/QuickGrid.Toolkit.Tests`, running on Microsoft.Testing.Platform, which the root `global.json` opts `dotnet test` into (remove that file and `dotnet test` errors on .NET 10). They cover the pure logic (`ExpressionHelper`, `QuickSearchUtility`, `CellStyleHelper`/`CellStyleMap`, `ColumnManager` footers). Component/render behaviour is still verified through the sample pages, not tests.
 
 ## Architecture
 

@@ -25,7 +25,7 @@ There is no domain/infrastructure layering and no `DbContext` in this repository
 
 - Build: `dotnet build QuickGrid.Toolkit.slnx`
 - Run the demo: `dotnet run --project src/QuickGrid.Samples` (Server) or `dotnet run --project src/QuickGrid.Samples.Wasm` (WebAssembly)
-- Tests: `dotnet test QuickGrid.Toolkit.slnx` — xUnit unit tests in `tests/QuickGrid.Toolkit.Tests` cover the pure logic (expression helpers, quick search, cell styling, footer arithmetic). Add or extend tests there when changing those areas; component/render behaviour is verified through the sample pages.
+- Tests: `dotnet test QuickGrid.Toolkit.slnx` — xunit.v3 unit tests in `tests/QuickGrid.Toolkit.Tests` (Microsoft.Testing.Platform runner, opted in by the root `global.json`) cover the pure logic (expression helpers, quick search, cell styling, footer arithmetic). Add or extend tests there when changing those areas; component/render behaviour is verified through the sample pages.
 
 ## Architecture
 

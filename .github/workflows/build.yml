@@ -33,7 +33,7 @@ jobs:
         run: dotnet build QuickGrid.Toolkit.slnx --configuration Release /warnaserror
 
       - name: Test
-        run: dotnet test QuickGrid.Toolkit.slnx --configuration Release --no-build --verbosity normal
+        run: dotnet test --solution QuickGrid.Toolkit.slnx --configuration Release --no-build --verbosity normal
 
       - name: Pack (verify packaging stays valid; nothing is published)
         run: dotnet pack src/QuickGrid.Toolkit/QuickGrid.Toolkit.csproj --configuration Release --no-build --output ./artifacts
