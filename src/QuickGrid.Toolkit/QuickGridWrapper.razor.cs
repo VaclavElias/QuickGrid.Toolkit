@@ -367,25 +367,23 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
         if (_isDisposed) return;
 
         var moduleTask = _moduleTask ??= JS.InvokeAsync<IJSObjectReference>("import", "./_content/QuickGrid.Toolkit/quickGridToolkit.js").AsTask();
-        IJSObjectReference module;
 
         try
         {
-            module = await moduleTask;
-        }
-        catch (ObjectDisposedException) when (_isDisposed)
-        {
-            return;
-        }
+            var module = await moduleTask;
 
-        if (_isDisposed) return;
+            if (_isDisposed) return;
 
-        try
-        {
             await module.InvokeVoidAsync(identifier, args);
         }
         catch (ObjectDisposedException) when (_isDisposed)
         {
+        }
+        catch (Exception ex) when (ex is OperationCanceledException or JSDisconnectedException)
+        {
+            // The circuit dropped or the call timed out. Forget a failed import so a later render can retry it.
+            if (moduleTask.IsCanceled || moduleTask.IsFaulted)
+                _moduleTask = null;
         }
     }
 
@@ -721,6 +719,9 @@ public partial class QuickGridWrapper<TGridItem> : ComponentBase, IAsyncDisposab
                 await module.DisposeAsync();
             }
             catch (JSDisconnectedException)
+            {
+            }
+            catch (OperationCanceledException)
             {
             }
             catch (ObjectDisposedException)
